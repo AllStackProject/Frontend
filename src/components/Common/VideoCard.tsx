@@ -1,5 +1,6 @@
 // src/components/Common/VideoCard.tsx
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HiClock, HiEye, HiCalendar, HiHeart, HiOutlineHeart } from 'react-icons/hi';
 
 interface VideoCardProps {
@@ -26,6 +27,7 @@ const VideoCard = ({
   onFavoriteToggle
 }: VideoCardProps) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
+  const navigate = useNavigate();
 
   // 조회수 포맷팅 (1000 -> 1K, 1000000 -> 1M)
   const formatViews = (count: number): string => {
@@ -70,8 +72,18 @@ const VideoCard = ({
     console.log(`영상 ${videoId} 즐겨찾기: ${newFavoriteState}`);
   };
 
+  // 동영상 카드 클릭 시 상세 페이지로 이동
+  const handleCardClick = () => {
+    if (videoId) {
+      navigate(`/video/${videoId}`);
+    }
+  };
+
   return (
-    <div className="min-w-[360px] max-w-[380px] cursor-pointer group">
+    <div 
+      className="min-w-[360px] max-w-[380px] cursor-pointer group"
+      onClick={handleCardClick}
+    >
       {/* 썸네일 영역 */}
       <div className="relative w-full h-52 bg-gray-200 rounded-xl overflow-hidden shadow-sm group-hover:shadow-md transition-shadow duration-200">
         <img

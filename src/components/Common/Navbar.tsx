@@ -59,7 +59,10 @@ const Navbar = () => {
                    sticky top-0 z-50 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300"
       >
         {/* 왼쪽: 로고 */}
-        <div className="flex items-center gap-2 px-8">
+        <div
+          className="flex items-center gap-2 px-8 cursor-pointer hover:opacity-80 transition"
+          onClick={() => navigate("/home")}
+        >
           <img src="/logo.png" alt="Privideo" className="w-11 h-11" />
           <p className="text-lg font-semibold text-gray-800">Privideo</p>
         </div>
@@ -166,8 +169,8 @@ const Navbar = () => {
               className="flex items-center gap-3 cursor-pointer"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <img src="/user2.png" alt="user" className="rounded-full w-10 h-10" />
-              <span className="font-semibold text-gray-700">user24</span>
+              <img src="/user9.png" alt="user" className="rounded-full w-10 h-10" />
+              <span className="font-semibold text-gray-700">홍길동</span>
               <ChevronDown className="text-gray-500 w-4 h-4" />
             </button>
 

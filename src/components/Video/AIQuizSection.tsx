@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Award } from 'lucide-react';
+import React, { useState } from "react";
+import { CheckCircle, XCircle, Award } from "lucide-react";
 
 interface QuizQuestion {
   id: number;
@@ -17,7 +17,11 @@ interface AIQuizSectionProps {
   onToggle: () => void;
 }
 
-const AIQuizSection: React.FC<AIQuizSectionProps> = ({ quiz, isOpen, onToggle }) => {
+const AIQuizSection: React.FC<AIQuizSectionProps> = ({
+  quiz,
+  isOpen,
+  onToggle,
+}) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<(boolean | null)[]>(
     new Array(quiz.questions.length).fill(null)
@@ -27,43 +31,36 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({ quiz, isOpen, onToggle })
 
   const handleOptionSelect = (answer: boolean) => {
     if (isSubmitted) return;
-
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuestion] = answer;
     setSelectedAnswers(newAnswers);
   };
 
   const handleNext = () => {
-    if (currentQuestion < quiz.questions.length - 1) {
+    if (currentQuestion < quiz.questions.length - 1)
       setCurrentQuestion(currentQuestion + 1);
-    }
   };
 
   const handlePrev = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-    }
+    if (currentQuestion > 0) setCurrentQuestion(currentQuestion - 1);
   };
 
   const handleSubmit = () => {
-    const allAnswered = selectedAnswers.every(answer => answer !== null);
+    const allAnswered = selectedAnswers.every((a) => a !== null);
     if (!allAnswered) {
-      alert('모든 문제에 답변해주세요!');
+      alert("모든 문제에 답변해주세요!");
       return;
     }
     setIsSubmitted(true);
     setShowResults(true);
   };
 
-  const calculateScore = () => {
-    let correct = 0;
-    selectedAnswers.forEach((answer, index) => {
-      if (answer === quiz.questions[index].correctAnswer) {
-        correct++;
-      }
-    });
-    return correct;
-  };
+  const calculateScore = () =>
+    selectedAnswers.reduce(
+      (acc, a, i) =>
+        a === quiz.questions[i].correctAnswer ? acc + 1 : acc,
+      0
+    );
 
   const resetQuiz = () => {
     setCurrentQuestion(0);
@@ -76,87 +73,170 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({ quiz, isOpen, onToggle })
   const score = calculateScore();
 
   return (
-    <div className="ai-quiz-section bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
       {/* 헤더 */}
       <div
-        className="flex items-center justify-between px-6 py-[18px] cursor-pointer border-b border-gray-200 hover:bg-[#F5F0CD] transition-colors"
+        className="flex justify-between items-center px-6 py-4 border-b border-gray-200 hover:bg-[#F5F0CD] cursor-pointer transition-colors"
         onClick={onToggle}
       >
-        <div className="flex items-center gap-3">
-          <img
-            src="/quiz-icon.png"
-            alt="AI 퀴즈"
-            className="w-[100px] object-contain translate-y-[-3px]"
-          />
-        </div>
-        <button className="text-[#3674B5] text-base hover:scale-110 transition-transform">
-          {isOpen ? '▼' : '▶'}
+        <img
+          src="/quiz-icon.png"
+          alt="퀴즈"
+          className="w-[100px] object-contain"
+        />
+        <button className="text-[#3674B5] text-lg hover:scale-110 transition-transform">
+          {isOpen ? "▼" : "▶"}
         </button>
       </div>
 
-      {/* 콘텐츠 */}
+      {/* 내용 */}
       {isOpen && (
-        <div className="quiz-content px-6 pb-6 bg-[#F9FAFB]">
+        <div className="bg-[#F9FAFB] p-6">
           {!showResults ? (
             <>
-              {/* 진행 상태 */}
-              <div className="quiz-progress mb-6 text-center">
+              {/* 진행상태 */}
+              <div className="text-center mb-6">
                 <div className="flex justify-center gap-3 mb-3">
-                  {quiz.questions.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm cursor-pointer transition-all 
-                        ${index === currentQuestion ? 'bg-[#3674B5] text-white scale-110 shadow-md' : ''}
-                        ${selectedAnswers[index] !== null && index !== currentQuestion ? 'bg-[#F5F0CD] text-[#3674B5]' : ''}
-                        ${selectedAnswers[index] === null && index !== currentQuestion ? 'bg-gray-200 text-gray-400' : ''}
-                      `}
-                      onClick={() => setCurrentQuestion(index)}
-                    >
-                      {index + 1}
-                    </div>
-                  ))}
+                  {quiz.questions.map((_, i) => {
+                    const isAnswered = selectedAnswers[i] !== null;
+                    const isActive = i === currentQuestion;
+                    return (
+                      <div
+                        key={i}
+                        className={`w-9 h-9 flex items-center justify-center rounded-full font-semibold text-sm cursor-pointer transition-all
+                        ${
+                          isActive
+                            ? "bg-[#3674B5] text-white scale-110 shadow-md"
+                            : isAnswered
+                            ? "bg-[#F5F0CD] text-[#3674B5]"
+                            : "bg-gray-200 text-gray-400"
+                        }
+                        hover:scale-105`}
+                        onClick={() => setCurrentQuestion(i)}
+                      >
+                        {i + 1}
+                      </div>
+                    );
+                  })}
                 </div>
                 <p className="text-sm text-gray-600">
                   문제 {currentQuestion + 1} / {quiz.questions.length}
                 </p>
               </div>
 
-              {/* 질문 */}
-              <div className="quiz-question-box">
-                <h3 className="text-lg font-semibold text-gray-900 bg-white p-4 rounded-lg border-l-4 border-[#3674B5] shadow-sm mb-6">
+              {/* 문제 */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#1E1E1E] mb-6 p-5 bg-white rounded-lg border-l-4 border-[#3674B5] shadow-sm leading-relaxed">
                   {currentQ.question}
                 </h3>
 
-                {/* OX 선택 */}
+                {/* OX 버튼 */}
                 <div className="flex justify-center gap-4 mb-6">
+                  {/* O 버튼 */}
                   <button
-                    className={`w-44 h-28 rounded-xl border-2 flex flex-col items-center justify-center text-5xl font-bold transition-all ${
+                    className={`flex flex-col items-center justify-center gap-2 relative w-full max-w-[200px] h-[120px] border-[3px] rounded-2xl bg-white transition-all
+                    ${
                       selectedAnswers[currentQuestion] === true
-                        ? 'bg-[#F5F0CD] border-[#3674B5] text-[#3674B5]'
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-[#3674B5]'
-                    }`}
+                        ? "border-[#3674B5] bg-[#F5F0CD]"
+                        : "border-gray-200"
+                    }
+                    ${
+                      isSubmitted && currentQ.correctAnswer === true
+                        ? "border-[#3BB273] bg-[#F0FDF4]"
+                        : isSubmitted &&
+                          selectedAnswers[currentQuestion] === true &&
+                          currentQ.correctAnswer === false
+                        ? "border-[#E25A5A] bg-[#FEF2F2]"
+                        : ""
+                    }
+                    hover:scale-105`}
                     onClick={() => handleOptionSelect(true)}
                     disabled={isSubmitted}
                   >
-                    O
+                    <span
+                      className={`text-5xl font-extrabold ${
+                        isSubmitted && currentQ.correctAnswer === true
+                          ? "text-[#3BB273]"
+                          : isSubmitted &&
+                            selectedAnswers[currentQuestion] === true &&
+                            currentQ.correctAnswer === false
+                          ? "text-[#E25A5A]"
+                          : "text-[#3674B5]"
+                      }`}
+                    >
+                      O
+                    </span>
+                    {isSubmitted &&
+                      (currentQ.correctAnswer === true ? (
+                        <CheckCircle
+                          size={22}
+                          className="absolute top-3 right-3 text-[#3BB273]"
+                        />
+                      ) : (
+                        selectedAnswers[currentQuestion] === true && (
+                          <XCircle
+                            size={22}
+                            className="absolute top-3 right-3 text-[#E25A5A]"
+                          />
+                        )
+                      ))}
                   </button>
+
+                  {/* X 버튼 */}
                   <button
-                    className={`w-44 h-28 rounded-xl border-2 flex flex-col items-center justify-center text-5xl font-bold transition-all ${
+                    className={`flex flex-col items-center justify-center gap-2 relative w-full max-w-[200px] h-[120px] border-[3px] rounded-2xl bg-white transition-all
+                    ${
                       selectedAnswers[currentQuestion] === false
-                        ? 'bg-[#FEF2F2] border-[#E25A5A] text-[#E25A5A]'
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-[#E25A5A]'
-                    }`}
+                        ? "border-[#E25A5A] bg-[#FEF2F2]"
+                        : "border-gray-200"
+                    }
+                    ${
+                      isSubmitted && currentQ.correctAnswer === false
+                        ? "border-[#3BB273] bg-[#F0FDF4]"
+                        : isSubmitted &&
+                          selectedAnswers[currentQuestion] === false &&
+                          currentQ.correctAnswer === true
+                        ? "border-[#E25A5A] bg-[#FEF2F2]"
+                        : ""
+                    }
+                    hover:scale-105`}
                     onClick={() => handleOptionSelect(false)}
                     disabled={isSubmitted}
                   >
-                    X
+                    <span
+                      className={`text-5xl font-extrabold ${
+                        isSubmitted && currentQ.correctAnswer === false
+                          ? "text-[#3BB273]"
+                          : isSubmitted &&
+                            selectedAnswers[currentQuestion] === false &&
+                            currentQ.correctAnswer === true
+                          ? "text-[#E25A5A]"
+                          : "text-[#E25A5A]"
+                      }`}
+                    >
+                      X
+                    </span>
+                    {isSubmitted &&
+                      (currentQ.correctAnswer === false ? (
+                        <CheckCircle
+                          size={22}
+                          className="absolute top-3 right-3 text-[#3BB273]"
+                        />
+                      ) : (
+                        selectedAnswers[currentQuestion] === false && (
+                          <XCircle
+                            size={22}
+                            className="absolute top-3 right-3 text-[#E25A5A]"
+                          />
+                        )
+                      ))}
                   </button>
                 </div>
 
                 {/* 네비게이션 */}
                 <div className="flex gap-3">
                   <button
-                    className="flex-1 py-3 bg-white border-2 border-gray-200 text-gray-600 font-semibold rounded-lg hover:border-[#3674B5] hover:text-[#3674B5] disabled:opacity-50"
+                    className="flex-1 py-3 bg-white text-gray-700 font-semibold text-sm border-2 border-gray-200 rounded-lg transition-all hover:text-[#3674B5] hover:border-[#3674B5] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handlePrev}
                     disabled={currentQuestion === 0}
                   >
@@ -165,15 +245,15 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({ quiz, isOpen, onToggle })
 
                   {currentQuestion === quiz.questions.length - 1 ? (
                     <button
-                      className="flex-1 py-3 bg-gradient-to-r from-[#3674B5] to-[#578FCA] text-white font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all"
+                      className="flex-1 py-3 text-white font-semibold text-base rounded-lg shadow-md bg-gradient-to-r from-[#3674B5] to-[#578FCA] transition-all hover:-translate-y-[2px] hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                       onClick={handleSubmit}
                       disabled={isSubmitted}
                     >
-                      {isSubmitted ? '제출완료' : '제출하기'}
+                      {isSubmitted ? "제출완료" : "제출하기"}
                     </button>
                   ) : (
                     <button
-                      className="flex-1 py-3 bg-gradient-to-r from-[#3674B5] to-[#578FCA] text-white font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all"
+                      className="flex-1 py-3 text-white font-semibold text-base rounded-lg bg-gradient-to-r from-[#3674B5] to-[#578FCA] transition-all hover:-translate-y-[2px] hover:shadow-lg"
                       onClick={handleNext}
                     >
                       다음
@@ -183,20 +263,49 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({ quiz, isOpen, onToggle })
               </div>
             </>
           ) : (
-            /* 결과 화면 */
-            <div className="text-center">
-              <Award size={48} className="text-[#FADA7A] mx-auto mb-3" />
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">퀴즈 완료!</h3>
-              <p className="text-lg font-semibold text-[#3674B5] mb-1">
-                {score} / {quiz.questions.length} 정답
-              </p>
-              <p className="text-gray-600 mb-6">
-                정답률 {Math.round((score / quiz.questions.length) * 100)}%
-              </p>
+            // ✅ 결과 화면
+            <div>
+              <div className="text-center bg-white p-8 rounded-xl mb-6">
+                <Award size={48} className="text-[#FADA7A] mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-[#1E1E1E] mb-2">
+                  퀴즈 완료!
+                </h3>
+                <p className="text-3xl font-extrabold text-[#3674B5] mb-2">
+                  {score} / {quiz.questions.length} 정답
+                </p>
+                <p className="text-gray-700">
+                  정답률: {Math.round((score / quiz.questions.length) * 100)}%
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 mb-6">
+                {quiz.questions.map((q, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      setShowResults(false);
+                      setCurrentQuestion(i);
+                    }}
+                    className="flex items-center gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md hover:translate-x-1"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#F5F0CD] text-[#3674B5] flex items-center justify-center font-bold flex-shrink-0">
+                      Q{i + 1}
+                    </div>
+                    {selectedAnswers[i] === q.correctAnswer ? (
+                      <CheckCircle size={20} className="text-[#3BB273]" />
+                    ) : (
+                      <XCircle size={20} className="text-[#E25A5A]" />
+                    )}
+                    <p className="flex-1 text-sm text-[#1E1E1E] leading-snug">
+                      {q.question}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
               <button
+                className="w-full py-3 rounded-lg text-white font-semibold text-base bg-gradient-to-r from-[#3674B5] to-[#578FCA] transition-all hover:-translate-y-[2px] hover:shadow-lg"
                 onClick={resetQuiz}
-                className="w-full py-3 bg-gradient-to-r from-[#3674B5] to-[#578FCA] text-white font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all"
               >
                 다시 풀기
               </button>

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Footer = () => {
   return (
     <footer className="bg-[#242b35] text-gray-300 text-sm mt-20">
@@ -18,7 +20,14 @@ const Footer = () => {
             <div>
               <h4 className="text-white font-semibold mb-3">Privideo</h4>
               <ul className="space-y-2">
-                <li>서비스 소개</li>
+                <li>
+                  <Link
+                    to="/"
+                    className="hover:text-white transition-colors"
+                  >
+                    서비스 소개
+                  </Link>
+                </li>
                 <li>공지사항</li>
                 <li>블로그</li>
               </ul>

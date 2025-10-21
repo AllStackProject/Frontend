@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
-import SocialLoginButtons from './SocialLoginButtons';
 
 type Errors = { email?: string; password?: string };
 
@@ -157,20 +156,6 @@ export default function LoginForm() {
           </Link>
         </div>
       </form>
-
-      {/* 소셜 로그인 */}
-      <div className="mt-8">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border-light"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-bg-card text-text-secondary">또는</span>
-          </div>
-        </div>
-
-        <SocialLoginButtons />
-      </div>
     </div>
   );
 }

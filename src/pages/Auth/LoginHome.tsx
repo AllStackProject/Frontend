@@ -1,4 +1,3 @@
-// src/pages/Auth/LoginHome.tsx
 import LoginForm from '@/components/Auth/LoginForm';
 import BrandSection from '@/components/Auth/BrandSection';
 

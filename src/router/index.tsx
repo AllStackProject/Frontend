@@ -6,7 +6,8 @@ import VideoDetailPage from "@/pages/Video/VideoDetailPage";
 import LoginHome from "@/pages/Auth/LoginHome";
 import LoginSelect from "@/pages/Auth/LoginSelect"; 
 import Register from "@/pages/Auth/Register";
-import UserLayout from "@/layouts/VideoLayout";
+import MyPage from "@/pages/User/MyPage";
+import MainLayout from "@/layouts/UserLayout";
 
 export const router = createBrowserRouter([
   {
@@ -30,11 +31,15 @@ export const router = createBrowserRouter([
     element: <Dashboard />,
   },
   {
-    element: <UserLayout />,
+    element: <MainLayout />,
     children: [
       {
         path: "/video/:id",
         element: <VideoDetailPage />,
+      },
+      {
+        path: "/mypage",
+        element: <MyPage />,
       },
     ],
   },

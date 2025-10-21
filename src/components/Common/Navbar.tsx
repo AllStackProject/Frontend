@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search,
   ChevronDown,
-  User,
+  ShieldUser,
   BookOpen,
-  Settings,
+  BellRing,
   Bookmark,
   Home,
   Bell,
@@ -56,12 +56,12 @@ const Navbar = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const menuItems = [
-    { icon: Home, label: "홈", path: "/" },
-    { icon: User, label: "마이페이지", path: "/mypage" },
-    { icon: BookOpen, label: "내 학습", path: "/learn" },
-    { icon: Bookmark, label: "스크랩", path: "/scrap" },
-    { icon: Settings, label: "설정", path: "/settings" },
-  ];
+  { icon: Home, label: "홈", path: "/" },
+  { icon: BookOpen, label: "내 기록", path: "/mypage/learning" },
+  { icon: Bookmark, label: "스크랩", path: "/mypage/scrap" },
+  { icon: ShieldUser, label: "내 조직", path: "/mypage/groups" },
+  { icon: BellRing, label: "알림 설정", path: "/mypage/settings" },
+];
 
   return (
     <>

@@ -56,7 +56,7 @@ const Navbar = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const menuItems = [
-  { icon: Home, label: "홈", path: "/" },
+  { icon: Home, label: "홈", path: "/home" },
   { icon: BookOpen, label: "내 기록", path: "/mypage/learning" },
   { icon: Bookmark, label: "스크랩", path: "/mypage/scrap" },
   { icon: ShieldUser, label: "내 조직", path: "/mypage/groups" },

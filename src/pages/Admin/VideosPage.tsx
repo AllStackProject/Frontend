@@ -10,8 +10,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import UploadVideoModal from "@/components/Admin/UploadVideoModal";
-import EditVideoModal from "@/components/Admin/EditVideoModal";
+import UploadVideoModal from "@/components/Admin/Video/UploadVideoModal";
+import EditVideoModal from "@/components/Admin/Video/EditVideoModal";
 
 interface Video {
   id: number;

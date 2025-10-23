@@ -21,12 +21,14 @@ import SettingsSection from "@/components/User/SettingsSection";
 // 관리자 페이지 관련 import
 import DashboardPage from "@/pages/Admin/DashboardPage";
 import VideosPage from "@/pages/Admin/VideosPage";
+import QuizPage from "@/pages/Admin/QuizPage";
 import UsersPage from "@/pages/Admin/UsersPage";
 import ReportsPage from "@/pages/Admin/ReportsPage";
 import NoticesPage from "@/pages/Admin/NoticesPage";
 import LearningPage from "@/pages/Admin/LearningPage";
 import PlansPage from "@/pages/Admin/PlansPage";
 import WatchHistoryPage from "@/pages/Admin/WatchHistoryPage";
+import LearningReportSection from "@/components/Admin/Learning/LearningReportSection";
 
 
 // 레이아웃 import
@@ -94,8 +96,10 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "videos", element: <VideosPage /> },
+      { path: "quiz", element: <QuizPage /> },
       { path: "users", element: <UsersPage /> },
       { path: "learning", element: <LearningPage /> },
+      { path: "learning/report/:userId", element: <LearningReportSection /> },
       { path: "notices", element: <NoticesPage /> },
       { path: "plans", element: <PlansPage /> },
       { path: "history", element: <WatchHistoryPage /> },

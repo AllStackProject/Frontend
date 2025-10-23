@@ -13,6 +13,7 @@ import {
   Layers,
   DollarSign,
   LogOut,
+  BrainCircuit
 } from "lucide-react";
 
 const DashboardLayout: React.FC = () => {
@@ -21,8 +22,9 @@ const DashboardLayout: React.FC = () => {
   const navItems = [
     { label: "홈", icon: Home, path: "/admin" },
     { label: "동영상 관리", icon: Video, path: "/admin/videos" },
+    { label: "AI 퀴즈 관리", icon: BrainCircuit, path: "/admin/quiz" },
     { label: "사용자 관리", icon: Users, path: "/admin/users" },
-    { label: "학습 관리", icon: BookOpen, path: "/admin/learning" },
+    { label: "시청 관리", icon: BookOpen, path: "/admin/learning" },
     { label: "시청 기록", icon: Layers, path: "/admin/history" },
     { label: "요금제 관리", icon: DollarSign, path: "/admin/plans" },
     { label: "공지사항", icon: FileText, path: "/admin/notices" },

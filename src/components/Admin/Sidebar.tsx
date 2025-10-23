@@ -24,12 +24,12 @@ const DashboardLayout: React.FC = () => {
     { label: "동영상 관리", icon: Video, path: "/admin/videos" },
     { label: "AI 퀴즈 관리", icon: BrainCircuit, path: "/admin/quiz" },
     { label: "사용자 관리", icon: Users, path: "/admin/users" },
-    { label: "시청 관리", icon: BookOpen, path: "/admin/learning" },
-    { label: "시청 기록", icon: Layers, path: "/admin/history" },
-    { label: "요금제 관리", icon: DollarSign, path: "/admin/plans" },
-    { label: "공지사항", icon: FileText, path: "/admin/notices" },
+    { label: "사용자별 시청 관리", icon: BookOpen, path: "/admin/learning" },
+    { label: "동영상별 시청 관리", icon: Layers, path: "/admin/history" },
+    { label: "요금제 & 광고 관리", icon: DollarSign, path: "/admin/plans" },
+    { label: "공지 등록", icon: FileText, path: "/admin/notices" },
     { label: "통계/리포트", icon: BarChart3, path: "/admin/reports" },
-    { label: "설정", icon: Settings, path: "/admin/settings" },
+    { label: "조직 설정", icon: Settings, path: "/admin/settings" },
   ];
 
   return (

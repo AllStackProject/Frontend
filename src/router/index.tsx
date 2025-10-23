@@ -29,7 +29,7 @@ import LearningPage from "@/pages/Admin/LearningPage";
 import PlansPage from "@/pages/Admin/PlansPage";
 import WatchHistoryPage from "@/pages/Admin/WatchHistoryPage";
 import LearningReportSection from "@/components/Admin/Learning/LearningReportSection";
-
+import SettingPage from "@/pages/Admin/SettingPage";
 
 // 레이아웃 import
 import UserLayout from "@/layouts/UserLayout";
@@ -104,6 +104,7 @@ export const router = createBrowserRouter([
       { path: "plans", element: <PlansPage /> },
       { path: "history", element: <WatchHistoryPage /> },
       { path: "reports", element: <ReportsPage /> },
+      { path: "settings", element: <SettingPage /> },
     ],
   },
 ]);

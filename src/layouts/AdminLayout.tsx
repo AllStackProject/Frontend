@@ -5,7 +5,7 @@ import { Outlet } from "react-router-dom";
 
 const DashboardLayout: React.FC = () => {
   return (
-    <div className="flex min-h-screen bg-gray-80">
+    <div className="flex min-h-screen bg-gray-70">
       {/* 사이드바 */}
       <Sidebar />
 

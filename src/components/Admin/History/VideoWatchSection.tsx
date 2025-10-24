@@ -1,12 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  Filter,
-  RotateCcw,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  Info,
-} from "lucide-react";
+import { Filter, RotateCcw, Eye, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import WatchUserModal from "@/components/Admin/History/WatchUserModal";
 
 interface WatchRecord {
@@ -81,7 +74,6 @@ const VideoWatchSection: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [selectedVideo, setSelectedVideo] = useState<WatchRecord | null>(null);
-  const [showTooltip, setShowTooltip] = useState(false);
 
   // 필터링
   const filteredRecords = useMemo(() => {
@@ -110,31 +102,6 @@ const VideoWatchSection: React.FC = () => {
 
   return (
     <div>
-      {/* 헤더 */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          동영상별 시청 기록 관리
-          <div
-            className="relative flex items-center"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-          >
-            <Info size={18} className="text-gray-500 cursor-pointer hover:text-gray-700 transition-colors" />
-            {showTooltip && (
-              <div className="absolute left-8 top-0 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 shadow-lg w-64 z-10">
-                <p className="font-semibold mb-1">시청률이란?</p>
-                <p className="text-gray-200">
-                  전체 구성원 중 해당 영상을 일정 비율 이상 시청 완료한 사용자의 비율입니다.
-                </p>
-                <p className="mt-2 text-gray-300 text-[11px]">
-                  계산식: (시청 완료 사용자 ÷ 전체 사용자) × 100
-                </p>
-              </div>
-            )}
-          </div>
-        </h2>
-      </div>
-
       {/* 필터 */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -184,7 +151,25 @@ const VideoWatchSection: React.FC = () => {
               <th className="px-4 py-3 font-semibold">업로드일</th>
               <th className="px-4 py-3 font-semibold">만료일</th>
               <th className="px-4 py-3 font-semibold">공개 범위</th>
-              <th className="px-4 py-3 font-semibold w-52">시청 완료율</th>
+              <th className="px-4 py-3 font-semibold w-52">
+                  <div className="flex items-center gap-1 relative group">
+                    멤버 시청 완료율
+                    <Info
+                      size={15}
+                      className="text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
+                    />
+                    {/* Tooltip */}
+                    <div className="absolute left-28 top-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-3 py-2 shadow-lg w-64 z-10">
+                      <p className="font-semibold mb-1">멤버 시청 완료율이란?</p>
+                      <p className="text-gray-200">
+                        전체 멤버 중 해당 영상을 80% 이상 시청 완료한 사용자의 비율입니다.
+                      </p>
+                      <p className="mt-2 text-gray-300 text-[11px]">
+                        계산식: (시청 완료 사용자 ÷ 전체 사용자) × 100
+                      </p>
+                    </div>
+                  </div>
+            </th>
               <th className="px-4 py-3 font-semibold text-center">시청자 수</th>
               <th className="px-4 py-3 font-semibold text-center">시청자 보기</th>
             </tr>

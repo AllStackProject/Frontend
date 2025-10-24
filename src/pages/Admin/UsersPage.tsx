@@ -7,7 +7,10 @@ const UsersPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">사용자 관리</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">사용자 관리</h1>
+        <p className="text-sm text-gray-600">조직에 속한 사용자 목록을 확인하고 권한 부여 및 초대 · 승인을 관리합니다.</p>
+      </div>
 
       {/* 탭 메뉴 */}
       <div className="flex gap-3 border-b border-gray-200 mb-6">
@@ -18,11 +21,10 @@ const UsersPage: React.FC = () => {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition ${
-              activeTab === tab.key
+            className={`px-4 py-2 font-medium text-sm border-b-2 transition ${activeTab === tab.key
                 ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             {tab.label}
           </button>

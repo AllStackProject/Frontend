@@ -55,7 +55,7 @@ const ReportsPage: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">통계 및 리포트</h1>
         <p className="text-sm text-gray-600">
-          조직의 동영상 시청 현황과 사용자 활동을 분석합니다.
+          시청률, 참여도, 시간대별 분석 등 조직의 학습 데이터를 시각화하여 확인합니다.
         </p>
       </div>
 

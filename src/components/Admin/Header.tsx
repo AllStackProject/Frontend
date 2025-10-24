@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Home, X } from "lucide-react";
+import { Home, X, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Organization {
@@ -8,7 +8,13 @@ interface Organization {
   logo: string;
 }
 
-const Header: React.FC = () => {
+type UserRole = "admin" | "manager";
+
+interface HeaderProps {
+  userRole?: UserRole;
+}
+
+const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<Organization>({
@@ -28,11 +34,23 @@ const Header: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  // 권한별 역할 표시 텍스트
+  const getRoleText = () => {
+    switch (userRole) {
+      case "admin":
+        return "Admin";
+      case "manager":
+        return "Manager";
+      default:
+        return "Admin";
+    }
+  };
+
   return (
     <>
       {/* 헤더 */}
       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-3 shadow-sm">
-        {/* 왼쪽: 조직 정보 */}
+        {/* 조직 정보 */}
         <div
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setIsModalOpen(true)}
@@ -43,21 +61,32 @@ const Header: React.FC = () => {
             className="w-10 h-10 rounded-md object-cover border border-gray-300"
           />
           <div>
-            <h2 className="font-semibold text-gray-800 group-hover:text-primary transition">
+            <h2 className="font-semibold text-gray-800 group-hover:text-blue-600 transition">
               {selectedOrg.name}
             </h2>
-            <p className="text-xs text-gray-500">Admin</p>
+            <p className="text-xs text-gray-500">{getRoleText()}</p>
           </div>
         </div>
 
-        {/* 오른쪽: 메인 화면으로 이동 */}
-        <button
-          onClick={() => navigate("/home")}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 transition"
-        >
-          <Home size={16} className="text-primary" />
-          메인 화면으로 이동
-        </button>
+        {/* 관리자 이름 + 홈 버튼 */}
+        <div className="flex items-center gap-4">
+          {/* 관리자 이름 */}
+          <div className="flex items-center gap-2 text-gray-700 text-sm font-medium">
+            <UserCircle size={18} className="text-blue-500" />
+            <span>
+              <span className="text-blue-600">홍길동</span>님
+            </span>
+          </div>
+
+          {/* 홈으로 이동 버튼 */}
+          <button
+            onClick={() => navigate("/home")}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-sm text-blue-600 font-medium transition"
+          >
+            <Home size={18} />
+            메인 화면
+          </button>
+        </div>
       </header>
 
       {/* 조직 선택 모달 */}
@@ -69,7 +98,7 @@ const Header: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-800">조직 선택</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -83,19 +112,19 @@ const Header: React.FC = () => {
                   onClick={() => handleSelectOrg(org)}
                   className={`flex items-center gap-3 p-3 rounded-lg border transition cursor-pointer ${
                     selectedOrg.id === org.id
-                      ? "border-primary bg-primary/10"
-                      : "border-gray-200 hover:bg-gray-50"
+                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                      : "border-gray-200 hover:bg-gray-50 hover:border-gray-300"
                   }`}
                 >
                   <img
                     src={org.logo}
                     alt={org.name}
-                    className="w-10 h-10 rounded-md object-cover"
+                    className="w-12 h-12 rounded-lg object-cover border border-gray-200"
                   />
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-medium text-gray-800">{org.name}</h4>
                     <p className="text-xs text-gray-500">
-                      {selectedOrg.id === org.id ? "현재 선택됨" : "클릭하여 선택"}
+                      {selectedOrg.id === org.id ? "✓ 현재 선택됨" : "클릭하여 선택"}
                     </p>
                   </div>
                 </div>
@@ -103,10 +132,10 @@ const Header: React.FC = () => {
             </div>
 
             {/* 닫기 버튼 */}
-            <div className="flex justify-end mt-5">
+            <div className="flex justify-end mt-5 pt-4 border-t border-gray-200">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 닫기
               </button>

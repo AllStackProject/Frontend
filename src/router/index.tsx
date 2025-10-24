@@ -18,12 +18,26 @@ import ProfileSection from "@/components/User/ProfileSection";
 import GroupSection from "@/components/User/OrganizationSection";
 import SettingsSection from "@/components/User/SettingsSection";
 
+// 관리자 페이지 관련 import
+import DashboardPage from "@/pages/Admin/DashboardPage";
+import VideosPage from "@/pages/Admin/VideosPage";
+import QuizPage from "@/pages/Admin/QuizPage";
+import UsersPage from "@/pages/Admin/UsersPage";
+import ReportsPage from "@/pages/Admin/ReportsPage";
+import NoticesPage from "@/pages/Admin/NoticesPage";
+import LearningPage from "@/pages/Admin/LearningPage";
+import PlansPage from "@/pages/Admin/PlansPage";
+import WatchHistoryPage from "@/pages/Admin/WatchHistoryPage";
+import LearningReportSection from "@/components/Admin/Learning/LearningReportSection";
+import SettingPage from "@/pages/Admin/SettingPage";
+
 // 레이아웃 import
-import MainLayout from "@/layouts/UserLayout";
+import UserLayout from "@/layouts/UserLayout";
+import AdminLayout from "@/layouts/AdminLayout";
 
 export const router = createBrowserRouter([
   // -----------------------------
-  // 메인 페이지 영역
+  // 기본 페이지 (비로그인/메인)
   // -----------------------------
   {
     path: "/",
@@ -47,17 +61,15 @@ export const router = createBrowserRouter([
   },
 
   // -----------------------------
-  // 메인 레이아웃 적용 구간
+  // 사용자 전용 레이아웃
   // -----------------------------
   {
-    element: <MainLayout />,
+    element: <UserLayout />,
     children: [
       {
         path: "/video/:id",
         element: <VideoDetailPage />,
       },
-
-      // 마이페이지 관련 라우트
       {
         path: "/mypage",
         element: <MyPage />,
@@ -69,9 +81,30 @@ export const router = createBrowserRouter([
           { path: "profile", element: <ProfileSection /> },
           { path: "groups", element: <GroupSection /> },
           { path: "settings", element: <SettingsSection /> },
-          { index: true, element: <LearningSection /> },
+          { index: true, element: <LearningSection /> }, // 기본 탭
         ],
       },
+    ],
+  },
+
+  // -----------------------------
+  // 관리자(Admin) 전용 레이아웃
+  // -----------------------------
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <DashboardPage /> },
+      { path: "videos", element: <VideosPage /> },
+      { path: "quiz", element: <QuizPage /> },
+      { path: "users", element: <UsersPage /> },
+      { path: "learning", element: <LearningPage /> },
+      { path: "learning/report/:userId", element: <LearningReportSection /> },
+      { path: "notices", element: <NoticesPage /> },
+      { path: "plans", element: <PlansPage /> },
+      { path: "history", element: <WatchHistoryPage /> },
+      { path: "reports", element: <ReportsPage /> },
+      { path: "settings", element: <SettingPage /> },
     ],
   },
 ]);

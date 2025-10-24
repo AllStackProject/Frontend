@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CheckCircle2, XCircle, UserCheck, Clock } from "lucide-react";
-import ConfirmActionModal from "@/components/Admin/Users/Confirmactionmodal";
+import ConfirmActionModal from "@/components/Admin/Users/ConfirmActionModal";
 
 interface PendingUser {
   id: string;

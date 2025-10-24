@@ -6,9 +6,9 @@ import {
   Hash,
   FileVideo,
   Users,
-  AlertTriangle,
   Brain,
 } from "lucide-react";
+import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
 
 interface EditVideoModalProps {
   video: any;
@@ -31,7 +31,6 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
 
   const [showCommentAlert, setShowCommentAlert] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmInput, setConfirmInput] = useState("");
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: typeof formData) => ({ ...prev, [key]: value }));
@@ -62,14 +61,6 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
     }
   };
 
-  // 실제 저장 실행
-  const confirmSave = () => {
-    if (confirmInput === "수정") {
-      onSubmit(formData);
-      setShowConfirmModal(false);
-      onClose();
-    }
-  };
   // 파일 용량 포맷
   const formatFileSize = (bytes: number) => {
     if (!bytes) return "—";
@@ -367,79 +358,34 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
 
       {/* 댓글 OFF 경고 모달 */}
       {showCommentAlert && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-            <AlertTriangle size={36} className="text-red-500 mx-auto mb-3" />
-            <p className="text-gray-800 font-medium mb-2">
-              댓글 기능을 비활성화하시겠습니까?
-            </p>
-            <p className="text-sm text-gray-500 mb-5">
-              기존 댓글은 모두 삭제됩니다.
-            </p>
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => setShowCommentAlert(false)}
-                className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-100"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  handleChange("allowComments", false);
-                  setShowCommentAlert(false);
-                }}
-                className="px-5 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmActionModal
+          title="댓글 기능 비활성화"
+          message="댓글 기능을 비활성화하시겠습니까? 기존 댓글은 모두 삭제됩니다."
+          color="red"
+          confirmText="확인"
+          onConfirm={() => {
+            handleChange("allowComments", false);
+            setShowCommentAlert(false);
+          }}
+          onClose={() => setShowCommentAlert(false)}
+        />
       )}
 
       {/* 수정 확인 모달 */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-            <AlertTriangle size={40} className="text-blue-500 mx-auto mb-3" />
-            <p className="text-gray-800 font-medium mb-2">
-              정말 수정하시겠습니까?
-              <br />
-              수정한 내용은 되돌릴 수 없습니다.
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              수정하려면 아래 입력창에 <b>"수정"</b>을 입력하세요.
-            </p>
-
-            {/* 입력 필드 */}
-            <input
-              type="text"
-              value={confirmInput}
-              onChange={(e) => setConfirmInput(e.target.value)}
-              placeholder='수정'
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-center mb-5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-100"
-              >
-                취소
-              </button>
-              <button
-                onClick={confirmSave}
-                disabled={confirmInput !== "수정"}
-                className={`px-5 py-2 rounded-lg font-semibold transition ${confirmInput === "수정"
-                    ? "bg-blue-500 text-white hover:bg-blue-600"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  }`}
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmActionModal
+          title="수정 확인"
+          message="정말 수정하시겠습니까? 수정한 내용은 되돌릴 수 없습니다."
+          keyword="수정"
+          confirmText="확인"
+          color="blue"
+          onConfirm={() => {
+            onSubmit(formData);
+            setShowConfirmModal(false);
+            onClose();
+          }}
+          onClose={() => setShowConfirmModal(false)}
+        />
       )}
     </div>
   );

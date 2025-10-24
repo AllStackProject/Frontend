@@ -3,6 +3,8 @@ import { Plus, Edit, Trash2, Eye, Filter, RotateCcw, ChevronLeft, ChevronRight }
 import CreateNoticeModal from "@/components/Admin/Notice/CreateNoticeModal";
 import EditNoticeModal from "@/components/Admin/Notice/EditNoticeModal";
 import ViewNoticeModal from "@/components/Admin/Notice/ViewNoticeModal";
+import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import SuccessModal from "@/components/Common/Modals/SuccessModal";
 
 interface Notice {
   id: number;
@@ -122,6 +124,11 @@ const NoticeSection: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [viewingNotice, setViewingNotice] = useState<Notice | null>(null);
+  
+  // 삭제 모달 상태
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingNotice, setDeletingNotice] = useState<Notice | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // 검색 + 필터
   const filteredNotices = useMemo(() => {
@@ -148,10 +155,19 @@ const NoticeSection: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // 삭제
-  const handleDelete = (id: number) => {
-    if (confirm("정말로 삭제하시겠습니까?")) {
-      setNotices(notices.filter((n) => n.id !== id));
+  // 삭제 확인 열기
+  const handleDeleteClick = (notice: Notice) => {
+    setDeletingNotice(notice);
+    setShowDeleteConfirm(true);
+  };
+
+  // 삭제 실행
+  const handleDeleteConfirm = () => {
+    if (deletingNotice) {
+      setNotices(notices.filter((n) => n.id !== deletingNotice.id));
+      setShowDeleteConfirm(false);
+      setShowSuccessModal(true);
+      setDeletingNotice(null);
     }
   };
 
@@ -170,7 +186,7 @@ const NoticeSection: React.FC = () => {
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <select
               value={visibilityFilter}
@@ -178,7 +194,7 @@ const NoticeSection: React.FC = () => {
                 setVisibilityFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="전체">전체 공개범위</option>
               <option value="전체공개">전체공개</option>
@@ -259,7 +275,7 @@ const NoticeSection: React.FC = () => {
                       <Edit size={16} />
                     </button>
                     <button
-                      onClick={() => handleDelete(n.id)}
+                      onClick={() => handleDeleteClick(n)}
                       className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                       title="삭제"
                     >
@@ -287,7 +303,7 @@ const NoticeSection: React.FC = () => {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value={5}>5개</option>
             <option value={10}>10개</option>
@@ -313,7 +329,7 @@ const NoticeSection: React.FC = () => {
                   onClick={() => setCurrentPage(i + 1)}
                   className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     currentPage === i + 1
-                      ? "bg-primary text-white"
+                      ? "bg-blue-600 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -352,6 +368,33 @@ const NoticeSection: React.FC = () => {
       )}
       {viewingNotice && (
         <ViewNoticeModal notice={viewingNotice} onClose={() => setViewingNotice(null)} />
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteConfirm && deletingNotice && (
+        <ConfirmActionModal
+          title="공지사항 삭제"
+          message={`"${deletingNotice.title}"를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`}
+          keyword="삭제"
+          confirmText="삭제"
+          color="red"
+          onConfirm={handleDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false);
+            setDeletingNotice(null);
+          }}
+        />
+      )}
+
+      {/* 성공 모달 */}
+      {showSuccessModal && (
+        <SuccessModal
+          title="삭제 완료"
+          message="공지사항이 삭제되었습니다."
+          autoClose={true}
+          autoCloseDelay={2000}
+          onClose={() => setShowSuccessModal(false)}
+        />
       )}
     </div>
   );

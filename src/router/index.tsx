@@ -7,6 +7,7 @@ import VideoDetailPage from "@/pages/Video/VideoDetailPage";
 import LoginHome from "@/pages/Auth/LoginHome";
 import LoginSelect from "@/pages/Auth/LoginSelect";
 import Register from "@/pages/Auth/Register";
+import LoginPasswordReset from "@/pages/Auth/LoginPasswordReset";
 
 // 마이페이지 관련 import
 import MyPage from "@/pages/User/MyPage";
@@ -54,6 +55,10 @@ export const router = createBrowserRouter([
   {
     path: "/login/select",
     element: <LoginSelect />,
+  },
+  {
+    path: "/reset-password",
+    element: <LoginPasswordReset />,
   },
   {
     path: "/home",

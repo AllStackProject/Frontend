@@ -18,7 +18,7 @@ const OrganizationSection: React.FC = () => {
     {
       id: 1,
       name: "우리 FISA",
-      logo: "/woori-logo.png",
+      logo: "/dummy/woori-logo.png",
       code: "FISA2024",
       role: "관리자",
       joinedDate: "2024.01.15",
@@ -27,7 +27,7 @@ const OrganizationSection: React.FC = () => {
     {
       id: 2,
       name: "PASTA EDU",
-      logo: "/woori-logo.png",
+      logo: "/dummy/woori-logo.png",
       code: "PASTA2024",
       role: "멤버",
       joinedDate: "2024.03.20",
@@ -36,7 +36,7 @@ const OrganizationSection: React.FC = () => {
     {
       id: 3,
       name: "Tech Academy",
-      logo: "/woori-logo.png",
+      logo: "/dummy/woori-logo.png",
       code: "TECH2024",
       role: "멤버",
       joinedDate: "2024.10.15",

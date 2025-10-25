@@ -18,12 +18,12 @@ const OrganizationSelectModal = ({
   if (!isOpen) return null;
 
   const organizations = [
-    { name: "우리 FISA", logo: "/woori-logo.png" },
-    { name: "PASTA", logo: "/scrap-icon.png" },
-    { name: "CODEMIND", logo: "/Lectures.png" },
-    { name: "INNOV", logo: "/learn-icon.png" },
-    { name: "NEXT EDU", logo: "/comments-icon.png" },
-    { name: "WECON", logo: "/groups-icon.png" },
+    { name: "우리 FISA", logo: "/dummy/woori-logo.png" },
+    { name: "PASTA", logo: "/dummy/woori-logo.png" },
+    { name: "CODEMIND", logo: "/dummy/woori-logo.png" },
+    { name: "INNOV", logo: "/dummy/woori-logo.png" },
+    { name: "NEXT EDU", logo: "/dummy/woori-logo.png" },
+    { name: "WECON", logo: "/dummy/woori-logo.png" },
   ];
 
   const handleJoinOrganization = () => {

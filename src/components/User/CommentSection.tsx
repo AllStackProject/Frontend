@@ -25,8 +25,8 @@ const CommentSection: React.FC = () => {
       videoId: 101,
       videoTitle: "AI 트렌드 영상",
       organization: "우리 FISA",
-      organizationLogo: "/woori-logo.png",
-      videoThumbnail: "/thum.png",
+      organizationLogo: "/dummy/woori-logo.png",
+      videoThumbnail: "/dummy/thum.png",
       content: "정말 유익했어요!",
       date: "2일 전",
     },
@@ -35,8 +35,8 @@ const CommentSection: React.FC = () => {
       videoId: 102,
       videoTitle: "딥러닝 기초",
       organization: "우리 FISA",
-      organizationLogo: "/woori-logo.png",
-      videoThumbnail: "/thum.png",
+      organizationLogo: "/dummy/woori-logo.png",
+      videoThumbnail: "/dummy/thum.png",
       content: "예시가 이해하기 쉬웠습니다.",
       date: "1주 전",
     },
@@ -45,8 +45,8 @@ const CommentSection: React.FC = () => {
       videoId: 103,
       videoTitle: "자연어 처리",
       organization: "PASTA EDU",
-      organizationLogo: "/woori-logo.png",
-      videoThumbnail: "/thum.png",
+      organizationLogo: "/dummy/woori-logo.png",
+      videoThumbnail: "/dummy/thum.png",
       content: "좋은 강의입니다!",
       date: "3일 전",
     },
@@ -75,7 +75,7 @@ const CommentSection: React.FC = () => {
         <h2 className="text-xl font-semibold text-text-primary">작성한 댓글</h2>
         <div className="flex items-center gap-2 px-3 py-1 bg-primary-light rounded-full">
           <img
-            src="/woori-logo.png"
+            src="/dummy/woori-logo.png"
             alt={currentOrgName}
             className="w-5 h-5 rounded object-cover"
           />

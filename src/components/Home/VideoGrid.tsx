@@ -1,11 +1,11 @@
 // src/components/Home/VideoGrid.tsx
-import VideoCard from '@/components/Common/VideoCard';
+import VideoCard from '@/components/Home/VideoCard';
 
 const VideoGrid = () => {
   // 더미 데이터에 추가 정보 포함
   const dummyVideos = Array(10).fill(null).map((_, index) => ({
     videoId: `video-${index + 1}`,
-    thumbnail: '/thum.png',
+    thumbnail: '/dummy/thum.png',
     title: '샘플 강의 제목입니다 샘플 제목 입니다',
     author: '인사팀',
     duration: `${Math.floor(Math.random() * 30) + 5}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
@@ -21,17 +21,17 @@ const VideoGrid = () => {
 
   const sections = [
     { 
-      icon: '/new-lectures.png', 
+      icon: '/icon/new-lectures.png', 
       title: '최신 강의', 
       color: 'text-info' 
     },
     { 
-      icon: '/hot-lectures.png', 
+      icon: '/icon/hot-lectures.png', 
       title: '인기 강의', 
       color: 'text-warning' 
     },
     { 
-      icon: '/recommended-lectures.png', 
+      icon: '/icon/recommended-lectures.png', 
       title: '추천 강의', 
       color: 'text-accent' 
     },

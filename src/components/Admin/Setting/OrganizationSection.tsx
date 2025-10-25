@@ -18,7 +18,7 @@ const OrganizationSection: React.FC = () => {
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: "ORG001",
     name: "우리 FISA",
-    image: "/woori-logo.png",
+    image: "/dummy/woori-logo.png",
     members: 86,
     inviteCode: "123456",
     hashtags: ["AI", "교육", "윤리"],

@@ -25,7 +25,7 @@ const ScrapSection: React.FC = () => {
       id: 1,
       title: "AI 개념과 적용 사례",
       organization: "우리 FISA",
-      organizationLogo: "/woori-logo.png",
+      organizationLogo: "/dummy/woori-logo.png",
       uploadDate: "2025.10.10",
       progress: 75,
       thumbnail: "/thum.png",
@@ -35,7 +35,7 @@ const ScrapSection: React.FC = () => {
       id: 2,
       title: "딥러닝 네트워크 이해",
       organization: "PASTA EDU",
-      organizationLogo: "/woori-logo.png",
+      organizationLogo: "/dummy/woori-logo.png",
       uploadDate: "2025.10.12",
       progress: 50,
       thumbnail: "/thum.png",
@@ -45,7 +45,7 @@ const ScrapSection: React.FC = () => {
       id: 3,
       title: "머신러닝 모델링 기초",
       organization: "우리 FISA",
-      organizationLogo: "/woori-logo.png",
+      organizationLogo: "/dummy/woori-logo.png",
       uploadDate: "2025.10.08",
       progress: 30,
       thumbnail: "/thum.png",
@@ -55,7 +55,7 @@ const ScrapSection: React.FC = () => {
       id: 4,
       title: "자연어 처리 실습",
       organization: "우리 FISA",
-      organizationLogo: "/woori-logo.png",
+      organizationLogo: "/dummy/woori-logo.png",
       uploadDate: "2025.10.05",
       progress: 90,
       thumbnail: "/thum.png",
@@ -87,7 +87,7 @@ const ScrapSection: React.FC = () => {
         <h2 className="text-xl font-semibold text-text-primary">내 스크랩</h2>
         <div className="flex items-center gap-2 px-3 py-1 bg-primary-light rounded-full">
           <img
-            src="/woori-logo.png"
+            src="/dummy/woori-logo.png"
             alt={currentOrgName}
             className="w-5 h-5 rounded object-cover"
           />

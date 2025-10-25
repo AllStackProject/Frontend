@@ -22,7 +22,7 @@ const ProfileSection: React.FC = () => {
     ageGroup: "20대",
     phone: "01012345678",
     organizations: ["우리 FISA", "PASTA EDU"],
-    avatar: "/user1.png",
+    avatar: "/user-icon/user1.png",
   });
 
   const [formData, setFormData] = useState({
@@ -93,11 +93,11 @@ const ProfileSection: React.FC = () => {
           <div className="flex flex-col space-y-2">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold text-text-primary">{user.name}</h2>
-              <Lock size={16} className="text-text-muted" title="수정 불가" />
+              <Lock size={16} className="text-text-muted" />
             </div>
             <div className="flex items-center gap-2">
               <p className="text-sm text-text-secondary">{user.email}</p>
-              <Lock size={14} className="text-text-muted" title="수정 불가" />
+              <Lock size={14} className="text-text-muted" />
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ const ProfileSection: React.FC = () => {
             <div className="sm:col-span-2 border-b border-border-light pb-3">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm text-text-secondary">소속된 조직명</span>
-                <Lock size={14} className="text-text-muted" title="수정 불가" />
+                <Lock size={14} className="text-text-muted" />
               </div>
               <div className="flex flex-wrap gap-2">
                 {user.organizations.map((org, i) => (
@@ -172,7 +172,7 @@ const ProfileSection: React.FC = () => {
               성별
             </label>
             <div className="flex gap-3">
-              {["남성", "여성", "기타"].map((g) => (
+              {["남성", "여성"].map((g) => (
                 <button
                   key={g}
                   type="button"
@@ -224,7 +224,7 @@ const ProfileSection: React.FC = () => {
               <label className="block text-sm font-medium text-text-secondary">
                 소속된 조직명
               </label>
-              <Lock size={14} className="text-text-muted" title="수정 불가" />
+              <Lock size={14} className="text-text-muted" />
             </div>
             <div className="flex flex-wrap gap-2">
               {user.organizations.map((org, i) => (

@@ -85,7 +85,7 @@ const Navbar = () => {
               className="flex items-center gap-2 pr-3 border-r border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => setIsModalOpen(true)}
             >
-              <img src="/woori-logo.png" alt="org" className="w-6 h-6 rounded-full" />
+              <img src="/dummy/woori-logo.png" alt="org" className="w-6 h-6 rounded-full" />
               <span className="font-medium text-gray-700 text-sm whitespace-nowrap">{organization}</span>
               <span className="text-gray-400 text-xs">▼</span>
             </div>
@@ -171,7 +171,7 @@ const Navbar = () => {
               className="flex items-center gap-2 lg:gap-3 cursor-pointer"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <img src="/user9.png" alt="user" className="rounded-full w-8 h-8 lg:w-10 lg:h-10" />
+              <img src="/user-icon/user9.png" alt="user" className="rounded-full w-8 h-8 lg:w-10 lg:h-10" />
               <span className="font-semibold text-gray-700 text-sm hidden lg:block">홍길동</span>
               <ChevronDown className="text-gray-500 w-4 h-4" />
             </button>

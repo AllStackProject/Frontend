@@ -4,7 +4,7 @@ import { ImagePlus, Trash2, Upload } from "lucide-react";
 const AdSection: React.FC = () => {
   // 현재 등록된 배너
   const [currentBanner, setCurrentBanner] = useState<string>(
-    "/AD2.png"
+    "/dummy/AD2.png"
   );
 
   // 새로 업로드할 배너 (미리보기 용)

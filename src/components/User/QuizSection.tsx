@@ -39,7 +39,7 @@ const QuizSection: React.FC = () => {
       videoId: 101,
       videoTitle: "AI 개념과 적용 사례",
       organization: "우리 FISA",
-      organizationLogo: "/woori-logo.png",
+      organizationLogo: "/dummy/woori-logo.png",
       correct: 2,
       total: 3,
       questions: [
@@ -70,7 +70,7 @@ const QuizSection: React.FC = () => {
       videoId: 102,
       videoTitle: "딥러닝 네트워크 이해",
       organization: "우리 FISA",
-      organizationLogo: "/woori-logo.png",
+      organizationLogo: "/dummy/woori-logo.png",
       correct: 3,
       total: 3,
       questions: [
@@ -99,7 +99,7 @@ const QuizSection: React.FC = () => {
       videoId: 103,
       videoTitle: "자연어 처리 기초",
       organization: "PASTA EDU",
-      organizationLogo: "/woori-logo.png",
+      organizationLogo: "/dummy/woori-logo.png",
       correct: 1,
       total: 3,
       questions: [
@@ -148,7 +148,7 @@ const QuizSection: React.FC = () => {
           <h2 className="text-xl font-semibold text-text-primary">AI 퀴즈 오답노트</h2>
           <div className="flex items-center gap-2 px-3 py-1 bg-primary-light rounded-full">
             <img
-              src="/woori-logo.png"
+              src="/dummy/woori-logo.png"
               alt={currentOrgName}
               className="w-5 h-5 rounded object-cover"
             />

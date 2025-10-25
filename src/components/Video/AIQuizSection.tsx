@@ -73,25 +73,25 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
   const score = calculateScore();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
+    <div className="bg-bg-card border border-border-light rounded-xl shadow-base overflow-hidden">
       {/* 헤더 */}
       <div
-        className="flex justify-between items-center px-6 py-4 border-b border-gray-200 hover:bg-[#F5F0CD] cursor-pointer transition-colors"
+        className="flex justify-between items-center px-6 py-4 border-b border-border-light hover:bg-accent-light cursor-pointer transition-colors"
         onClick={onToggle}
       >
         <img
-          src="/quiz-icon.png"
+          src="/icon/quiz-icon.png"
           alt="퀴즈"
           className="w-[100px] object-contain"
         />
-        <button className="text-[#3674B5] text-lg hover:scale-110 transition-transform">
+        <button className="text-text-link text-lg hover:scale-110 transition-transform">
           {isOpen ? "▼" : "▶"}
         </button>
       </div>
 
       {/* 내용 */}
       {isOpen && (
-        <div className="bg-[#F9FAFB] p-6">
+        <div className="bg-bg-page p-6">
           {!showResults ? (
             <>
               {/* 진행상태 */}
@@ -106,9 +106,9 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                         className={`w-9 h-9 flex items-center justify-center rounded-full font-semibold text-sm cursor-pointer transition-all
                         ${
                           isActive
-                            ? "bg-[#3674B5] text-white scale-110 shadow-md"
+                            ? "bg-primary text-white scale-110 shadow-base"
                             : isAnswered
-                            ? "bg-[#F5F0CD] text-[#3674B5]"
+                            ? "bg-accent-light text-primary"
                             : "bg-gray-200 text-gray-400"
                         }
                         hover:scale-105`}
@@ -119,14 +119,14 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     );
                   })}
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-text-secondary">
                   문제 {currentQuestion + 1} / {quiz.questions.length}
                 </p>
               </div>
 
               {/* 문제 */}
               <div>
-                <h3 className="text-lg font-semibold text-[#1E1E1E] mb-6 p-5 bg-white rounded-lg border-l-4 border-[#3674B5] shadow-sm leading-relaxed">
+                <h3 className="text-lg font-semibold text-text-primary mb-6 p-5 bg-white rounded-lg border-l-4 border-primary shadow-sm leading-relaxed">
                   {currentQ.question}
                 </h3>
 
@@ -137,16 +137,16 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     className={`flex flex-col items-center justify-center gap-2 relative w-full max-w-[200px] h-[120px] border-[3px] rounded-2xl bg-white transition-all
                     ${
                       selectedAnswers[currentQuestion] === true
-                        ? "border-[#3674B5] bg-[#F5F0CD]"
-                        : "border-gray-200"
+                        ? "border-primary bg-accent-light"
+                        : "border-border-light"
                     }
                     ${
                       isSubmitted && currentQ.correctAnswer === true
-                        ? "border-[#3BB273] bg-[#F0FDF4]"
+                        ? "border-success bg-green-50"
                         : isSubmitted &&
                           selectedAnswers[currentQuestion] === true &&
                           currentQ.correctAnswer === false
-                        ? "border-[#E25A5A] bg-[#FEF2F2]"
+                        ? "border-error bg-red-50"
                         : ""
                     }
                     hover:scale-105`}
@@ -156,12 +156,12 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     <span
                       className={`text-5xl font-extrabold ${
                         isSubmitted && currentQ.correctAnswer === true
-                          ? "text-[#3BB273]"
+                          ? "text-success"
                           : isSubmitted &&
                             selectedAnswers[currentQuestion] === true &&
                             currentQ.correctAnswer === false
-                          ? "text-[#E25A5A]"
-                          : "text-[#3674B5]"
+                          ? "text-error"
+                          : "text-primary"
                       }`}
                     >
                       O
@@ -170,13 +170,13 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                       (currentQ.correctAnswer === true ? (
                         <CheckCircle
                           size={22}
-                          className="absolute top-3 right-3 text-[#3BB273]"
+                          className="absolute top-3 right-3 text-success"
                         />
                       ) : (
                         selectedAnswers[currentQuestion] === true && (
                           <XCircle
                             size={22}
-                            className="absolute top-3 right-3 text-[#E25A5A]"
+                            className="absolute top-3 right-3 text-error"
                           />
                         )
                       ))}
@@ -187,16 +187,16 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     className={`flex flex-col items-center justify-center gap-2 relative w-full max-w-[200px] h-[120px] border-[3px] rounded-2xl bg-white transition-all
                     ${
                       selectedAnswers[currentQuestion] === false
-                        ? "border-[#E25A5A] bg-[#FEF2F2]"
-                        : "border-gray-200"
+                        ? "border-error bg-red-50"
+                        : "border-border-light"
                     }
                     ${
                       isSubmitted && currentQ.correctAnswer === false
-                        ? "border-[#3BB273] bg-[#F0FDF4]"
+                        ? "border-success bg-green-50"
                         : isSubmitted &&
                           selectedAnswers[currentQuestion] === false &&
                           currentQ.correctAnswer === true
-                        ? "border-[#E25A5A] bg-[#FEF2F2]"
+                        ? "border-error bg-red-50"
                         : ""
                     }
                     hover:scale-105`}
@@ -206,12 +206,12 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     <span
                       className={`text-5xl font-extrabold ${
                         isSubmitted && currentQ.correctAnswer === false
-                          ? "text-[#3BB273]"
+                          ? "text-success"
                           : isSubmitted &&
                             selectedAnswers[currentQuestion] === false &&
                             currentQ.correctAnswer === true
-                          ? "text-[#E25A5A]"
-                          : "text-[#E25A5A]"
+                          ? "text-error"
+                          : "text-error"
                       }`}
                     >
                       X
@@ -220,13 +220,13 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                       (currentQ.correctAnswer === false ? (
                         <CheckCircle
                           size={22}
-                          className="absolute top-3 right-3 text-[#3BB273]"
+                          className="absolute top-3 right-3 text-success"
                         />
                       ) : (
                         selectedAnswers[currentQuestion] === false && (
                           <XCircle
                             size={22}
-                            className="absolute top-3 right-3 text-[#E25A5A]"
+                            className="absolute top-3 right-3 text-error"
                           />
                         )
                       ))}
@@ -236,7 +236,7 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                 {/* 네비게이션 */}
                 <div className="flex gap-3">
                   <button
-                    className="flex-1 py-3 bg-white text-gray-700 font-semibold text-sm border-2 border-gray-200 rounded-lg transition-all hover:text-[#3674B5] hover:border-[#3674B5] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 py-3 bg-white text-text-primary font-semibold text-sm border-2 border-border-light rounded-lg transition-all hover:text-primary hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handlePrev}
                     disabled={currentQuestion === 0}
                   >
@@ -245,7 +245,7 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
 
                   {currentQuestion === quiz.questions.length - 1 ? (
                     <button
-                      className="flex-1 py-3 text-white font-semibold text-base rounded-lg shadow-md bg-gradient-to-r from-[#3674B5] to-[#578FCA] transition-all hover:-translate-y-[2px] hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="flex-1 py-3 text-white font-semibold text-base rounded-lg shadow-md bg-gradient-to-r from-primary to-primary-light transition-all hover:-translate-y-[2px] hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                       onClick={handleSubmit}
                       disabled={isSubmitted}
                     >
@@ -253,7 +253,7 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     </button>
                   ) : (
                     <button
-                      className="flex-1 py-3 text-white font-semibold text-base rounded-lg bg-gradient-to-r from-[#3674B5] to-[#578FCA] transition-all hover:-translate-y-[2px] hover:shadow-lg"
+                      className="flex-1 py-3 text-white font-semibold text-base rounded-lg bg-gradient-to-r from-primary to-primary-light transition-all hover:-translate-y-[2px] hover:shadow-lg"
                       onClick={handleNext}
                     >
                       다음
@@ -266,14 +266,14 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
             // ✅ 결과 화면
             <div>
               <div className="text-center bg-white p-8 rounded-xl mb-6">
-                <Award size={48} className="text-[#FADA7A] mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-[#1E1E1E] mb-2">
+                <Award size={48} className="text-accent mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-text-primary mb-2">
                   퀴즈 완료!
                 </h3>
-                <p className="text-3xl font-extrabold text-[#3674B5] mb-2">
+                <p className="text-3xl font-extrabold text-primary mb-2">
                   {score} / {quiz.questions.length} 정답
                 </p>
-                <p className="text-gray-700">
+                <p className="text-text-secondary">
                   정답률: {Math.round((score / quiz.questions.length) * 100)}%
                 </p>
               </div>
@@ -288,15 +288,15 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     }}
                     className="flex items-center gap-3 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md hover:translate-x-1"
                   >
-                    <div className="w-10 h-10 rounded-full bg-[#F5F0CD] text-[#3674B5] flex items-center justify-center font-bold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-accent-light text-primary flex items-center justify-center font-bold flex-shrink-0">
                       Q{i + 1}
                     </div>
                     {selectedAnswers[i] === q.correctAnswer ? (
-                      <CheckCircle size={20} className="text-[#3BB273]" />
+                      <CheckCircle size={20} className="text-success" />
                     ) : (
-                      <XCircle size={20} className="text-[#E25A5A]" />
+                      <XCircle size={20} className="text-error" />
                     )}
-                    <p className="flex-1 text-sm text-[#1E1E1E] leading-snug">
+                    <p className="flex-1 text-sm text-text-primary leading-snug">
                       {q.question}
                     </p>
                   </div>
@@ -304,7 +304,7 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
               </div>
 
               <button
-                className="w-full py-3 rounded-lg text-white font-semibold text-base bg-gradient-to-r from-[#3674B5] to-[#578FCA] transition-all hover:-translate-y-[2px] hover:shadow-lg"
+                className="w-full py-3 rounded-lg text-white font-semibold text-base bg-gradient-to-r from-primary to-primary-light transition-all hover:-translate-y-[2px] hover:shadow-lg"
                 onClick={resetQuiz}
               >
                 다시 풀기

@@ -19,7 +19,7 @@ const generateDummyVideos = (count: number): Video[] =>
   Array.from({ length: count }, (_, i) => ({
     id: i + 1,
     title: `샘플 동영상 ${i + 1}`,
-    thumbnail: "/thum.png",
+    thumbnail: "/dummy/thum.png",
     isPublic: i % 3 !== 0,
     visibility: i % 3 === 0 ? "private" : i % 2 === 0 ? "organization" : "group",
     createdAt: `2025-0${(i % 9) + 1}-${String((i * 2) % 28 + 1).padStart(2, "0")}`,

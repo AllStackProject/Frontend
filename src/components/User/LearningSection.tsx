@@ -26,7 +26,7 @@ const LearningSection: React.FC = () => {
     {
       id: 1,
       name: "우리 FISA",
-      logo: "/woori-logo.png",
+      logo: "/dummy/woori-logo.png",
       videos: [
         { id: 101, title: "AI 개념과 적용 사례", progress: 80, date: "2025.10.15" },
         { id: 102, title: "머신러닝 모델링 기초", progress: 60, date: "2025.10.13" },
@@ -38,7 +38,7 @@ const LearningSection: React.FC = () => {
     {
       id: 2,
       name: "PASTA EDU",
-      logo: "/woori-logo.png",
+      logo: "/dummy/woori-logo.png",
       videos: [
         { id: 106, title: "강화학습 실습 입문", progress: 45, date: "2025.10.17" },
         { id: 107, title: "생성형 AI 모델 구조", progress: 25, date: "2025.10.12" },

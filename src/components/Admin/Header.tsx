@@ -20,13 +20,13 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
   const [selectedOrg, setSelectedOrg] = useState<Organization>({
     id: 1,
     name: "우리 FISA",
-    logo: "/woori-logo.png",
+    logo: "/dummy/woori-logo.png",
   });
 
   const organizations: Organization[] = [
-    { id: 1, name: "우리 FISA", logo: "/woori-logo.png" },
-    { id: 2, name: "PASTA EDU", logo: "/woori-logo.png" },
-    { id: 3, name: "Tech Academy", logo: "/woori-logo.png" },
+    { id: 1, name: "우리 FISA", logo: "/dummy/woori-logo.png" },
+    { id: 2, name: "PASTA EDU", logo: "/dummy/woori-logo.png" },
+    { id: 3, name: "Tech Academy", logo: "/dummy/woori-logo.png" },
   ];
 
   const handleSelectOrg = (org: Organization) => {

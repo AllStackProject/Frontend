@@ -15,7 +15,7 @@ interface CommentSectionProps {
 const CommentSection: React.FC<CommentSectionProps> = ({ comments }) => {
   const getRandomAvatar = (userId: number) => {
     const avatarNumber = (userId % 9) + 1; // 1~9 순환
-    return `/user${avatarNumber}.png`;
+    return `/user-icon/user${avatarNumber}.png`;
   };
 
   return (
@@ -24,7 +24,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments }) => {
       <div className="flex flex-col mb-5">
         <div className="flex items-center gap-2">
           <img
-            src="/comment-icon.png"
+            src="/icon/comment-icon.png"
             alt="댓글"
             className="w-[100px] object-contain translate-y-[1px]"
           />

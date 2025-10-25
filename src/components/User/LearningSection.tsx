@@ -19,7 +19,7 @@ const LearningSection: React.FC = () => {
   const navigate = useNavigate();
 
   // 현재 접속한 조직 (추후 Context나 Redux에서 가져올 예정)
-  const currentOrgName = "우리 FISA"; // 또는 localStorage.getItem('currentOrg')
+  const currentOrgName = "우리 FISA";
 
   // 예시 데이터 (추후 API 연동 예정)
   const orgs: Organization[] = [
@@ -75,14 +75,6 @@ const LearningSection: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-text-primary">최근 시청 기록</h2>
-          <div className="flex items-center gap-2 px-3 py-1 bg-primary-light rounded-full">
-            <img
-              src={currentOrg.logo}
-              alt={`${currentOrg.name} 로고`}
-              className="w-5 h-5 rounded object-cover"
-            />
-            <span className="text-sm font-medium text-bg-page">{currentOrg.name}</span>
-          </div>
         </div>
 
         {currentOrg.videos.length > 3 && (

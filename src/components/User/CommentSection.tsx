@@ -70,17 +70,9 @@ const CommentSection: React.FC = () => {
 
   return (
     <div className="space-y-5 relative">
-      {/* 타이틀 + 조직 정보 */}
+      {/* 타이틀 */}
       <div className="flex items-center gap-3">
         <h2 className="text-xl font-semibold text-text-primary">작성한 댓글</h2>
-        <div className="flex items-center gap-2 px-3 py-1 bg-primary-light rounded-full">
-          <img
-            src="/dummy/woori-logo.png"
-            alt={currentOrgName}
-            className="w-5 h-5 rounded object-cover"
-          />
-          <span className="text-sm font-medium text-bg-page">{currentOrgName}</span>
-        </div>
         {filteredComments.length > 0 && (
           <span className="text-sm text-text-muted">
             ({filteredComments.length}개)

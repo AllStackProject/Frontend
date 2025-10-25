@@ -82,17 +82,9 @@ const ScrapSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 타이틀 + 조직 정보 */}
+      {/* 타이틀 */}
       <div className="flex items-center gap-3">
         <h2 className="text-xl font-semibold text-text-primary">내 스크랩</h2>
-        <div className="flex items-center gap-2 px-3 py-1 bg-primary-light rounded-full">
-          <img
-            src="/dummy/woori-logo.png"
-            alt={currentOrgName}
-            className="w-5 h-5 rounded object-cover"
-          />
-          <span className="text-sm font-medium text-bg-page">{currentOrgName}</span>
-        </div>
         {filteredVideos.length > 0 && (
           <span className="text-sm text-text-muted">
             ({filteredVideos.length}개)

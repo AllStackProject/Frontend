@@ -18,7 +18,7 @@ const MyPageTabs: React.FC<MyPageTabsProps> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-border-light pb-2">
+    <div className="flex flex-wrap items-center gap-1 border-b border-border-light">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
 
@@ -27,26 +27,35 @@ const MyPageTabs: React.FC<MyPageTabsProps> = ({ activeTab, onTabChange }) => {
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "relative flex items-center gap-2 px-4 py-2 text-base font-medium transition-all duration-200 rounded-md",
+              "relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200",
               isActive
-                ? "text-primary font-semibold bg-accent-light"
-                : "text-text-secondary hover:text-primary hover:bg-gray-50"
+                ? "text-primary"
+                : "text-text-secondary hover:text-text-primary"
             )}
           >
             {/* 아이콘 */}
             <img
               src={tab.icon}
               alt={tab.label}
-              className="w-9 h-9 object-contain opacity-80"
+              className={cn(
+                "w-7 h-7 object-contain transition-all duration-200",
+                isActive ? "opacity-100 scale-110" : "opacity-60"
+              )}
             />
+            
             {/* 텍스트 */}
-            <span>{tab.label}</span>
+            <span className={cn(
+              "transition-all duration-200",
+              isActive && "font-semibold"
+            )}>
+              {tab.label}
+            </span>
 
-            {/* 밑줄 애니메이션 */}
+            {/* 하단 밑줄 */}
             <span
               className={cn(
-                "absolute bottom-0 left-0 w-full h-[3px] rounded-full transition-all duration-300",
-                isActive ? "bg-primary" : "bg-transparent"
+                "absolute bottom-0 left-0 w-full h-[3px] transition-all duration-300",
+                isActive ? "bg-primary scale-x-100" : "bg-transparent scale-x-0"
               )}
             ></span>
           </button>

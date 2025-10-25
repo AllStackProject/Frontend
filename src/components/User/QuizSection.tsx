@@ -142,18 +142,10 @@ const QuizSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 타이틀 + 조직 정보 + 평균 정답률 */}
+      {/* 타이틀 + 평균 정답률 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-text-primary">AI 퀴즈 오답노트</h2>
-          <div className="flex items-center gap-2 px-3 py-1 bg-primary-light rounded-full">
-            <img
-              src="/dummy/woori-logo.png"
-              alt={currentOrgName}
-              className="w-5 h-5 rounded object-cover"
-            />
-            <span className="text-sm font-medium text-bg-page">{currentOrgName}</span>
-          </div>
           {filteredQuizResults.length > 0 && (
             <span className="text-sm text-text-muted">
               ({filteredQuizResults.length}개)

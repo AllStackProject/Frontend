@@ -62,7 +62,7 @@ export default function RegisterForm({
           성별 <span className="text-error">*</span>
         </label>
         <div className="flex gap-3">
-          {['male', 'female', 'other'].map((gender) => (
+          {['male', 'female'].map((gender) => (
             <label
               key={gender}
               className={`flex-1 flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${
@@ -81,7 +81,7 @@ export default function RegisterForm({
                 className="sr-only"
               />
               <span className="font-medium">
-                {gender === 'male' ? '남성' : gender === 'female' ? '여성' : '기타'}
+                {gender === 'male' ? '남성' : '여성'}
               </span>
             </label>
           ))}

@@ -1,5 +1,3 @@
-// src/components/Auth/TermsAgreement.tsx
-
 interface TermsAgreementProps {
   agreeAll: boolean;
   agreeTos: boolean;
@@ -24,15 +22,26 @@ export default function TermsAgreement({
 }: TermsAgreementProps) {
   return (
     <div className="space-y-4">
-      {/* 전체 동의 */}
-      <label className="flex items-center gap-3 p-4 bg-bg-section rounded-lg cursor-pointer">
+      {/* 전체 동의 - 연령대 선택 스타일과 동일 */}
+      <label
+        className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all ${
+          agreeAll
+            ? 'border-primary bg-primary/5'
+            : 'border-border-light hover:border-primary/50 hover:bg-bg-page'
+        }`}
+      >
         <input
           type="checkbox"
           checked={agreeAll}
           onChange={(e) => onChange('agreeAll', e.target.checked)}
-          className="w-5 h-5 text-primary focus:ring-primary rounded"
+          className="mt-1 w-4 h-4 text-primary focus:ring-primary rounded"
         />
-        <span className="text-text-primary font-semibold">전체동의</span>
+        <div className="flex-1">
+          <span className="text-text-primary font-semibold">전체동의</span>
+          <p className="text-sm text-text-muted mt-1">
+            이용약관, 개인정보 수집 및 이용, 마케팅 수신 동의(선택)
+          </p>
+        </div>
       </label>
 
       <div className="space-y-3">

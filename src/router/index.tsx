@@ -10,7 +10,8 @@ import Register from "@/pages/Auth/Register";
 import LoginPasswordReset from "@/pages/Auth/LoginPasswordReset";
 
 // 마이페이지 관련 import
-import MyPage from "@/pages/User/MyPage";
+import OrgMyPage from "@/pages/User/OrgMyPage";
+import UserMyPage from "@/pages/User/UserMyPage"
 import LearningSection from "@/components/User/LearningSection";
 import QuizSection from "@/components/User/QuizSection";
 import ScrapSection from "@/components/User/ScrapSection";
@@ -76,17 +77,24 @@ export const router = createBrowserRouter([
         element: <VideoDetailPage />,
       },
       {
-        path: "/mypage",
-        element: <MyPage />,
+        path: "/orgmypage",
+        element: <OrgMyPage />,
         children: [
           { path: "learning", element: <LearningSection /> },
           { path: "quiz", element: <QuizSection /> },
           { path: "scrap", element: <ScrapSection /> },
           { path: "comment", element: <CommentSection /> },
+          { index: true, element: <LearningSection /> }, // 기본 탭
+        ],
+      },
+      {
+        path: "/usermypage",
+        element: <UserMyPage />,
+        children: [
           { path: "profile", element: <ProfileSection /> },
           { path: "groups", element: <GroupSection /> },
           { path: "settings", element: <SettingsSection /> },
-          { index: true, element: <LearningSection /> }, // 기본 탭
+          { index: true, element: <GroupSection /> }, // 기본 탭
         ],
       },
     ],

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Building2 } from "lucide-react";
-import MyPageTabs from "@/components/User/MyPageTabs";
+import OrgMyPageTabs from "@/components/User/OrgMyPageTabs";
 import OrganizationSelectModal from "@/components/Common/Modals/OrganizationSelectModal";
 
-const MyPage: React.FC = () => {
+const OrgMyPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ const MyPage: React.FC = () => {
   });
 
   const handleTabChange = (tab: string) => {
-    navigate(`/mypage/${tab}`);
+    navigate(`/orgmypage/${tab}`);
   };
 
   const handleOrganizationClick = () => {
@@ -46,10 +46,15 @@ const MyPage: React.FC = () => {
         {/* 헤더 영역 */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-text-primary">마이페이지</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-text-primary">{currentOrganization.name} 활동</h1>
+              <p className="text-sm text-text-secondary mt-1">
+                학습 기록, 퀴즈, 스크랩, 댓글을 한눈에 확인하세요
+              </p>
+            </div>
             
             {/* 구분선 */}
-            <div className="w-px h-6 bg-border-light"></div>
+            <div className="w-px h-12 bg-border-light ml-2"></div>
             
             {/* 현재 조직 정보 */}
             <button
@@ -93,7 +98,7 @@ const MyPage: React.FC = () => {
         </div>
 
         {/* 탭 네비게이션 */}
-        <MyPageTabs activeTab={currentTab} onTabChange={handleTabChange} />
+        <OrgMyPageTabs activeTab={currentTab} onTabChange={handleTabChange} />
 
         {/* 콘텐츠 영역 */}
         <div className="mt-8 bg-bg-card border border-border-light rounded-xl shadow-base p-6 transition-all">
@@ -111,4 +116,4 @@ const MyPage: React.FC = () => {
   );
 };
 
-export default MyPage;
+export default OrgMyPage;

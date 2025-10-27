@@ -10,6 +10,12 @@ import {
   Bell,
   Menu,
   X,
+  Settings,
+  Building2,
+  User,
+  MessageSquare,
+  MessageCircle,
+  UserCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/Common/Modals/OrganizationSelectModal";
@@ -21,6 +27,10 @@ const Navbar = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [organization, setOrganization] = useState("우리 FISA");
+  
+  // TODO: 실제로는 API나 전역 상태에서 가져올 사용자 권한
+  const [isAdmin] = useState(true); // 관리자 여부
+  
   const [notifications, setNotifications] = useState([
     { id: 1, text: "📢 새로운 강의 'AI 기초반'이 업로드되었습니다.", read: false },
     { id: 2, text: "🎓 '데이터 분석' 수강평이 업데이트되었습니다.", read: false },
@@ -55,13 +65,30 @@ const Navbar = () => {
   // 안 읽은 알림 개수
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const menuItems = [
-  { icon: Home, label: "홈", path: "/home" },
-  { icon: BookOpen, label: "내 기록", path: "/mypage/learning" },
-  { icon: Bookmark, label: "스크랩", path: "/mypage/scrap" },
-  { icon: ShieldUser, label: "내 조직", path: "/mypage/groups" },
-  { icon: BellRing, label: "알림 설정", path: "/mypage/settings" },
-];
+  // 메뉴 아이템 타입 정의
+  type MenuItem = {
+    icon?: any;
+    label: string;
+    path?: string;
+    type?: "divider";
+    isParent?: boolean;
+    isChild?: boolean;
+  };
+
+  const menuItems: MenuItem[] = [
+    { icon: Home, label: "홈", path: "/home" },
+    { type: "divider", label: "" },
+    { icon: Building2, label: `${organization}에서 내 활동`, path: "/orgmypage", isParent: true },
+    { icon: BookOpen, label: "시청 기록", path: "/orgmypage/learning", isChild: true },
+    { icon: MessageSquare, label: "AI 퀴즈", path: "/orgmypage/quiz", isChild: true },
+    { icon: Bookmark, label: "스크랩", path: "/orgmypage/scrap", isChild: true },
+    { icon: MessageCircle, label: "작성한 댓글", path: "/orgmypage/comment", isChild: true },
+    { type: "divider", label: "" },
+    { icon: User, label: "마이페이지", path: "/usermypage", isParent: true },
+    { icon: ShieldUser, label: "내 조직", path: "/usermypage/groups", isChild: true },
+    { icon: UserCircle, label: "내 정보", path: "/usermypage/profile", isChild: true },
+    { icon: BellRing, label: "알림 설정", path: "/usermypage/settings", isChild: true },
+  ];
 
   return (
     <>
@@ -104,9 +131,28 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* 오른쪽: 알림 + 프로필 (중간 화면 이상) */}
-        <div className="hidden md:flex items-center gap-4 lg:gap-6 px-2 sm:px-4 md:px-8">
+        {/* 오른쪽: 관리자 버튼 + 알림 + 프로필 (중간 화면 이상) */}
+        <div className="hidden md:flex items-center gap-3 lg:gap-4 px-2 sm:px-4 md:px-8">
           
+          {/* 관리자 버튼 (관리자만 표시) */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="group relative flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border border-purple-200 hover:border-purple-300 rounded-lg transition-all duration-200 hover:shadow-md"
+              title="관리자 페이지"
+            >
+              <div className="relative">
+                <Settings 
+                  size={18} 
+                  className="text-purple-600 group-hover:rotate-90 transition-transform duration-300" 
+                />
+              </div>
+              <span className="text-xs font-semibold text-purple-700 hidden lg:block">
+                관리자
+              </span>
+            </button>
+          )}
+
           {/* 알림 */}
           <div className="relative" ref={notifRef}>
             <button
@@ -178,19 +224,44 @@ const Navbar = () => {
 
             {/* 프로필 드롭다운 */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-3 w-60 bg-white shadow-lg rounded-xl border border-gray-100 py-5 z-50 animate-fadeIn">
-                {menuItems.map(({ icon: Icon, label, path }) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(path)}
-                  >
-                    <Icon size={16} className="text-gray-500" />
-                    <span className="text-base text-gray-700">{label}</span>
-                  </div>
-                ))}
-                <hr className="my-2" />
-                <div className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 cursor-pointer">
+              <div className="absolute right-0 mt-3 w-60 bg-white shadow-lg rounded-xl border border-gray-100 py-3 z-50 animate-fadeIn">
+                {menuItems.map((item, index) => {
+                  // 구분선
+                  if (item.type === "divider") {
+                    return <hr key={`divider-${index}`} className="my-2 border-gray-200" />;
+                  }
+
+                  const Icon = item.icon;
+                  const isParent = item.isParent;
+                  const isChild = item.isChild;
+
+                  return (
+                    <div
+                      key={item.label}
+                      className={`flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        isChild ? "pl-8" : ""
+                      } ${isParent ? "font-semibold" : ""}`}
+                      onClick={() => {
+                        if (item.path) {
+                          navigate(item.path);
+                          setIsDropdownOpen(false);
+                        }
+                      }}
+                    >
+                      {Icon && (
+                        <Icon 
+                          size={isChild ? 14 : 16} 
+                          className={`${isParent ? "text-gray-700" : "text-gray-500"} ${isChild ? "opacity-70" : ""}`} 
+                        />
+                      )}
+                      <span className={`text-sm ${isParent ? "text-gray-800" : "text-gray-700"}`}>
+                        {item.label}
+                      </span>
+                    </div>
+                  );
+                })}
+                <hr className="my-2 border-gray-200" />
+                <div className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 cursor-pointer transition-colors">
                   로그아웃
                 </div>
               </div>
@@ -231,6 +302,25 @@ const Navbar = () => {
               </div>
             </div>
 
+            {/* 관리자 버튼 (모바일 - 관리자만 표시) */}
+            {isAdmin && (
+              <div className="mb-4">
+                <button
+                  onClick={() => {
+                    navigate("/admin");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border border-purple-200 rounded-lg transition-all"
+                >
+                  <div className="relative">
+                    <Settings size={18} className="text-purple-600" />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"></span>
+                  </div>
+                  <span className="text-sm font-semibold text-purple-700">관리자 페이지</span>
+                </button>
+              </div>
+            )}
+
             {/* 알림 */}
             <div className="mb-4">
               <div 
@@ -253,19 +343,41 @@ const Navbar = () => {
             </div>
 
             {/* 메뉴 */}
-            {menuItems.map(({ icon: Icon, label, path }) => (
-              <div
-                key={label}
-                className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer mb-1"
-                onClick={() => {
-                  navigate(path);
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                <Icon size={18} className="text-gray-500" />
-                <span className="text-sm text-gray-700">{label}</span>
-              </div>
-            ))}
+            {menuItems.map((item, index) => {
+              // 구분선
+              if (item.type === "divider") {
+                return <hr key={`mobile-divider-${index}`} className="my-3 border-gray-200" />;
+              }
+
+              const Icon = item.icon;
+              const isParent = item.isParent;
+              const isChild = item.isChild;
+
+              return (
+                <div
+                  key={item.label}
+                  className={`flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer mb-1 transition-colors ${
+                    isChild ? "pl-8" : ""
+                  } ${isParent ? "font-semibold" : ""}`}
+                  onClick={() => {
+                    if (item.path) {
+                      navigate(item.path);
+                      setIsMobileMenuOpen(false);
+                    }
+                  }}
+                >
+                  {Icon && (
+                    <Icon 
+                      size={isChild ? 16 : 18} 
+                      className={`${isParent ? "text-gray-700" : "text-gray-500"} ${isChild ? "opacity-70" : ""}`}
+                    />
+                  )}
+                  <span className={`text-sm ${isParent ? "text-gray-800" : "text-gray-700"}`}>
+                    {item.label}
+                  </span>
+                </div>
+              );
+            })}
 
             <hr className="my-4" />
             <div 

@@ -4,7 +4,7 @@ import { createBrowserRouter } from "react-router-dom";
 import Landing from "@/pages/Home/Landing";
 import Dashboard from "@/pages/Home/Dashboard";
 import VideoDetailPage from "@/pages/Video/VideoDetailPage";
-import LoginHome from "@/pages/Auth/LoginHome";
+import LoginHome from "@/pages/Auth/LoginPage";
 import LoginSelect from "@/pages/Auth/LoginSelect";
 import Register from "@/pages/Auth/Register";
 import LoginPasswordReset from "@/pages/Auth/LoginPasswordReset";

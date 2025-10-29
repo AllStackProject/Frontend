@@ -17,7 +17,7 @@ const VideoDetailPage: React.FC = () => {
     views: 1234,
     uploadDate: "2024.01.01",
     category: "해시태그",
-    videoUrl: "sample-video.mp4",
+    videoUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
   };
 
   const comments = [

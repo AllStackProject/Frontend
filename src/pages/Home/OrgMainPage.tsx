@@ -1,18 +1,18 @@
-import DashboardLayout from "@/layouts/DashboardLayout";
-import VideoGrid from "@/components/Home/VideoGrid";
+import OrgMainLayout from "@/layouts/OrgMainLayout";
+import VideoGrid from "@/components/Home/OrgMainVideoGrid";
 import HashtagSelect from "@/components/Home/HashtagSelect";
 import AdBanner from '@/components/Home/AdBanner';
 
 
 const Dashboard = () => {
   return (
-    <DashboardLayout>
+    <OrgMainLayout>
       <div className="px-8 py-6 w-full h-full">
         <AdBanner/>
         <HashtagSelect />
         <VideoGrid />
       </div>
-    </DashboardLayout>
+    </OrgMainLayout>
   );
 };
 

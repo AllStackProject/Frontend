@@ -2,11 +2,11 @@ interface AdBannerProps {
   image?: string;
 }
 
-const AdBanner = ({ image = "/dummy/AD2.png" }: AdBannerProps) => {
+const AdBanner = ({ image = "/dummy/AD.png" }: AdBannerProps) => {
   return (
     <div
       className="relative w-full h-60 rounded-2xl overflow-hidden shadow-xl group perspective-1000 mb-6 select-none cursor-default"
-      onClick={(e) => e.preventDefault()} // 클릭 이벤트 차단
+      onClick={(e) => e.preventDefault()}
     >
       {/* 그라데이션 오버레이 */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 transform transition-transform duration-500 pointer-events-none"></div>

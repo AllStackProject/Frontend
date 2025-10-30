@@ -99,8 +99,7 @@ const Navbar = () => {
           className="flex items-center gap-2 px-2 sm:px-4 md:px-8 cursor-pointer hover:opacity-80 transition"
           onClick={() => navigate("/home")}
         >
-          <img src="/logo.png" alt="Privideo" className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11" />
-          <p className="text-base sm:text-lg font-semibold text-gray-800 hidden sm:block">Privideo</p>
+          <img src="/logo.png" alt="Privideo" className="w-40" />
         </div>
 
         {/* 중앙: 검색창 (데스크톱만 표시) */}

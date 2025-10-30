@@ -1,53 +1,214 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause, Settings, Maximize } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import Hls from "hls.js";
+import { Play, Pause, Settings, Maximize, Volume2, Volume1, VolumeX } from "lucide-react";
+import { useVideoAnalytics } from "@/hooks/Video/useVideoAnalytics";
 
 interface VideoPlayerProps {
   videoUrl: string;
+  userId?: number;
+  videoId?: number;
+  orgId?: number;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  videoUrl,
+  userId = 1,
+  videoId = 1001,
+  orgId,
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSubMenu, setShowSubMenu] = useState<string | null>(null);
   const [subtitle, setSubtitle] = useState(true);
-  const [quality, setQuality] = useState("1080p");
+  const [quality, setQuality] = useState("자동");
   const [playbackRate, setPlaybackRate] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(1357);
+  const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [volume, setVolume] = useState(0.7);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [thumbnail, setThumbnail] = useState<string>("");
   const settingsRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const hideControlsTimeout = useRef<number | null>(null);
 
-  // 비디오 시간 업데이트
+  const analytics = useVideoAnalytics({
+    userId,
+    videoId,
+    orgId,
+    getVideoEl: () => videoRef.current,
+  });
+
+  // ---- 썸네일 생성
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const updateTime = () => {
-      if (!isDragging) {
-        setCurrentTime(video.currentTime);
-        setProgress((video.currentTime / video.duration) * 100);
+    const generateThumbnail = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        setThumbnail(canvas.toDataURL("image/jpeg"));
       }
     };
 
-    const updateDuration = () => {
-      if (video.duration && !isNaN(video.duration)) {
-        setDuration(video.duration);
+    video.addEventListener("loadeddata", generateThumbnail);
+    return () => video.removeEventListener("loadeddata", generateThumbnail);
+  }, []);
+
+  // ---- 컨트롤러 자동 숨김/표시
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowControls(true);
+      
+      // 기존 타이머 제거
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+
+      // 재생 중일 때만 자동 숨김 (3초 후)
+      if (isPlaying) {
+        hideControlsTimeout.current = window.setTimeout(() => {
+          setShowControls(false);
+        }, 3000);
       }
     };
 
-    video.addEventListener("timeupdate", updateTime);
-    video.addEventListener("loadedmetadata", updateDuration);
+    const handleMouseLeave = () => {
+      // 재생 중일 때만 즉시 숨김
+      if (isPlaying) {
+        if (hideControlsTimeout.current) {
+          clearTimeout(hideControlsTimeout.current);
+        }
+        hideControlsTimeout.current = window.setTimeout(() => {
+          setShowControls(false);
+        }, 1000);
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("mousemove", handleMouseMove);
+      container.addEventListener("mouseleave", handleMouseLeave);
+    }
 
     return () => {
-      video.removeEventListener("timeupdate", updateTime);
-      video.removeEventListener("loadedmetadata", updateDuration);
+      if (container) {
+        container.removeEventListener("mousemove", handleMouseMove);
+        container.removeEventListener("mouseleave", handleMouseLeave);
+      }
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+    };
+  }, [isPlaying]);
+
+  // ---- 재생 상태 변경 시 컨트롤러 표시
+  useEffect(() => {
+    if (!isPlaying) {
+      setShowControls(true);
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+    }
+  }, [isPlaying]);
+
+  // ---- HLS.js 초기화
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let hls: Hls | null = null;
+
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = videoUrl;
+    } else if (Hls.isSupported()) {
+      hls = new Hls({ enableWorker: true });
+      hls.loadSource(videoUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => setQuality("자동"));
+      hls.on(Hls.Events.ERROR, (_, data) => console.error("[HLS] Error:", data));
+    } else {
+      video.src = videoUrl;
+    }
+
+    return () => {
+      if (hls) hls.destroy();
+    };
+  }, [videoUrl]);
+
+  // ---- 비디오 기본 상태
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.volume = volume;
+    v.muted = isMuted;
+  }, [volume, isMuted]);
+
+  // ---- 메타데이터 / 타임 업데이트
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+
+    const handleLoaded = () => setDuration(v.duration || 0);
+    const handleTimeUpdate = () => {
+      if (!isDragging && v.duration > 0) {
+        setCurrentTime(v.currentTime);
+        setProgress((v.currentTime / v.duration) * 100);
+      }
+    };
+
+    v.addEventListener("loadedmetadata", handleLoaded);
+    v.addEventListener("timeupdate", handleTimeUpdate);
+    return () => {
+      v.removeEventListener("loadedmetadata", handleLoaded);
+      v.removeEventListener("timeupdate", handleTimeUpdate);
     };
   }, [isDragging]);
 
-  // 외부 클릭 시 설정 닫기
+  // ---- Analytics 이벤트 연결
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+      analytics.onPlay();
+    };
+    const handlePause = () => {
+      setIsPlaying(false);
+      if (!isDragging) analytics.onPause();
+    };
+    const handleSeeking = () => analytics.onSeeking();
+    const handleSeeked = () => analytics.onSeeked();
+    const handleEnded = () => {
+      setIsPlaying(false);
+      analytics.onEnded();
+    };
+
+    v.addEventListener("play", handlePlay);
+    v.addEventListener("pause", handlePause);
+    v.addEventListener("seeking", handleSeeking);
+    v.addEventListener("seeked", handleSeeked);
+    v.addEventListener("ended", handleEnded);
+
+    return () => {
+      v.removeEventListener("play", handlePlay);
+      v.removeEventListener("pause", handlePause);
+      v.removeEventListener("seeking", handleSeeking);
+      v.removeEventListener("seeked", handleSeeked);
+      v.removeEventListener("ended", handleEnded);
+    };
+  }, [analytics, isDragging]);
+
+  // ---- 외부 클릭 시 설정 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
@@ -59,22 +220,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showSettings]);
 
-  // 드래그 진행바 제어
+  // ---- 진행바 드래그
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !progressRef.current) return;
+      if (!isDragging || !progressRef.current || !videoRef.current) return;
       const rect = progressRef.current.getBoundingClientRect();
       const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
       const pct = (x / rect.width) * 100;
-      const newTime = (pct / 100) * duration;
+      const newTime = (pct / 100) * (videoRef.current.duration || 0);
       setProgress(pct);
       setCurrentTime(newTime);
     };
     const handleMouseUp = () => {
-      if (isDragging) {
-        if (videoRef.current?.duration) {
-          videoRef.current.currentTime = currentTime;
-        }
+      if (isDragging && videoRef.current) {
+        videoRef.current.currentTime = currentTime;
         setIsDragging(false);
       }
     };
@@ -86,55 +245,64 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, currentTime, duration]);
+  }, [isDragging, currentTime]);
 
+  // ---- 재생/정지/전체화면
   const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (isPlaying) videoRef.current.pause();
-    else videoRef.current.play();
-    setIsPlaying(!isPlaying);
+    const v = videoRef.current;
+    if (!v) return;
+    isPlaying ? v.pause() : v.play();
   };
 
   const toggleFullscreen = () => {
-    if (!videoRef.current) return;
+    const v = videoRef.current;
+    if (!v) return;
     if (document.fullscreenElement) document.exitFullscreen();
-    else videoRef.current.requestFullscreen();
+    else v.requestFullscreen();
+  };
+
+  // ---- 볼륨 관련
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const vol = Number(e.target.value);
+    setVolume(vol);
+    if (vol > 0 && isMuted) setIsMuted(false);
+  };
+
+  const VolumeIcon = () => {
+    if (isMuted || volume === 0) return <VolumeX size={20} />;
+    if (volume < 0.5) return <Volume1 size={20} />;
+    return <Volume2 size={20} />;
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current) return;
+    if (!progressRef.current || !videoRef.current) return;
     const rect = progressRef.current.getBoundingClientRect();
     const pct = ((e.clientX - rect.left) / rect.width) * 100;
-    const newTime = (pct / 100) * duration;
-    if (videoRef.current?.duration) videoRef.current.currentTime = newTime;
+    const newTime = (pct / 100) * (videoRef.current.duration || 0);
+    videoRef.current.currentTime = newTime;
     setProgress(pct);
     setCurrentTime(newTime);
   };
 
   const formatTime = (s: number) => {
-    if (isNaN(s)) return "0:00";
+    if (!s || isNaN(s)) return "0:00";
     const m = Math.floor(s / 60);
     const sec = Math.floor(s % 60);
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  // ---- 설정 메뉴
   const settingsMenu = [
-    { id: "subtitle", label: "자막", value: subtitle ? "ON" : "OFF" },
-    { id: "quality", label: "품질", value: quality },
+    { id: "quality", label: "화질", value: quality },
     { id: "speed", label: "재생 속도", value: `${playbackRate}x` },
   ];
 
-  const subMenus = {
-    subtitle: [
-      { label: "ON", value: true },
-      { label: "OFF", value: false },
-    ],
-    quality: [
-      { label: "1080p", value: "1080p" },
-      { label: "720p", value: "720p" },
-      { label: "480p", value: "480p" },
-      { label: "360p", value: "360p" },
-    ],
+  const subMenus: Record<string, { label: string; value: any }[]> = {
+    quality: [{ label: "자동", value: "auto" }],
     speed: [
       { label: "2.0x", value: 2 },
       { label: "1.5x", value: 1.5 },
@@ -147,7 +315,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
 
   const handleSubMenuClick = (menuId: string, value: any) => {
     if (menuId === "subtitle") setSubtitle(value);
-    if (menuId === "quality") setQuality(value);
     if (menuId === "speed" && videoRef.current) {
       videoRef.current.playbackRate = value;
       setPlaybackRate(value);
@@ -157,18 +324,39 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
   };
 
   return (
-    <div className="relative w-full bg-black rounded-xl overflow-hidden shadow-md">
+    <div 
+      ref={containerRef}
+      className="relative w-full bg-black rounded-xl overflow-hidden shadow-md group"
+      style={{ cursor: showControls ? 'default' : 'none' }}
+    >
       {/* 비디오 */}
       <video
         ref={videoRef}
-        className="w-full aspect-video cursor-pointer"
+        className="w-full aspect-video cursor-pointer bg-black"
         onClick={togglePlay}
-      >
-        <source src={videoUrl} type="video/mp4" />
-      </video>
+        playsInline
+        preload="metadata"
+        poster={thumbnail || undefined}
+      />
 
-      {/* 컨트롤 */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex items-center gap-3">
+      {/* 중앙 재생 버튼 (일시정지 시만 표시) */}
+      {!isPlaying && showControls && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center cursor-pointer"
+          onClick={togglePlay}
+        >
+          <div className="bg-black/50 rounded-full p-6 hover:bg-black/70 transition-all hover:scale-110">
+            <Play size={48} strokeWidth={2} fill="white" className="text-white" />
+          </div>
+        </div>
+      )}
+
+      {/* 컨트롤러 */}
+      <div 
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4 flex items-center gap-3 transition-opacity duration-300 ${
+          showControls ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
         {/* ▶ 재생 버튼 */}
         <button
           onClick={togglePlay}
@@ -181,16 +369,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
           )}
         </button>
 
-        {/* 시간 */}
-        <div className="text-white text-xs font-medium min-w-[80px] flex items-center gap-1 select-none">
+        {/* 시간 표시 */}
+        <div className="text-white text-xs font-medium min-w-[90px] flex items-center gap-1 select-none">
           <span>{formatTime(currentTime)}</span>
           <span className="text-gray-400">/</span>
           <span>{formatTime(duration)}</span>
         </div>
 
         {/* 진행바 */}
-        <div className="flex-1 h-[6px] bg-white/30 rounded cursor-pointer relative group"
+        <div
           ref={progressRef}
+          className="flex-1 h-[6px] bg-white/30 rounded cursor-pointer relative group/progress"
           onClick={handleProgressClick}
         >
           <div
@@ -198,15 +387,43 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
             style={{ width: `${progress}%` }}
           >
             <div
-              className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-yellow-400 rounded-full shadow cursor-grab group-hover:scale-110 transition-transform"
+              className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-yellow-400 rounded-full shadow cursor-grab group-hover/progress:scale-110 transition-transform"
               onMouseDown={() => setIsDragging(true)}
-            ></div>
+            />
           </div>
         </div>
 
-        {/* 오른쪽 버튼 */}
+        {/* 🔊 볼륨 컨트롤 */}
+        <div className="relative flex items-center ml-2 group/volume text-white">
+          {/* 아이콘 */}
+          <button
+            onClick={toggleMute}
+            className="hover:text-yellow-400 p-2 rounded transition"
+          >
+            <VolumeIcon />
+          </button>
+
+          {/* 슬라이더 (hover 시만 표시) */}
+          <div
+            className="overflow-hidden transition-all duration-300 ease-in-out w-0 opacity-0 group-hover/volume:w-20 group-hover/volume:opacity-100"
+          >
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={isMuted ? 0 : volume}
+              onChange={handleVolumeChange}
+              className="ml-2 w-16 h-1 cursor-pointer accent-yellow-400 appearance-none bg-white/30 rounded-full"
+              style={{
+                background: `linear-gradient(to right, #facc15 0%, #facc15 ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) 100%)`
+              }}
+            />
+          </div>
+        </div>
+
+        {/* 설정 / 전체화면 */}
         <div className="flex items-center gap-2 ml-2">
-          {/* 설정 */}
           <div className="relative" ref={settingsRef}>
             <button
               onClick={() => {
@@ -218,7 +435,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
               <Settings size={20} />
             </button>
 
-            {/* 설정 메뉴 */}
             {showSettings && (
               <div className="absolute bottom-full right-0 mb-3 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-[260px] overflow-y-auto z-10">
                 {showSubMenu ? (
@@ -229,26 +445,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
                     >
                       ← {settingsMenu.find((m) => m.id === showSubMenu)?.label}
                     </div>
-                    {subMenus[showSubMenu as keyof typeof subMenus]?.map(
-                      (item, i) => (
-                        <div
-                          key={i}
-                          onClick={() => handleSubMenuClick(showSubMenu, item.value)}
-                          className={`px-4 py-2 text-sm cursor-pointer flex justify-between hover:bg-gray-100 ${
-                            (showSubMenu === "subtitle" &&
-                              item.value === subtitle) ||
-                            (showSubMenu === "quality" &&
-                              item.value === quality) ||
-                            (showSubMenu === "speed" &&
-                              item.value === playbackRate)
-                              ? "bg-blue-50 text-blue-600 font-semibold"
-                              : "text-gray-700"
+                    {subMenus[showSubMenu]?.map((item, i) => (
+                      <div
+                        key={i}
+                        onClick={() => handleSubMenuClick(showSubMenu, item.value)}
+                        className={`px-4 py-2 text-sm cursor-pointer flex justify-between hover:bg-gray-100 ${(showSubMenu === "subtitle" && item.value === subtitle) ||
+                            (showSubMenu === "speed" && item.value === playbackRate)
+                            ? "bg-blue-50 text-blue-600 font-semibold"
+                            : "text-gray-700"
                           }`}
-                        >
-                          {item.label}
-                        </div>
-                      )
-                    )}
+                      >
+                        {item.label}
+                      </div>
+                    ))}
                   </>
                 ) : (
                   settingsMenu.map((option) => (
@@ -268,7 +477,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl }) => {
             )}
           </div>
 
-          {/* 전체 화면 */}
           <button
             onClick={toggleFullscreen}
             className="text-white hover:text-yellow-400 p-2 rounded transition"

@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
-import { startSession, flushSession } from "@/api/Video/session";
+import { flushSession } from "@/api/Video/session";
 import { sendVideoEvents } from "@/api/Video/event";
 
 export type AnalyticsEventType = "JOIN" | "PLAY" | "PAUSE" | "SEEK" | "END" | "LEAVE";
 export type AnalyticsEvent = {
     type: AnalyticsEventType;
-    position: number;      // 초
-    timestamp: number;     // epoch ms
+    position: number;      
+    timestamp: number;   
     metadata?: Record<string, any>;
 };
 
@@ -28,7 +28,7 @@ export function useVideoAnalytics({ userId, videoId, orgId, getVideoEl }: Params
     const isPlaying = useRef(false);
     const isSeeking = useRef(false);
     const endedSent = useRef(false);
-    const lastPos = useRef(0);           // 마지막 기준 위치(초)
+    const lastPos = useRef(0);           
     const startedAt = useRef(Date.now());
 
     // ===== 공통 헬퍼 =====
@@ -56,11 +56,6 @@ export function useVideoAnalytics({ userId, videoId, orgId, getVideoEl }: Params
         recentPositionSec: v.currentTime || 0,
         durationSec: v.duration || 0,
     });
-
-    const flushWithBeacon = (body: any) => {
-        console.log("📋 [MOCK - 콘솔만] Beacon 전송", body);
-        // 실제 전송 없음 - 콘솔 로그만
-    };
 
     // 이벤트 버퍼를 서버로 전송
     const sendEventBuffer = async () => {

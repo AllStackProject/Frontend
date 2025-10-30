@@ -1,62 +1,53 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Eye, Calendar, Hash } from "lucide-react";
 
 interface VideoInfoProps {
   title: string;
   channel: string;
   views: number;
   uploadDate: string;
-  category: string;
+  categories?: string[];
 }
 
 const VideoInfo: React.FC<VideoInfoProps> = ({
   title,
-  channel,
   views,
   uploadDate,
-  category,
+  categories = [],
 }) => {
-  const navigate = useNavigate();
-
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-      {/* 메타데이터 */}
-      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-        {/* 조직명 */}
-        <button
-          onClick={() => navigate("/home")}
-          className="text-gray-700 font-medium hover:text-[#3674B5] transition-colors cursor-pointer"
-        >
-          {channel}
-        </button>
-
-        <span className="text-gray-300">|</span>
-
-        {/* 날짜 */}
-        <span className="text-gray-500">{uploadDate}</span>
-
-        <span className="text-gray-300">|</span>
-
-        {/* 카테고리 (해시태그) */}
-        <button
-          onClick={() => navigate("/home")}
-          className="text-[#3674B5] hover:underline cursor-pointer"
-        >
-          #{category}
-        </button>
-
-        <span className="text-gray-300">|</span>
-
-        {/* 조회수 */}
-        <span className="text-gray-500">
-          조회수 {views.toLocaleString()}
-        </span>
-      </div>
-
+    <div className="bg-bg-card border border-border-light rounded-xl shadow-base p-6">
       {/* 제목 */}
-      <h1 className="text-2xl font-semibold text-gray-900 leading-snug">
+      <h1 className="text-xl font-bold text-text-primary mb-3 leading-snug">
         {title}
       </h1>
+
+      {/* 해시태그 */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {categories.map((tag, idx) => (
+            <span
+              key={idx}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full text-primary border border-border-light"
+            >
+              <Hash size={12} />
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* 메타데이터 */}
+      <div className="flex flex-wrap items-center gap-4 mt-5 text-sm text-text-secondary">
+        <div className="flex items-center gap-1.5">
+          <Eye size={16} className="text-text-muted" />
+          <span>{views.toLocaleString()}회 시청</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Calendar size={16} className="text-text-muted" />
+          <span>{uploadDate}</span>
+        </div>
+      </div>
     </div>
   );
 };

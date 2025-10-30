@@ -3,7 +3,6 @@ import { createBrowserRouter } from "react-router-dom";
 // 페이지 import
 import Landing from "@/pages/Home/Landing";
 import OrgMainPage from "@/pages/Home/OrgMainPage";
-import VideoListPage from "@/pages/Home/VideoListPage";
 import VideoDetailPage from "@/pages/Video/VideoDetailPage";
 import LoginHome from "@/pages/Auth/LoginPage";
 import LoginSelect from "@/pages/Auth/LoginSelect";
@@ -73,10 +72,6 @@ export const router = createBrowserRouter([
   {
     element: <UserLayout />,
     children: [
-      {
-        path: "/videoList",
-        element: <VideoListPage />,
-      },
       {
         path: "/video/:id",
         element: <VideoDetailPage />,

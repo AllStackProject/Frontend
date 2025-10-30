@@ -24,22 +24,22 @@ interface VideoListSectionProps {
 type SortType = "latest" | "popular" | "recommended";
 
 const DUMMY_VIDEOS: Video[] = Array.from({ length: 50 }, (_, i) => {
-  const randomThumb = Math.floor(Math.random() * 9) + 1;
+    const randomThumb = Math.floor(Math.random() * 9) + 1;
 
-  return {
-    id: `${i + 1}`,
-    title: `예시 동영상 ${i + 1} — 동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라 만세 무궁화 삼천리 화려강산`,
-    thumbnail: `/dummy/thum${randomThumb}.png`,
-    duration: `${Math.floor(Math.random() * 15) + 3}:${Math.floor(
-      Math.random() * 60
-    )
-      .toString()
-      .padStart(2, "0")}`,
-    views: Math.floor(Math.random() * 50000),
-    uploadDate: `2025-0${(i % 9) + 1}-10`,
-    hashtags: i % 3 === 0 ? ["AI", "보안"] : ["교육", "테크"],
-    isFavorite: i % 2 === 0,
-  };
+    return {
+        id: `${i + 1}`,
+        title: `예시 동영상 ${i + 1} — 동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라 만세 무궁화 삼천리 화려강산`,
+        thumbnail: `/dummy/thum${randomThumb}.png`,
+        duration: `${Math.floor(Math.random() * 15) + 3}:${Math.floor(
+            Math.random() * 60
+        )
+            .toString()
+            .padStart(2, "0")}`,
+        views: Math.floor(Math.random() * 50000),
+        uploadDate: `2025-0${(i % 9) + 1}-10`,
+        hashtags: i % 3 === 0 ? ["AI", "보안"] : ["교육", "테크"],
+        isFavorite: i % 2 === 0,
+    };
 });
 
 const VideoListSection: React.FC<VideoListSectionProps> = ({
@@ -47,7 +47,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
     onFavoriteToggle,
 }) => {
     const [searchParams] = useSearchParams();
-    const [sortType, setSortType] = useState<SortType>("latest");
+    const [sortType, setSortType] = useState<SortType>("recommended");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
@@ -64,7 +64,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
     // 정렬 적용
     const sortedVideos = useMemo(() => {
         let videos = [...filteredByTag];
-        
+
         switch (sortType) {
             case "latest":
                 return videos.sort((a, b) => (a.uploadDate! < b.uploadDate! ? 1 : -1));
@@ -80,7 +80,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
     // 카테고리별 필터링 (URL 파라미터 기반)
     const filteredVideos = useMemo(() => {
         if (!category) return sortedVideos;
-        
+
         switch (category) {
             case "new":
                 return sortedVideos.sort((a, b) => (a.uploadDate! < b.uploadDate! ? 1 : -1));
@@ -154,11 +154,11 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
     return (
         <div className="w-full">
             {/* 헤더 + 해시태그 + 필터 */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                {/* 해시태그 */}
-                <div className="flex items-center gap-3 mb-5">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-10 mt-10">
+                {/* 해시태그 + 영상 개수 */}
+                <div className="flex items-center gap-3 sm:mb-0 mb-2">
                     <HashtagSelect />
-                    <span className="text-sm text-text-muted font-medium px-3 py-1 bg-gray-100 rounded-full">
+                    <span className="text-sm text-text-muted font-medium px-3 py-1 bg-gray-100 rounded-full flex items-center justify-center">
                         {filteredVideos.length}개
                     </span>
                 </div>
@@ -173,12 +173,12 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                         <span className="font-medium text-text-primary">
                             {sortOptions[sortType].label}
                         </span>
-                        <HiChevronDown 
-                            className={`text-text-secondary transition-transform ml-auto ${
-                                isDropdownOpen ? "rotate-180" : ""
-                            }`}
+                        <HiChevronDown
+                            className={`text-text-secondary transition-transform ml-auto ${isDropdownOpen ? "rotate-180" : ""
+                                }`}
                         />
                     </button>
+
 
                     {/* 드롭다운 메뉴 */}
                     {isDropdownOpen && (
@@ -194,16 +194,14 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                                 {/* 추천순 */}
                                 <button
                                     onClick={() => handleSortChange("recommended")}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
-                                        sortType === "recommended" ? "bg-gradient-to-br" : ""
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${sortType === "recommended" ? "bg-gradient-to-br" : ""
+                                        }`}
                                 >
                                     <div
-                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                            sortType === "recommended"
+                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${sortType === "recommended"
                                                 ? "border-primary"
                                                 : "border-gray-300"
-                                        }`}
+                                            }`}
                                     >
                                         {sortType === "recommended" && (
                                             <div className="w-3 h-3 rounded-full bg-primary" />
@@ -218,16 +216,14 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                                 {/* 인기순 */}
                                 <button
                                     onClick={() => handleSortChange("popular")}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
-                                        sortType === "popular" ? "bg-gradient-to-br" : ""
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${sortType === "popular" ? "bg-gradient-to-br" : ""
+                                        }`}
                                 >
                                     <div
-                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                            sortType === "popular"
+                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${sortType === "popular"
                                                 ? "border-primary"
                                                 : "border-gray-300"
-                                        }`}
+                                            }`}
                                     >
                                         {sortType === "popular" && (
                                             <div className="w-3 h-3 rounded-full bg-primary" />
@@ -242,16 +238,14 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                                 {/* 최신순 */}
                                 <button
                                     onClick={() => handleSortChange("latest")}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
-                                        sortType === "latest" ? "bg-bg-gradient-to-br" : ""
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${sortType === "latest" ? "bg-bg-gradient-to-br" : ""
+                                        }`}
                                 >
                                     <div
-                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                            sortType === "latest"
+                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${sortType === "latest"
                                                 ? "border-primary"
                                                 : "border-gray-300"
-                                        }`}
+                                            }`}
                                     >
                                         {sortType === "latest" && (
                                             <div className="w-3 h-3 rounded-full bg-primary" />
@@ -272,8 +266,8 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
             {filteredVideos.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-text-muted py-32">
                     <p className="text-lg font-medium">
-                        {sortType === "recommended" 
-                            ? "추천 영상이 없습니다" 
+                        {sortType === "recommended"
+                            ? "추천 영상이 없습니다"
                             : "해당 태그의 영상이 없습니다"}
                     </p>
                     <p className="text-sm text-text-secondary mt-2">
@@ -320,11 +314,10 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                                         ) : (
                                             <button
                                                 onClick={() => setCurrentPage(page as number)}
-                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                                                    currentPage === page
+                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${currentPage === page
                                                         ? "bg-primary text-white shadow-sm"
                                                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                                }`}
+                                                    }`}
                                             >
                                                 {page}
                                             </button>

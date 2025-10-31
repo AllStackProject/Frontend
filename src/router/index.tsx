@@ -8,6 +8,7 @@ import LoginHome from "@/pages/Auth/LoginPage";
 import LoginSelect from "@/pages/Auth/LoginSelect";
 import Register from "@/pages/Auth/Register";
 import LoginPasswordReset from "@/pages/Auth/LoginPasswordReset";
+import NoticePage from "@/pages/Notice/NoticePage";
 
 // 마이페이지 관련 import
 import OrgMyPage from "@/pages/User/OrgMyPage";
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
   {
     path: "/home",
     element: <OrgMainPage />,
+  },
+  {
+        path: "/notice",
+        element: <NoticePage />,
   },
 
   // -----------------------------

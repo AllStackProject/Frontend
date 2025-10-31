@@ -5,6 +5,7 @@ import {
   ShieldUser,
   BookOpen,
   BellRing,
+  Megaphone,
   Bookmark,
   Home,
   Bell,
@@ -27,10 +28,10 @@ const Navbar = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [organization, setOrganization] = useState("우리 FISA");
-  
+
   // TODO: 실제로는 API나 전역 상태에서 가져올 사용자 권한
   const [isAdmin] = useState(true); // 관리자 여부
-  
+
   const [notifications, setNotifications] = useState([
     { id: 1, text: "📢 새로운 강의 'AI 기초반'이 업로드되었습니다.", read: false },
     { id: 2, text: "🎓 '데이터 분석' 수강평이 업데이트되었습니다.", read: false },
@@ -42,7 +43,7 @@ const Navbar = () => {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
- 
+
   // 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -93,7 +94,7 @@ const Navbar = () => {
   return (
     <>
       <header className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 md:py-4 bg-white border-b border-gray-200 sticky top-0 z-50 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300">
-        
+
         {/* 왼쪽: 로고 */}
         <div
           className="flex items-center gap-2 px-2 sm:px-4 md:px-8 cursor-pointer hover:opacity-80 transition"
@@ -105,7 +106,7 @@ const Navbar = () => {
         {/* 중앙: 검색창 (데스크톱만 표시) */}
         <div className="hidden lg:flex flex-1 justify-center px-4">
           <div className="flex items-center bg-white rounded-full px-4 py-2.5 w-full max-w-2xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100">
-            
+
             {/* 조직 선택 */}
             <div
               className="flex items-center gap-2 pr-3 border-r border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
@@ -132,7 +133,7 @@ const Navbar = () => {
 
         {/* 오른쪽: 관리자 버튼 + 알림 + 프로필 (중간 화면 이상) */}
         <div className="hidden md:flex items-center gap-3 lg:gap-4 px-2 sm:px-4 md:px-8">
-          
+
           {/* 관리자 버튼 (관리자만 표시) */}
           {isAdmin && (
             <button
@@ -141,9 +142,9 @@ const Navbar = () => {
               title="관리자 페이지"
             >
               <div className="relative">
-                <Settings 
-                  size={18} 
-                  className="text-purple-600 group-hover:rotate-90 transition-transform duration-300" 
+                <Settings
+                  size={18}
+                  className="text-purple-600 group-hover:rotate-90 transition-transform duration-300"
                 />
               </div>
               <span className="text-xs font-semibold text-purple-700 hidden lg:block">
@@ -152,15 +153,25 @@ const Navbar = () => {
             </button>
           )}
 
+
+          {/* 공지사항 */}
+          <button
+            onClick={() => navigate("/notice")}
+            className="relative p-2 text-gray-600 hover:text-blue-500 transition rounded-lg hover:bg-gray-50"
+            title="공지사항"
+          >
+            <Megaphone size={22} />
+          </button>
+
           {/* 알림 */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="relative text-base text-gray-600 hover:text-blue-500 transition"
+              className="relative p-2 text-gray-600 hover:text-blue-500 transition rounded-lg hover:bg-gray-50"
             >
-              <Bell size={20} className="md:w-[22px] md:h-[22px]" />
+              <Bell size={22} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
               )}
             </button>
 
@@ -184,11 +195,10 @@ const Navbar = () => {
                     notifications.map((n) => (
                       <div
                         key={n.id}
-                        className={`px-4 py-2 text-sm cursor-pointer transition ${
-                          n.read
+                        className={`px-4 py-2 text-sm cursor-pointer transition ${n.read
                             ? "text-gray-600 hover:bg-gray-50"
                             : "bg-blue-50 text-gray-800 font-semibold hover:bg-blue-100"
-                        }`}
+                          }`}
                         onClick={() =>
                           setNotifications((prev) =>
                             prev.map((m) =>
@@ -209,6 +219,7 @@ const Navbar = () => {
               </div>
             )}
           </div>
+
 
           {/* 프로필 */}
           <div className="relative" ref={dropdownRef}>
@@ -237,9 +248,8 @@ const Navbar = () => {
                   return (
                     <div
                       key={item.label}
-                      className={`flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors ${
-                        isChild ? "pl-8" : ""
-                      } ${isParent ? "font-semibold" : ""}`}
+                      className={`flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors ${isChild ? "pl-8" : ""
+                        } ${isParent ? "font-semibold" : ""}`}
                       onClick={() => {
                         if (item.path) {
                           navigate(item.path);
@@ -248,9 +258,9 @@ const Navbar = () => {
                       }}
                     >
                       {Icon && (
-                        <Icon 
-                          size={isChild ? 14 : 16} 
-                          className={`${isParent ? "text-gray-700" : "text-gray-500"} ${isChild ? "opacity-70" : ""}`} 
+                        <Icon
+                          size={isChild ? 14 : 16}
+                          className={`${isParent ? "text-gray-700" : "text-gray-500"} ${isChild ? "opacity-70" : ""}`}
                         />
                       )}
                       <span className={`text-sm ${isParent ? "text-gray-800" : "text-gray-700"}`}>
@@ -284,12 +294,12 @@ const Navbar = () => {
 
       {/* 모바일 메뉴 */}
       {isMobileMenuOpen && (
-        <div 
-          className="md:hidden fixed inset-0 top-[57px] bg-black bg-opacity-50 z-40" 
+        <div
+          className="md:hidden fixed inset-0 top-[57px] bg-black bg-opacity-50 z-40"
           onClick={() => setIsMobileMenuOpen(false)}
         >
-          <div 
-            className="bg-white w-64 h-full shadow-lg p-4 overflow-y-auto" 
+          <div
+            className="bg-white w-64 h-full shadow-lg p-4 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 프로필 정보 */}
@@ -322,7 +332,7 @@ const Navbar = () => {
 
             {/* 알림 */}
             <div className="mb-4">
-              <div 
+              <div
                 className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
                 onClick={() => {
                   setIsMobileMenuOpen(false);
@@ -355,9 +365,8 @@ const Navbar = () => {
               return (
                 <div
                   key={item.label}
-                  className={`flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer mb-1 transition-colors ${
-                    isChild ? "pl-8" : ""
-                  } ${isParent ? "font-semibold" : ""}`}
+                  className={`flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer mb-1 transition-colors ${isChild ? "pl-8" : ""
+                    } ${isParent ? "font-semibold" : ""}`}
                   onClick={() => {
                     if (item.path) {
                       navigate(item.path);
@@ -366,8 +375,8 @@ const Navbar = () => {
                   }}
                 >
                   {Icon && (
-                    <Icon 
-                      size={isChild ? 16 : 18} 
+                    <Icon
+                      size={isChild ? 16 : 18}
                       className={`${isParent ? "text-gray-700" : "text-gray-500"} ${isChild ? "opacity-70" : ""}`}
                     />
                   )}
@@ -379,7 +388,7 @@ const Navbar = () => {
             })}
 
             <hr className="my-4" />
-            <div 
+            <div
               className="px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 rounded-lg cursor-pointer"
               onClick={() => setIsMobileMenuOpen(false)}
             >

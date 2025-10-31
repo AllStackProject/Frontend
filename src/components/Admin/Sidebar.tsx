@@ -49,16 +49,15 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = "admin" }) => {
     >
       {/* 조직 정보 */}
       <div className="flex items-center gap-3 p-3 border-b border-gray-600 flex-shrink-0">
-        <div className="w-10 h-10 bg-gradient-to-br flex items-center justify-center flex-shrink-0">
+        <div className="w-40 bg-gradient-to-br flex items-center justify-center flex-shrink-0">
           <img
-            src="/logo.png"
+            src="/adminlogo.png"
             alt="로고"
-            className="w-10 h-10 rounded-md object-cover"
+            className="w-40 rounded-md object-cover"
           />
         </div>
         {!isCollapsed && (
           <div>
-            <h2 className="font-bold text-white text-base">Privideo</h2>
             <p className="text-xs text-gray-400">
               {userRole === "admin" ? "Admin" : userRole === "manager" ? "Manager" : "User"}
             </p>

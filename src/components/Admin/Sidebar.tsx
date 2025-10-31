@@ -43,24 +43,30 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = "admin" }) => {
 
   return (
     <aside
-      className={`${
-        isCollapsed ? "w-20" : "w-64"
-      } bg-[#2c3e50] text-gray-200 flex flex-col transition-all duration-300 shadow-xl h-screen sticky top-0`}
+      className={`${isCollapsed ? "w-20" : "w-64"
+        } bg-[#2c3e50] text-gray-200 flex flex-col transition-all duration-300 shadow-xl h-screen sticky top-0`}
     >
       {/* 조직 정보 */}
-      <div className="flex items-center gap-3 p-3 border-b border-gray-600 flex-shrink-0">
-        <div className="w-40 bg-gradient-to-br flex items-center justify-center flex-shrink-0">
+      <div
+        className={`flex items-center border-b border-gray-600 flex-shrink-0 transition-all duration-300 
+    ${isCollapsed ? "justify-center py-4" : "justify-start py-3"} 
+  `}
+      >
+        {isCollapsed ? (
+          // 접은 상태
           <img
-            src="/adminlogo.png"
+            src="/adminonlylogo.png"
             alt="로고"
-            className="w-40 rounded-md object-cover"
+            className="w-10 h-10 object-contain"
           />
-        </div>
-        {!isCollapsed && (
-          <div>
-            <p className="text-xs text-gray-400">
-              {userRole === "admin" ? "Admin" : userRole === "manager" ? "Manager" : "User"}
-            </p>
+        ) : (
+          // 펼친 상태
+          <div className="flex items-center pl-4">
+            <img
+              src="/adminlogowhite.png"
+              alt="로고"
+              className="w-40 object-contain"
+            />
           </div>
         )}
       </div>
@@ -73,10 +79,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = "admin" }) => {
             to={path}
             end={path === "/admin" || path === "/dashboard"}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-lg"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${isActive
+                ? "bg-blue-600 text-white shadow-lg"
+                : "text-gray-300 hover:bg-gray-700 hover:text-white"
               }`
             }
             title={isCollapsed ? label : undefined}
@@ -107,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = "admin" }) => {
 
       {/* 로그아웃 */}
       <div className="border-t border-gray-600 p-3 flex-shrink-0">
-        <button 
+        <button
           className="flex items-center justify-center gap-3 text-gray-400 hover:text-white hover:bg-red-600/20 w-full py-2.5 rounded-lg transition-colors"
           title={isCollapsed ? "로그아웃" : undefined}
         >

@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
   return (
     <>
       {/* 헤더 */}
-      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-3 shadow-sm">
+      <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
         {/* 조직 정보 */}
         <div
           className="flex items-center gap-3 cursor-pointer group"

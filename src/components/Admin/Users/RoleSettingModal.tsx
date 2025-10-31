@@ -38,7 +38,7 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
       case "슈퍼관리자":
         return "모든 권한을 가지며, 조직 설정 및 사용자 관리가 가능합니다.";
       case "관리자":
-        return "콘텐츠 관리 및 일부 통계 조회 권한을 가집니다.";
+        return "콘텐츠 관리 권한을 가집니다. 접근 권한이 없는 페이지는 비활성화됩니다.";
       case "일반 사용자":
         return "기본적인 콘텐츠 조회 및 제한적인 기능만 사용 가능합니다.";
       default:
@@ -125,51 +125,39 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                 <div className="space-y-3">
                   {[
                     { 
-                      key: "manageVideos", 
-                      label: "동영상 관리", 
-                      description: "동영상 업로드, 수정, 삭제 및 관리 권한",
+                      key: "manageVideosAndQuiz", 
+                      label: "동영상 & AI 퀴즈 관리", 
+                      description: "동영상과 AI퀴즈 생성, 수정, 삭제 및 관리",
                       adminOnly: false
                     },
                     { 
-                      key: "manageQuiz", 
-                      label: "AI 퀴즈 관리", 
-                      description: "AI 퀴즈 생성, 수정, 삭제 및 관리 권한",
-                      adminOnly: false
-                    },
-                    { 
-                      key: "manageViewing", 
-                      label: "시청 관리", 
-                      description: "사용자 시청 기록 조회 및 분석 권한",
+                      key: "manageViewingAndStats", 
+                      label: "시청 관리 & 통계 및 리포트", 
+                      description: "사용자 시청 기록 조회 및 분석 & 조직 통계 및 리포트 조회",
                       adminOnly: false
                     },
                     { 
                       key: "manageNotice", 
                       label: "공지 등록", 
-                      description: "공지사항 작성, 수정, 삭제 권한",
-                      adminOnly: false
-                    },
-                    { 
-                      key: "viewStats", 
-                      label: "통계/리포트", 
-                      description: "조직 통계 및 리포트 조회 권한",
+                      description: "공지사항 작성, 수정, 삭제",
                       adminOnly: false
                     },
                     { 
                       key: "manageOrganization", 
                       label: "조직 설정", 
-                      description: "조직 정보, 그룹, 해시태그 관리 권한",
+                      description: "조직 정보, 그룹, 해시태그 관리",
                       adminOnly: false
                     },
                     { 
                       key: "manageUsers", 
                       label: "사용자 관리", 
-                      description: "사용자 승인, 권한 설정 및 관리 (슈퍼관리자 전용)",
+                      description: "사용자 승인, 권한 설정 및 관리",
                       adminOnly: true
                     },
                     { 
                       key: "viewPricing", 
-                      label: "요금제 광고", 
-                      description: "요금제 정보 조회 (슈퍼관리자 전용)",
+                      label: "요금제 & 배너", 
+                      description: "조직의 요금제와 배너 관리",
                       adminOnly: true
                     },
                   ].map((item) => {

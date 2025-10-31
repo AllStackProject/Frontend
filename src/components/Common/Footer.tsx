@@ -8,11 +8,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-12">
           {/* 로고 + 문구 */}
           <div className="flex items-center md:items-start gap-4 w-full md:w-1/2">
-            <img src="/logo.png" alt="Privideo Logo" className="w-16 h-16" />
-            <div>
-              <h3 className="text-white text-lg font-semibold mb-1">Privideo</h3>
-              <p className="text-gray-400 text-sm">더 안전한 영상 공유 플랫폼</p>
-            </div>
+            <img src="/logo.png" alt="Privideo Logo" className="w-40 h-30" />
           </div>
 
           {/* 메뉴 섹션 */}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Plus, Trash2, Users } from "lucide-react";
+import { X, Plus, Trash2, Users, Info } from "lucide-react";
 import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
 
 interface GroupManagementModalProps {
@@ -80,7 +80,7 @@ const GroupManagementModal: React.FC<GroupManagementModalProps> = ({
           {/* 내용 */}
           <div className="p-6 overflow-y-auto flex-1">
             {/* 현재 상태 표시 */}
-            <div className="mb-5 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="mb-2 p-4 bg-gray-50 border border-gray-200 rounded-lg">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm font-semibold text-gray-700">
@@ -100,6 +100,10 @@ const GroupManagementModal: React.FC<GroupManagementModalProps> = ({
                 </div>
               </div>
             </div>
+            <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg flex gap-2">
+                <Info size={16} className="text-gray-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-gray-600">사용자별 그룹 설정은 '사용자 관리'에서 가능합니다.</p>
+              </div>
 
             {/* 입력 필드 */}
             <div className="mb-5">

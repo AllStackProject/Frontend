@@ -1,7 +1,7 @@
-// src/pages/Home/Landing.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HiShieldCheck, HiCloud, HiShare, HiLockClosed, HiMenu, HiX, HiCheck } from 'react-icons/hi';
+import { HiShieldCheck, HiCloud, HiShare, HiLockClosed, HiMenu, HiX } from 'react-icons/hi';
+import Footer from "@/components/Common/Footer";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -134,21 +134,17 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className={`fixed top-0 left-0 right-0 backdrop-blur-lg border-b z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/90 border-border-light shadow-sm' : 'bg-white/80 border-transparent'
-      }`}>
+      <header className={`fixed top-0 left-0 right-0 backdrop-blur-lg border-b z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 border-border-light shadow-sm' : 'bg-white/80 border-transparent'
+        }`}>
         <nav className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <img 
-                src="/logo.png" 
-                alt="Privideo Logo" 
-                className="w-8 h-8 object-contain"
-              />
-              <span className="text-xl font-semibold text-text-primary">Privideo</span>
+            <div
+              className="flex items-center gap-2 px-2 sm:px-4 md:px-8 cursor-pointer hover:opacity-80 transition"
+              onClick={() => navigate("/")}
+            >
+              <img src="/logo.png" alt="Privideo" className="w-40" />
             </div>
-
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
               <button onClick={() => scrollToSection('product')} className="text-text-secondary hover:text-text-primary transition-colors text-sm font-medium">
@@ -224,14 +220,14 @@ export default function Landing() {
             팀과 조직의 소중한 영상을 안전하게 저장하고 공유하세요.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-400">
-            <button 
-              onClick={handleGetStarted} 
+            <button
+              onClick={handleGetStarted}
               className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-light transition-all duration-300 text-lg font-semibold shadow-lg hover:shadow-xl hover:scale-105 transform"
             >
               {isAuthenticated ? '대시보드로 이동 →' : '무료로 시작하기 →'}
             </button>
-            <button 
-              onClick={() => scrollToSection('pricing')} 
+            <button
+              onClick={() => scrollToSection('pricing')}
               className="px-8 py-4 bg-bg-page text-text-primary rounded-lg hover:bg-border-light transition-all duration-300 text-lg font-semibold hover:scale-105 transform"
             >
               요금제 보기
@@ -284,8 +280,8 @@ export default function Landing() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {features.map((feature, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="bg-bg-page p-8 rounded-2xl hover:shadow-xl transition-all duration-300 animate-on-scroll transform hover:-translate-y-2 group overflow-hidden"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
@@ -318,11 +314,10 @@ export default function Landing() {
                 <tr className="border-b border-border-light">
                   <th className="text-left p-6 text-sm font-semibold text-text-muted bg-bg-page">요금제명</th>
                   {pricingPlans.map((plan, index) => (
-                    <th 
-                      key={index} 
-                      className={`p-6 text-center relative transition-all duration-300 cursor-pointer ${
-                        hoveredPlan === index ? 'bg-primary/10' : ''
-                      }`}
+                    <th
+                      key={index}
+                      className={`p-6 text-center relative transition-all duration-300 cursor-pointer ${hoveredPlan === index ? 'bg-primary/10' : ''
+                        }`}
                       onMouseEnter={() => setHoveredPlan(index)}
                       onMouseLeave={() => setHoveredPlan(null)}
                     >
@@ -342,11 +337,10 @@ export default function Landing() {
                 <tr className="border-b border-border-light">
                   <td className="p-6 text-sm font-medium text-text-secondary bg-bg-page">조직원</td>
                   {pricingPlans.map((plan, index) => (
-                    <td 
-                      key={index} 
-                      className={`p-6 text-center text-sm text-text-secondary transition-all duration-300 cursor-pointer ${
-                        hoveredPlan === index ? 'bg-primary/10' : ''
-                      }`}
+                    <td
+                      key={index}
+                      className={`p-6 text-center text-sm text-text-secondary transition-all duration-300 cursor-pointer ${hoveredPlan === index ? 'bg-primary/10' : ''
+                        }`}
                       onMouseEnter={() => setHoveredPlan(index)}
                       onMouseLeave={() => setHoveredPlan(null)}
                     >
@@ -357,11 +351,10 @@ export default function Landing() {
                 <tr className="border-b border-border-light">
                   <td className="p-6 text-sm font-medium text-text-secondary bg-bg-page">스토리지</td>
                   {pricingPlans.map((plan, index) => (
-                    <td 
-                      key={index} 
-                      className={`p-6 text-center text-sm text-text-secondary transition-all duration-300 cursor-pointer ${
-                        hoveredPlan === index ? 'bg-primary/10' : ''
-                      }`}
+                    <td
+                      key={index}
+                      className={`p-6 text-center text-sm text-text-secondary transition-all duration-300 cursor-pointer ${hoveredPlan === index ? 'bg-primary/10' : ''
+                        }`}
                       onMouseEnter={() => setHoveredPlan(index)}
                       onMouseLeave={() => setHoveredPlan(null)}
                     >
@@ -372,11 +365,10 @@ export default function Landing() {
                 <tr className="border-b border-border-light">
                   <td className="p-6 text-sm font-semibold text-text-primary bg-bg-page">가격</td>
                   {pricingPlans.map((plan, index) => (
-                    <td 
-                      key={index} 
-                      className={`p-6 text-center transition-all duration-300 cursor-pointer ${
-                        hoveredPlan === index ? 'bg-primary/10' : ''
-                      }`}
+                    <td
+                      key={index}
+                      className={`p-6 text-center transition-all duration-300 cursor-pointer ${hoveredPlan === index ? 'bg-primary/10' : ''
+                        }`}
                       onMouseEnter={() => setHoveredPlan(index)}
                       onMouseLeave={() => setHoveredPlan(null)}
                     >
@@ -387,21 +379,19 @@ export default function Landing() {
                 <tr>
                   <td className="p-6 bg-bg-page"></td>
                   {pricingPlans.map((plan, index) => (
-                    <td 
-                      key={index} 
-                      className={`p-6 text-center transition-all duration-300 ${
-                        hoveredPlan === index ? 'bg-primary/10' : ''
-                      }`}
+                    <td
+                      key={index}
+                      className={`p-6 text-center transition-all duration-300 ${hoveredPlan === index ? 'bg-primary/10' : ''
+                        }`}
                       onMouseEnter={() => setHoveredPlan(index)}
                       onMouseLeave={() => setHoveredPlan(null)}
                     >
-                      <button 
-                        onClick={handleGetStarted} 
-                        className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
-                          hoveredPlan === index
-                            ? 'bg-primary text-white hover:bg-primary-light hover:shadow-lg' 
+                      <button
+                        onClick={handleGetStarted}
+                        className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${hoveredPlan === index
+                            ? 'bg-primary text-white hover:bg-primary-light hover:shadow-lg'
                             : 'bg-bg-page hover:bg-border-light text-text-primary hover:shadow-md'
-                        }`}
+                          }`}
                       >
                         시작하기
                       </button>
@@ -430,13 +420,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border-light py-12 px-6">
-        <div className="container mx-auto text-center">
-          <p className="text-sm text-text-muted">
-            © {new Date().getFullYear()} Privideo. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer/>
     </div>
   );
 }

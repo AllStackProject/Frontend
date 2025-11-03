@@ -8,6 +8,7 @@ import TimePatternSection from "@/components/Admin/Report/TimePatternSection";
 import DropOffAnalysisSection from "@/components/Admin/Report/DropOffAnalysisSection";
 import DemographicSection from "@/components/Admin/Report/DemographicSection";
 import ReportFilterBar from "@/components/Admin/Report/ReportFilterBar";
+import VideoAnalyticsSection from "@/components/Admin/Report/VideoAnalyticsSection";
 
 type TabType = "overview" | "activity" | "users" | "content";
 
@@ -103,7 +104,6 @@ const ReportsPage: React.FC = () => {
         {activeTab === "activity" && (
           <>
             <TimePatternSection />
-            <DropOffAnalysisSection />
           </>
         )}
 
@@ -116,7 +116,9 @@ const ReportsPage: React.FC = () => {
 
         {activeTab === "content" && (
           <>
+            <VideoAnalyticsSection/>
             <VideoRankingSection />
+            <DropOffAnalysisSection />
           </>
         )}
       </div>

@@ -21,8 +21,8 @@ const LearningPage: React.FC = () => {
       {/* 탭 메뉴 */}
       <div className="flex gap-3 border-b border-gray-200 mb-6">
         {[
-          { key: "attendance", label: "출결 관리" },
-          { key: "report", label: "사용자별 학습 리포트" },
+          { key: "attendance", label: "시청 관리" },
+          { key: "report", label: "사용자별 시청 리포트" },
         ].map((tab) => (
           <button
             key={tab.key}

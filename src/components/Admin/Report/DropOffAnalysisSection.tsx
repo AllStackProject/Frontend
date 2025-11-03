@@ -99,12 +99,9 @@ const DropOffAnalysisSection: React.FC = () => (
                 </div>
                 <span className="text-lg font-bold text-red-600 ml-2">{v.dropOff}%</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-gray-600">
-                <span className="flex items-center gap-1">
-                  <TrendingDown size={12} className="text-red-600" />
-                  이탈률
-                </span>
-                <span>평균 시청: {v.avgTime}</span>
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <TrendingDown size={12} className="text-red-600" />
+                <span>평균 시청 시간: {v.avgTime}</span>
               </div>
               {/* 프로그레스 바 */}
               <div className="mt-2 h-1.5 bg-red-200 rounded-full overflow-hidden">
@@ -155,12 +152,9 @@ const DropOffAnalysisSection: React.FC = () => (
                 </div>
                 <span className="text-lg font-bold text-green-600 ml-2">{v.dropOff}%</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-gray-600">
-                <span className="flex items-center gap-1">
-                  <TrendingUp size={12} className="text-green-600" />
-                  완료율
-                </span>
-                <span>평균 시청: {v.avgTime}</span>
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <TrendingUp size={12} className="text-green-600" />
+                <span>평균 시청 시간: {v.avgTime}</span>
               </div>
               {/* 프로그레스 바 */}
               <div className="mt-2 h-1.5 bg-green-200 rounded-full overflow-hidden">

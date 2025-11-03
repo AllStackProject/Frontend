@@ -19,7 +19,7 @@ const timeData = [
   { time: "15-18시", views: 340 },
   { time: "18-21시", views: 410 },
   { time: "21-24시", views: 230 },
-  { time: "00-03시", views: 50 },
+  { time: "00-06시", views: 50 },
 ];
 
 // 커스텀 툴팁

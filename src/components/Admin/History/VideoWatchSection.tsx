@@ -152,35 +152,33 @@ const VideoWatchSection: React.FC = () => {
               <th className="px-4 py-3 font-semibold">만료일</th>
               <th className="px-4 py-3 font-semibold">공개 범위</th>
               <th className="px-4 py-3 font-semibold w-52">
-                  <div className="flex items-center gap-1 relative group">
-                    멤버 시청 완료율
-                    <Info
-                      size={15}
-                      className="text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
-                    />
-                    {/* Tooltip */}
-                    <div className="absolute left-28 top-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-3 py-2 shadow-lg w-64 z-10">
-                      <p className="font-semibold mb-1">멤버 시청 완료율이란?</p>
-                      <p className="text-gray-200">
-                        전체 멤버 중 해당 영상을 80% 이상 시청 완료한 사용자의 비율입니다.
-                      </p>
-                      <p className="mt-2 text-gray-300 text-[11px]">
-                        계산식: (시청 완료 사용자 ÷ 전체 사용자) × 100
-                      </p>
-                    </div>
+                <div className="flex items-center gap-1 relative group">
+                  시청 완료율
+                  <Info
+                    size={15}
+                    className="text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
+                  />
+                  {/* Tooltip */}
+                  <div className="absolute left-28 top-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-3 py-2 shadow-lg w-64 z-10">
+                    <p className="font-semibold mb-1">시청 완료율이란?</p>
+                    <p className="text-gray-200">
+                      시청한 멤버 중 해당 영상을 90% 이상 시청 완료한 멤버의 비율입니다.
+                    </p>
+                    <p className="mt-2 text-gray-300 text-[11px]">
+                      계산식: (시청 완료 멤버 ÷ 전체 시청자) × 100
+                    </p>
                   </div>
-            </th>
+                </div>
+              </th>
               <th className="px-4 py-3 font-semibold text-center">시청자 수</th>
-              <th className="px-4 py-3 font-semibold text-center">시청자 보기</th>
             </tr>
           </thead>
           <tbody>
             {currentRecords.map((r, index) => (
               <tr
                 key={r.id}
-                className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${
-                  index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                }`}
+                className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                  }`}
               >
                 <td className="px-4 py-3 font-medium text-gray-800">{r.video}</td>
                 <td className="px-4 py-3 text-gray-600">{r.uploader}</td>
@@ -194,19 +192,18 @@ const VideoWatchSection: React.FC = () => {
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-                      r.visibility === "organization"
-                        ? "bg-green-100 text-green-700"
-                        : r.visibility === "group"
+                    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${r.visibility === "organization"
+                      ? "bg-green-100 text-green-700"
+                      : r.visibility === "group"
                         ? "bg-blue-100 text-blue-700"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                   >
                     {r.visibility === "organization"
                       ? "조직 전체"
                       : r.visibility === "group"
-                      ? "특정 그룹"
-                      : "비공개"}
+                        ? "특정 그룹"
+                        : "비공개"}
                   </span>
                 </td>
 
@@ -215,24 +212,22 @@ const VideoWatchSection: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${
-                          r.viewRate >= 80
-                            ? "bg-green-500"
-                            : r.viewRate >= 50
+                        className={`h-full rounded-full transition-all ${r.viewRate >= 80
+                          ? "bg-green-500"
+                          : r.viewRate >= 50
                             ? "bg-blue-500"
                             : "bg-red-400"
-                        }`}
+                          }`}
                         style={{ width: `${r.viewRate}%` }}
                       />
                     </div>
                     <span
-                      className={`text-sm font-semibold min-w-[45px] ${
-                        r.viewRate >= 80
-                          ? "text-green-600"
-                          : r.viewRate >= 50
+                      className={`text-sm font-semibold min-w-[45px] ${r.viewRate >= 80
+                        ? "text-green-600"
+                        : r.viewRate >= 50
                           ? "text-blue-600"
                           : "text-red-500"
-                      }`}
+                        }`}
                     >
                       {r.viewRate}%
                     </span>
@@ -242,19 +237,19 @@ const VideoWatchSection: React.FC = () => {
                 {/* 시청자 수 */}
                 <td
                   onClick={() => setSelectedVideo(r)}
-                  className="px-4 py-3 text-center font-semibold text-blue-600 cursor-pointer hover:text-blue-800 transition-colors"
+                  className="px-4 py-3 text-center cursor-pointer transition-all duration-200 hover:bg-blue-50"
                 >
-                  {r.viewers.toLocaleString()}명
-                </td>
-
-                {/* 보기 버튼 */}
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => setSelectedVideo(r)}
-                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-                  >
-                    <Eye size={14} /> 보기
-                  </button>
+                  <div className="flex items-center justify-center gap-1.5 text-gray-700 group">
+                    <Eye
+                      size={15}
+                      className="text-gray-500 transition-colors duration-200 group-hover:text-blue-600"
+                    />
+                    <span
+                      className="font-medium text-sm transition-all duration-200 group-hover:text-blue-700 group-hover:font-semibold"
+                    >
+                      {r.viewers.toLocaleString()}명
+                    </span>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -302,11 +297,10 @@ const VideoWatchSection: React.FC = () => {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    currentPage === i + 1
-                      ? "bg-primary text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                  className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === i + 1
+                    ? "bg-primary text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   {i + 1}
                 </button>

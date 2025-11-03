@@ -46,7 +46,7 @@ const ActivityChartSection: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={20} className="text-blue-600" />
-            <h3 className="text-lg font-bold text-gray-800">월별 학습 활동 추이</h3>
+            <h3 className="text-lg font-bold text-gray-800">월별 시청 활동 추이</h3>
           </div>
           <p className="text-sm text-gray-600">
             최근 3개월간의 시청 및 퀴즈 완료 현황

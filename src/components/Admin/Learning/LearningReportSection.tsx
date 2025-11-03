@@ -179,7 +179,7 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
           {/* 학습 트렌드 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 mb-8">
             <h3 className="text-base font-semibold text-gray-700 mb-3">
-              월별 학습 활동 추이
+              월별 시청 활동 추이
             </h3>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={selectedUser.data}>
@@ -209,7 +209,7 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
           <div className="bg-white border border-gray-200 rounded-lg p-4 relative">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-gray-700 flex items-center gap-2">
-                월별 학습 상세 기록
+                월별 시청 상세 기록
               </h3>
 
               {/* 활동지수 설명 */}
@@ -222,7 +222,7 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
                 {showTooltip && (
                   <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-md w-64">
                     <p>
-                      <strong>활동지수</strong>는 사용자의 학습 참여도를 나타내는
+                      <strong>활동지수</strong>는 사용자의 시청 참여도를 나타내는
                       지표입니다.
                     </p>
                     <p className="mt-1 text-gray-300">

@@ -85,22 +85,6 @@ const VideoRankingSection: React.FC = () => {
             조회수와 완료율이 높은 상위 동영상 목록
           </p>
         </div>
-
-        {/* 요약 통계 */}
-        <div className="flex gap-3">
-          <div className="text-right">
-            <p className="text-xs text-gray-600 mb-1">총 조회수</p>
-            <p className="text-lg font-bold text-blue-600">
-              {totalViews.toLocaleString()}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-600 mb-1">평균 완료율</p>
-            <p className="text-lg font-bold text-green-600">
-              {avgCompletion}%
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* 동영상 목록 */}

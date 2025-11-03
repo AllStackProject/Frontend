@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload }: any) => {
             완료율: <span className="font-bold text-blue-600">{payload[0].value}%</span>
           </p>
           <p className="text-xs text-gray-500">
-            구성원: {payload[0].payload.members}명
+            멤버수: {payload[0].payload.members}명
           </p>
         </div>
       </div>
@@ -48,7 +48,7 @@ const GroupComparisonSection: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Users size={20} className="text-blue-600" />
-            <h3 className="text-lg font-bold text-gray-800">그룹별 학습 완료율 비교</h3>
+            <h3 className="text-lg font-bold text-gray-800">그룹별 시청 완료율 비교</h3>
           </div>
           <p className="text-sm text-gray-600">
             각 그룹의 평균 시청 완료율을 비교합니다.
@@ -76,7 +76,7 @@ const GroupComparisonSection: React.FC = () => {
       {/* 요약 통계 */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-          <p className="text-xs text-blue-600 mb-1">평균 완료율</p>
+          <p className="text-xs text-blue-600 mb-1">조직 평균 완료율</p>
           <p className="text-2xl font-bold text-blue-600">{avgCompletion}%</p>
         </div>
         <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
@@ -140,7 +140,7 @@ const GroupComparisonSection: React.FC = () => {
           <div>
             <p className="text-xs font-semibold text-amber-900 mb-0.5">개선 제안</p>
             <p className="text-xs text-amber-700">
-              {lowGroup?.name}의 학습 참여를 독려하기 위한 별도 지원이 필요합니다.
+              {lowGroup?.name}의 시청 참여를 독려하기 위한 별도 지원이 필요합니다.
             </p>
           </div>
         </div>

@@ -1,16 +1,21 @@
 import { useState } from 'react';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '@/api/Auth/login';
+import type { LoginRequest } from '@/types/auth';
 
-type Errors = { email?: string; password?: string };
+type Errors = { email?: string; password?: string; general?: string };
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
 export default function LoginForm() {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
-  const [values, setValues] = useState({ email: '', password: '' });
+  const [values, setValues] = useState<LoginRequest>({ email: '', password: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
   const [errors, setErrors] = useState<Errors>({});
+  const [loading, setLoading] = useState(false);
 
   const validate = (v = values): Errors => {
     const e: Errors = {};
@@ -23,37 +28,57 @@ export default function LoginForm() {
 
   const handleChange =
     (key: 'email' | 'password') =>
-    (ev: React.ChangeEvent<HTMLInputElement>) => {
-      const next = { ...values, [key]: ev.target.value };
-      setValues(next);
-      setErrors(validate(next));
-    };
+      (ev: React.ChangeEvent<HTMLInputElement>) => {
+        const next = { ...values, [key]: ev.target.value };
+        setValues(next);
+        setErrors(validate(next));
+      };
 
   const handleBlur = (key: 'email' | 'password') => () => {
     setTouched((t) => ({ ...t, [key]: true }));
     setErrors(validate());
   };
 
-  const hasError = (k: keyof Errors) => !!errors[k] && touched[k];
+  const hasError = (k: keyof Errors) => !!errors[k] && !!touched[k as keyof typeof touched];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const eMap = validate();
-    setErrors(eMap);
-    setTouched({ email: true, password: true });
-    if (Object.keys(eMap).length > 0) return;
-    // ✅ TODO: 백엔드 API 연동
-    console.log('login submit', values);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const eMap = validate();
+  setErrors(eMap);
+  setTouched({ email: true, password: true });
 
-  const isInvalid = Object.keys(validate()).length > 0;
+  if (Object.keys(eMap).length > 0) return;
+
+  setLoading(true);
+  setErrors({});
+
+  try {
+    const res = await login(values);
+
+    if (res.is_success) {
+      //console.log("✅ 로그인 성공 - 토큰 저장 및 이동");
+      navigate('/login/select');
+    } else {
+      //console.warn("⚠️ 로그인 실패 - 응답 성공 false");
+      setErrors({ general: '이메일 또는 비밀번호를 확인해주세요.' });
+    }
+  } catch (err: any) {
+    //console.error("❌ 로그인 요청 실패:", err.response || err.message);
+    setErrors({ general: err.message || '로그인 중 오류가 발생했습니다.' });
+  } finally {
+    //console.log("🔚 로그인 요청 종료");
+    setLoading(false);
+  }
+};
+
+  const isInvalid = Object.keys(validate()).length > 0 || loading;
 
   return (
     <div className="w-full max-w-md mx-auto">
       {/* 로고 */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">Privideo</h1>
-        <p className="text-text-secondary text-sm">프라이빗 스트리밍 플랫폼</p>
+        <p className="text-text-secondary text-sm">간편하게 공유하는 “우리”만의 영상 공간</p>
       </div>
 
       {/* 로그인 폼 */}
@@ -61,11 +86,10 @@ export default function LoginForm() {
         {/* 이메일 입력 */}
         <div>
           <div
-            className={`relative flex items-center border rounded-lg overflow-hidden transition-colors ${
-              hasError('email')
+            className={`relative flex items-center border rounded-lg overflow-hidden transition-colors ${hasError('email')
                 ? 'border-error'
                 : 'border-border-light focus-within:border-primary'
-            }`}
+              }`}
           >
             <HiMail className="absolute left-3 text-text-muted text-xl" aria-hidden />
             <input
@@ -93,11 +117,10 @@ export default function LoginForm() {
         {/* 비밀번호 입력 */}
         <div>
           <div
-            className={`relative flex items-center border rounded-lg overflow-hidden transition-colors ${
-              hasError('password')
+            className={`relative flex items-center border rounded-lg overflow-hidden transition-colors ${hasError('password')
                 ? 'border-error'
                 : 'border-border-light focus-within:border-primary'
-            }`}
+              }`}
           >
             <HiLockClosed className="absolute left-3 text-text-muted text-xl" aria-hidden />
             <input
@@ -130,13 +153,18 @@ export default function LoginForm() {
           )}
         </div>
 
+        {/* 공통 에러 메시지 */}
+        {errors.general && (
+          <p className="text-center text-sm text-error mt-2">{errors.general}</p>
+        )}
+
         {/* 로그인 버튼 */}
         <button
           type="submit"
           disabled={isInvalid}
           className="w-full py-3 rounded-lg font-semibold text-white bg-primary hover:bg-primary-light transition-colors disabled:bg-text-muted disabled:cursor-not-allowed"
         >
-          로그인
+          {loading ? '로그인 중...' : '로그인'}
         </button>
 
         {/* 링크 */}
@@ -145,7 +173,7 @@ export default function LoginForm() {
             to="/register"
             className="text-primary hover:text-primary-light font-medium transition-colors"
           >
-            이메일 회원가입
+            회원가입
           </Link>
           <Link
             to="/reset-password"

@@ -1,3 +1,4 @@
+// 회원가입
 /** 회원가입 단계별 입력값 전체 구조 */
 export interface RegisterValues {
   name: string;
@@ -36,4 +37,16 @@ export interface SignupResponse {
   status: string;
   message: string;
   result?: any;  // 필요시 구체적인 타입 정의
+}
+
+// 로그인
+/** 로그인 요청 */
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+/** 로그인 응답 */
+export interface LoginResponse {
+  is_success: boolean;
 }

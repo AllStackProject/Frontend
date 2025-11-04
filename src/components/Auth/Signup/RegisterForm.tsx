@@ -12,7 +12,7 @@ interface RegisterFormProps {
     confirm: string;
     organizationCode: string;
   };
-  onChange: (key: string, value: any) => void;
+  onChange: (key: string, value: any) => void; 
   onBlur: (key: string) => void;
   errors: Record<string, string>;
   touched: Record<string, boolean>;
@@ -34,7 +34,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   onChange,
   onBlur,
   errors,
-  touched,
   hasError,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,9 +46,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         label="이름"
         name="name"
         value={values.name}
-        onChange={(e) => onChange("name", e.target.value)}
+        onChange={(value) => onChange("name", value)}
         onBlur={() => onBlur("name")}
-        placeholder="홍길동"
+        placeholder="이름을 입력하세요"
         required
         error={hasError("name") ? errors.name : undefined}
       />
@@ -112,7 +111,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         label="전화번호"
         name="phone"
         value={values.phone}
-        onChange={(e) => onChange("phone", e.target.value)}
+        onChange={(value) => onChange("phone", value)}
         onBlur={() => onBlur("phone")}
         placeholder="01012345678"
         required
@@ -126,7 +125,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         name="email"
         type="email"
         value={values.email}
-        onChange={(e) => onChange("email", e.target.value)}
+        onChange={(value) => onChange("email", value)}
         onBlur={() => onBlur("email")}
         placeholder="example@email.com"
         required
@@ -139,7 +138,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           label="비밀번호"
           name="password"
           value={values.password}
-          onChange={(e) => onChange("password", e.target.value)}
+          onChange={(value) => onChange("password", value)}
           onBlur={() => onBlur("password")}
           placeholder="비밀번호를 입력하세요"
           required
@@ -174,7 +173,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         label="비밀번호 확인"
         name="confirm"
         value={values.confirm}
-        onChange={(e) => onChange("confirm", e.target.value)}
+        onChange={(value) => onChange("confirm", value)}
         onBlur={() => onBlur("confirm")}
         placeholder="비밀번호를 다시 입력하세요"
         required
@@ -188,7 +187,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         label="조직코드"
         name="organizationCode"
         value={values.organizationCode}
-        onChange={(e) => onChange("organizationCode", e.target.value)}
+        onChange={(value) => onChange("organizationCode", value)}
         onBlur={() => onBlur("organizationCode")}
         placeholder="조직코드를 입력하세요 (선택사항)"
         helperText="조직코드가 있으면 입력해주세요"
@@ -214,7 +213,7 @@ const InputField = ({
   name: string;
   type?: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (value: string) => void; 
   onBlur: () => void;
   placeholder?: string;
   required?: boolean;
@@ -229,7 +228,7 @@ const InputField = ({
       type={type}
       name={name}
       value={value}
-      onChange={onChange}
+      onChange={(e) => onChange(e.target.value)} 
       onBlur={onBlur}
       placeholder={placeholder}
       className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition ${
@@ -243,7 +242,7 @@ const InputField = ({
   </div>
 );
 
-/* 비밀번호 입력 필드 (눈 아이콘 포함) */
+/* 비밀번호 입력 필드 */
 const PasswordField = ({
   label,
   name,
@@ -259,7 +258,7 @@ const PasswordField = ({
   label: string;
   name: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (value: string) => void; 
   onBlur: () => void;
   placeholder?: string;
   required?: boolean;
@@ -276,7 +275,7 @@ const PasswordField = ({
         type={showPassword ? "text" : "password"}
         name={name}
         value={value}
-        onChange={onChange}
+        onChange={(e) => onChange(e.target.value)} 
         onBlur={onBlur}
         placeholder={placeholder}
         className={`w-full px-4 py-2.5 pr-12 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition ${

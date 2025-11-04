@@ -1,5 +1,3 @@
-// src/components/Auth/AgeGroupSelect.tsx
-
 interface AgeGroupSelectProps {
   value: '' | 'over14' | 'under14';
   onChange: (value: 'over14' | 'under14') => void;

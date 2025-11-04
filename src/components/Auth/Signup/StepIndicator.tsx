@@ -1,5 +1,3 @@
-// src/components/Auth/StepIndicator.tsx
-
 interface StepIndicatorProps {
   currentStep: number;
   steps: string[];

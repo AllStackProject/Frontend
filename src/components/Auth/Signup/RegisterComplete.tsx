@@ -1,5 +1,3 @@
-// src/components/Auth/RegisterComplete.tsx
-
 interface RegisterCompleteProps {
   onLogin: () => void;
 }

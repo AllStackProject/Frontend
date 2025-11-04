@@ -1,4 +1,3 @@
-// src/components/Auth/LoginForm.tsx
 import { useState } from 'react';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
 import { Link } from 'react-router-dom';

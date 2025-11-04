@@ -22,7 +22,7 @@ export default function TermsAgreement({
 }: TermsAgreementProps) {
   return (
     <div className="space-y-4">
-      {/* 전체 동의 - 연령대 선택 스타일과 동일 */}
+      {/* 전체 동의 */}
       <label
         className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all ${
           agreeAll

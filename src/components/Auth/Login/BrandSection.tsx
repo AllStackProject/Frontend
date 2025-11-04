@@ -1,5 +1,3 @@
-// src/components/Auth/BrandSection.tsx
-
 export default function BrandSection() {
   return (
     <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-primary to-primary-light p-12">

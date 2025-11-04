@@ -8,7 +8,7 @@ import {
   Users,
   Brain,
 } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface EditVideoModalProps {
   video: any;

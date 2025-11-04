@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Play, Pause, Settings, Maximize, Volume2, Volume1, VolumeX } from "lucide-react";
-import { useVideoAnalytics } from "@/hooks/Video/useVideoAnalytics";
+import { useVideoAnalytics } from "@/hooks/video/useVideoAnalytics";
 
 interface VideoPlayerProps {
   videoUrl: string;

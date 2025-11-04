@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Users, Info } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface GroupSettingModalProps {
   user: { id: string; name: string; email: string; groups: string[] };

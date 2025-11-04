@@ -1,6 +1,6 @@
 import { useState } from "react";
 import OrgMainLayout from "@/layouts/OrgMainLayout";
-import NoticeListSection from "@/components/Notice/NoticeListSection";
+import NoticeListSection from "@/components/notice/NoticeListSection";
 
 
 const NoticePage = () => {

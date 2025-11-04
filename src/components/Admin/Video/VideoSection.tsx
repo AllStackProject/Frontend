@@ -9,8 +9,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
-import SuccessModal from "@/components/Common/Modals/SuccessModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import SuccessModal from "@/components/common/modals/SuccessModal";
 
 interface Video {
   id: number;

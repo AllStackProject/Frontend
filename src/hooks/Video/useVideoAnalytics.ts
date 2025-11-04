@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { flushSession } from "@/api/Video/session";
-import { sendVideoEvents } from "@/api/Video/event";
+import { flushSession } from "@/api/video/session";
+import { sendVideoEvents } from "@/api/video/event";
 
 export type AnalyticsEventType = "JOIN" | "PLAY" | "PAUSE" | "SEEK" | "END" | "LEAVE";
 export type AnalyticsEvent = {

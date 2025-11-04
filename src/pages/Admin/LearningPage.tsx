@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import AttendanceSection from "@/components/Admin/Learning/AttendanceSection";
-import LearningReportSection from "@/components/Admin/Learning/LearningReportSection";
+import AttendanceSection from "@/components/admin/learning/AttendanceSection";
+import LearningReportSection from "@/components/admin/learning/LearningReportSection";
 
 const LearningPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("attendance");

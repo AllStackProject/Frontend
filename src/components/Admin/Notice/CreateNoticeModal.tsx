@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, UploadCloud, FileText, Trash2, FilePlay } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface NoticeFormData {
   title: string;

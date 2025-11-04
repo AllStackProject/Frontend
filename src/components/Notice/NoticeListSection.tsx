@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import NoticeDetailModal from "@/components/Notice/NoticeDetailModal";
+import NoticeDetailModal from "@/components/notice/NoticeDetailModal";
 
 interface Notice {
   id: number;

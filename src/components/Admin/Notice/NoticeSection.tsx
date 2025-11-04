@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { Plus, Edit, Trash2, Eye, Filter, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
-import CreateNoticeModal from "@/components/Admin/Notice/CreateNoticeModal";
-import EditNoticeModal from "@/components/Admin/Notice/EditNoticeModal";
-import ViewNoticeModal from "@/components/Admin/Notice/ViewNoticeModal";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
-import SuccessModal from "@/components/Common/Modals/SuccessModal";
+import CreateNoticeModal from "@/components/admin/notice/CreateNoticeModal";
+import EditNoticeModal from "@/components/admin/notice/EditNoticeModal";
+import ViewNoticeModal from "@/components/admin/notice/ViewNoticeModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import SuccessModal from "@/components/common/modals/SuccessModal";
 
 interface Notice {
   id: number;

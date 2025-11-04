@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "@/components/Admin/Sidebar";
-import Header from "@/components/Admin/Header";
+import Sidebar from "@/components/admin/Sidebar";
+import Header from "@/components/admin/Header";
 import { Outlet } from "react-router-dom";
 
 const DashboardLayout: React.FC = () => {

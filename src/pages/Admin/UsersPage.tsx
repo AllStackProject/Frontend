@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import UserListSection from "@/components/Admin/Users/UserListSection";
-import UserInviteSection from "@/components/Admin/Users/UserInviteSection";
+import UserListSection from "@/components/admin/user/UserListSection";
+import UserInviteSection from "@/components/admin/user/UserInviteSection";
 
 const UsersPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("list");

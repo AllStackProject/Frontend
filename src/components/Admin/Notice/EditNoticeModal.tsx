@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Edit3, FileText } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface Notice {
   id: number;

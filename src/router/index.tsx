@@ -1,38 +1,38 @@
 import { createBrowserRouter } from "react-router-dom";
 
 // 페이지 import
-import Landing from "@/pages/Home/Landing";
-import OrgMainPage from "@/pages/Home/OrgMainPage";
-import VideoDetailPage from "@/pages/Video/VideoDetailPage";
-import LoginHome from "@/pages/Auth/LoginPage";
-import LoginSelect from "@/pages/Auth/LoginSelect";
-import Register from "@/pages/Auth/Register";
-import LoginPasswordReset from "@/pages/Auth/LoginPasswordReset";
-import NoticePage from "@/pages/Notice/NoticePage";
+import Landing from "@/pages/home/Landing";
+import OrgMainPage from "@/pages/home/OrgMainPage";
+import VideoDetailPage from "@/pages/video/VideoDetailPage";
+import LoginHome from "@/pages/auth/LoginPage";
+import LoginSelect from "@/pages/auth/LoginSelect";
+import Register from "@/pages/auth/Register";
+import LoginPasswordReset from "@/pages/auth/LoginPasswordReset";
+import NoticePage from "@/pages/notice/NoticePage";
 
 // 마이페이지 관련 import
-import OrgMyPage from "@/pages/User/OrgMyPage";
-import UserMyPage from "@/pages/User/UserMyPage"
-import LearningSection from "@/components/User/LearningSection";
-import QuizSection from "@/components/User/QuizSection";
-import ScrapSection from "@/components/User/ScrapSection";
-import CommentSection from "@/components/User/CommentSection";
-import ProfileSection from "@/components/User/ProfileSection";
-import GroupSection from "@/components/User/OrganizationSection";
-import SettingsSection from "@/components/User/SettingsSection";
+import OrgMyPage from "@/pages/user/OrgMyPage";
+import UserMyPage from "@/pages/user/UserMyPage"
+import LearningSection from "@/components/user/LearningSection";
+import QuizSection from "@/components/user/QuizSection";
+import ScrapSection from "@/components/user/ScrapSection";
+import CommentSection from "@/components/user/CommentSection";
+import ProfileSection from "@/components/user/ProfileSection";
+import GroupSection from "@/components/user/OrganizationSection";
+import SettingsSection from "@/components/user/SettingsSection";
 
 // 관리자 페이지 관련 import
-import DashboardPage from "@/pages/Admin/DashboardPage";
-import VideosPage from "@/pages/Admin/VideosPage";
-import QuizPage from "@/pages/Admin/QuizPage";
-import UsersPage from "@/pages/Admin/UsersPage";
-import ReportsPage from "@/pages/Admin/ReportsPage";
-import NoticesPage from "@/pages/Admin/NoticesPage";
-import LearningPage from "@/pages/Admin/LearningPage";
-import PlansPage from "@/pages/Admin/PlansPage";
-import WatchHistoryPage from "@/pages/Admin/WatchHistoryPage";
-import LearningReportSection from "@/components/Admin/Learning/LearningReportSection";
-import SettingPage from "@/pages/Admin/SettingPage";
+import DashboardPage from "@/pages/admin/DashboardPage";
+import VideosPage from "@/pages/admin/VideosPage";
+import QuizPage from "@/pages/admin/QuizPage";
+import UsersPage from "@/pages/admin/UsersPage";
+import ReportsPage from "@/pages/admin/ReportsPage";
+import NoticesPage from "@/pages/admin/NoticesPage";
+import LearningPage from "@/pages/admin/LearningPage";
+import PlansPage from "@/pages/admin/PlansPage";
+import WatchHistoryPage from "@/pages/admin/WatchHistoryPage";
+import LearningReportSection from "@/components/admin/learning/LearningReportSection";
+import SettingPage from "@/pages/admin/SettingPage";
 
 // 레이아웃 import
 import UserLayout from "@/layouts/UserLayout";

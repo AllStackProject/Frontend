@@ -1,5 +1,5 @@
 import React from "react";
-import VideoWatchSection from "@/components/Admin/History/VideoWatchSection";
+import VideoWatchSection from "@/components/admin/history/VideoWatchSection";
 
 const WatchHistoryPage: React.FC = () => {
 

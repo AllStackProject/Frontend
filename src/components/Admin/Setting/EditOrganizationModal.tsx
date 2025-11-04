@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, UploadCloud, RefreshCcw, Building2, AlertTriangle } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface OrganizationInfo {
   id: string;

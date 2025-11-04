@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiShieldCheck, HiCloud, HiShare, HiLockClosed, HiMenu, HiX } from 'react-icons/hi';
-import Footer from "@/components/Common/Footer";
+import Footer from "@/components/common/Footer";
 
 export default function Landing() {
   const navigate = useNavigate();

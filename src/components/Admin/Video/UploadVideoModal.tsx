@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Upload, Image, Calendar, Hash, FileVideo, Users } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface UploadVideoModalProps {
   onClose: () => void;

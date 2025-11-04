@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Filter, RotateCcw, Eye, BarChart3 } from "lucide-react";
-import VideoDetailModal from "@/components/Admin/Learning/VideoDetailModal";
-import QuizDetailModal from "@/components/Admin/Learning/QuizDetailModal";
+import VideoDetailModal from "@/components/admin/learning/VideoDetailModal";
+import QuizDetailModal from "@/components/admin/learning/QuizDetailModal";
 
 interface UserRecord {
     id: string;

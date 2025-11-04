@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StepIndicator from '@/components/Auth/Signup/StepIndicator';
-import AgeGroupSelect from '@/components/Auth/Signup/AgeGroupSelect';
-import TermsAgreement from '@/components/Auth/Signup/TermsAgreement';
-import RegisterForm from '@/components/Auth/Signup/RegisterForm';
-import RegisterComplete from '@/components/Auth/Signup/RegisterComplete';
-import ConfirmActionModal from '@/components/Common/Modals/ConfirmActionModal';
+import StepIndicator from '@/components/signup/StepIndicator';
+import AgeGroupSelect from '@/components/signup/AgeGroupSelect';
+import TermsAgreement from '@/components/signup/TermsAgreement';
+import RegisterForm from '@/components/signup/RegisterForm';
+import RegisterComplete from '@/components/signup/RegisterComplete';
+import ConfirmActionModal from '@/components/common/modals/ConfirmActionModal';
 
-import { signup } from "@/api/Auth/signup";
+import { signup } from "@/api/auth/signup";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const phoneRe = /^[0-9]{10,11}$/;

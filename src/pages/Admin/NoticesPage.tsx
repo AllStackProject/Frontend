@@ -1,5 +1,5 @@
 import React from "react";
-import NoticeSection from "@/components/Admin/Notice/NoticeSection";
+import NoticeSection from "@/components/admin/notice/NoticeSection";
 
 const NoticesPage: React.FC = () => {
   return (

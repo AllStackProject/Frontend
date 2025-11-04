@@ -1,5 +1,5 @@
 import React from "react";
-import OrganizationSection from "@/components/Admin/Setting/OrganizationSection";
+import OrganizationSection from "@/components/admin/setting/OrganizationSection";
 
 const OrganizationSettingsPage: React.FC = () => {
   return (

@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Search, Filter, RotateCcw, Users, Layers, Shield, ChevronLeft, ChevronRight } from "lucide-react";
 import RoleSettingModal from "./RoleSettingModal";
-import ConfirmRemoveUserModal from "@/components/Admin/Users/ConfirmRemoveUserModal";
-import GroupSettingModal from "@/components/Admin/Users/GroupSettiongModal";
+import ConfirmRemoveUserModal from "@/components/admin/user/ConfirmRemoveUserModal";
+import GroupSettingModal from "@/components/admin/user/GroupSettiongModal";
 
 interface User {
   id: string;

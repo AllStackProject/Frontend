@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Edit, Users, Hash, KeyRound, Building2, ImagePlus, Copy, Check } from "lucide-react";
-import EditOrganizationModal from "@/components/Admin/Setting/EditOrganizationModal";
-import GroupManagementModal from "@/components/Admin/Setting/GroupManagementModal";
-import HashtagModal from "@/components/Admin/Setting/HashtagModal";
+import EditOrganizationModal from "@/components/admin/setting/EditOrganizationModal";
+import GroupManagementModal from "@/components/admin/setting/GroupManagementModal";
+import HashtagModal from "@/components/admin/setting/HashtagModal";
 
 interface OrganizationInfo {
   id: string;

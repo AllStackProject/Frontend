@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Filter, RotateCcw, Eye, ChevronLeft, ChevronRight, Info } from "lucide-react";
-import WatchUserModal from "@/components/Admin/History/WatchUserModal";
+import WatchUserModal from "@/components/admin/history/WatchUserModal";
 
 interface WatchRecord {
   id: number;

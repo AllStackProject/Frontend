@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ArrowRight, Crown } from "lucide-react";
-import PlanChangeModal from "@/components/Admin/Plans/PlanChangeModal";
+import PlanChangeModal from "@/components/admin/plans/PlanChangeModal";
 
 const currentPlan = {
   name: "플러스",

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Filter, RotateCcw, Eye, ChevronLeft, ChevronRight } from "lucide-react";
-import EditQuizModal from "@/components/Admin/Quiz/EditQuizModal";
+import EditQuizModal from "@/components/admin/quiz/EditQuizModal";
 import type { VideoQuiz } from "@/types/AdminQuiz";
 
 const dummyQuizVideos: VideoQuiz[] = [

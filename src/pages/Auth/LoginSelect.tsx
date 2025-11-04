@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ChevronRight, Plus, X } from 'lucide-react';
-import ConfirmActionModal from '@/components/Common/Modals/ConfirmActionModal';
-import SuccessModal from '@/components/Common/Modals/SuccessModal';
+import ConfirmActionModal from '@/components/common/modals/ConfirmActionModal';
+import SuccessModal from '@/components/common/modals/SuccessModal';
 
 // 조직 데이터 타입
 interface Organization {

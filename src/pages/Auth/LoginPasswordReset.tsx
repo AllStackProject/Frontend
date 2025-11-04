@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Mail, Key, Lock, CheckCircle } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 const LoginPasswordReset: React.FC = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);

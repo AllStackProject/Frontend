@@ -19,7 +19,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import OrganizationSelectModal from "@/components/Common/Modals/OrganizationSelectModal";
+import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
 
 const Navbar = () => {
   const navigate = useNavigate();

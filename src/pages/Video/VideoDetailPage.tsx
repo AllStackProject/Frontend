@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import VideoPlayer from "../../components/Video/VideoPlayer";
-import VideoInfo from "../../components/Video/VideoInfo";
-import CommentSection from "../../components/Video/CommentSection";
-import AIQuizSection from "../../components/Video/AIQuizSection";
+import VideoPlayer from "@/components/video/VideoPlayer";
+import VideoInfo from "@/components/video/VideoInfo";
+import CommentSection from "@/components/video/CommentSection";
+import AIQuizSection from "@/components/video/AIQuizSection";
 
 const VideoDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -116,6 +116,7 @@ const VideoDetailPage: React.FC = () => {
         <div className="flex flex-col gap-6">
           
           <VideoInfo
+           videoId={videoData.id}
             title={videoData.title}
             channel={videoData.channel}
             views={videoData.views}

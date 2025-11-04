@@ -1,5 +1,5 @@
 import React from "react";
-import QuizSection from "@/components/Admin/Quiz/QuizSection";
+import QuizSection from "@/components/admin/quiz/QuizSection";
 
 const QuizPage: React.FC = () => {
   return (

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { BarChart3, TrendingUp, Users, Video } from "lucide-react";
-import OverviewSection from "@/components/Admin/Report/OverviewSection";
-import ActivityChartSection from "@/components/Admin/Report/ActivityChartSection";
-import GroupComparisonSection from "@/components/Admin/Report/GroupComparisonSection";
-import VideoRankingSection from "@/components/Admin/Report/VideoRankingSection";
-import TimePatternSection from "@/components/Admin/Report/TimePatternSection";
-import DropOffAnalysisSection from "@/components/Admin/Report/DropOffAnalysisSection";
-import DemographicSection from "@/components/Admin/Report/DemographicSection";
-import ReportFilterBar from "@/components/Admin/Report/ReportFilterBar";
-import VideoAnalyticsSection from "@/components/Admin/Report/VideoAnalyticsSection";
+import OverviewSection from "@/components/admin/report/OverviewSection";
+import ActivityChartSection from "@/components/admin/report/ActivityChartSection";
+import GroupComparisonSection from "@/components/admin/report/GroupComparisonSection";
+import VideoRankingSection from "@/components/admin/report/VideoRankingSection";
+import TimePatternSection from "@/components/admin/report/TimePatternSection";
+import DropOffAnalysisSection from "@/components/admin/report/DropOffAnalysisSection";
+import DemographicSection from "@/components/admin/report/DemographicSection";
+import ReportFilterBar from "@/components/admin/report/ReportFilterBar";
+import VideoAnalyticsSection from "@/components/admin/report/VideoAnalyticsSection";
 
 type TabType = "overview" | "activity" | "users" | "content";
 

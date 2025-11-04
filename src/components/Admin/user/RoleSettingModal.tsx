@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Shield, Info } from "lucide-react";
-import ConfirmActionModal from "@/components/Common/Modals/ConfirmActionModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface RoleSettingModalProps {
   user: { name: string; email: string; role: string };

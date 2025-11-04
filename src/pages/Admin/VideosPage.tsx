@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
-import VideoSection from "@/components/Admin/Video/VideoSection";
-import UploadVideoModal from "@/components/Admin/Video/UploadVideoModal";
-import EditVideoModal from "@/components/Admin/Video/EditVideoModal";
+import VideoSection from "@/components/admin/video/VideoSection";
+import UploadVideoModal from "@/components/admin/video/UploadVideoModal";
+import EditVideoModal from "@/components/admin/video/EditVideoModal";
 
 interface Video {
   id: number;

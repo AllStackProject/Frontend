@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import PlanSection from "@/components/Admin/Plans/PlanSection";
-import AdSection from "@/components/Admin/Plans/AdSection";
+import PlanSection from "@/components/admin/plans/PlanSection";
+import AdSection from "@/components/admin/plans/AdSection";
 
 const PlansPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"plan" | "ad">("plan");

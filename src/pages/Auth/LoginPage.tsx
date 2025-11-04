@@ -1,5 +1,5 @@
-import LoginForm from '@/components/Auth/Login/LoginForm';
-import BrandSection from '@/components/Auth/Login/BrandSection';
+import LoginForm from '@/components/login/LoginForm';
+import BrandSection from '@/components/login/BrandSection';
 
 export default function LoginHome() {
   return (

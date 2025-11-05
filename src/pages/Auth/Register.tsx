@@ -272,6 +272,7 @@ export default function Register() {
 
       if (res.code === 1000 || res.status === 'OK') {
         // console.log("✅ 회원가입 성공:", res);
+         setStep(3);
       } else {
         // console.log("❌ 회원가입 실패:", res);
         openModal(res.message || "회원가입에 실패했습니다.", {

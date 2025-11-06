@@ -7,3 +7,11 @@ export interface UserInfoResponse {
   phone_number: string;
   organizations: string[];
 }
+
+export interface UpdateUserInfoRequest {
+  newPassword?: string;
+  confirmPassword?: string;
+  changed_age?: string;
+  changed_gender?: string;
+  changed_phone_num?: string;
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Edit2, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { getUserInfo } from "@/api/mypage/getUserInfo";
 import type { UserInfoResponse } from "@/types/user";
+import { updateUserInfo } from "@/api/mypage/updateUserInfo";
 
 // 전화번호 정규식
 const phoneRe = /^[0-9]{10,11}$/;
@@ -73,12 +74,12 @@ const ProfileSection: React.FC = () => {
           data.ages === 10
             ? "10대"
             : data.ages === 20
-            ? "20대"
-            : data.ages === 30
-            ? "30대"
-            : data.ages === 40
-            ? "40대"
-            : "50대 이상";
+              ? "20대"
+              : data.ages === 30
+                ? "30대"
+                : data.ages === 40
+                  ? "40대"
+                  : "50대 이상";
 
         setUser({
           name: data.name,
@@ -148,45 +149,52 @@ const ProfileSection: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // 저장 버튼
-  const handleSave = () => {
-    if (!validateForm()) {
-      const firstErrorField = Object.keys(errors)[0];
-      const element = document.querySelector(`[name="${firstErrorField}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      return;
+  // 수정후 저장
+  const handleSave = async () => {
+  if (!validateForm()) {
+    const firstErrorField = Object.keys(errors)[0];
+    const element = document.querySelector(`[name="${firstErrorField}"]`);
+    if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  try {
+    const body: Record<string, string> = {
+      // 🔹 "대" 제거 + 숫자만 문자열로 보냄 ("40대" → "40")
+      changed_age: formData.ageGroup.replace("대", "").trim(),
+      changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
+      changed_phone_num: formData.phone,
+    };
+
+    if (formData.password && formData.passwordConfirm) {
+      body.newPassword = formData.password;
+      body.confirmPassword = formData.passwordConfirm;
     }
 
-    setUser({
-      ...user,
-      gender: formData.gender,
-      ageGroup: formData.ageGroup,
-      phone: formData.phone,
-    });
+    const success = await updateUserInfo(body);
 
-    if (formData.password) {
-      console.log("비밀번호 변경:", formData.password);
-      // TODO: 비밀번호 변경 API 연결
+    if (success) {
+      alert("✅ 사용자 정보가 성공적으로 수정되었습니다.");
+      setUser({
+        ...user,
+        gender: formData.gender,
+        ageGroup: formData.ageGroup,
+        phone: formData.phone,
+      });
+      setIsEditing(false);
+      setFormData({
+        ...formData,
+        password: "",
+        passwordConfirm: "",
+      });
+    } else {
+      alert("❌ 사용자 정보 수정에 실패했습니다.");
     }
-
-    console.log("사용자 정보 변경:", {
-      gender: formData.gender,
-      ageGroup: formData.ageGroup,
-      phone: formData.phone,
-    });
-
-    setIsEditing(false);
-    setErrors({});
-    setFormData({
-      ...formData,
-      password: "",
-      passwordConfirm: "",
-    });
-
-    alert("정보가 성공적으로 수정되었습니다.");
-  };
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message || "정보 수정 중 오류가 발생했습니다.");
+  }
+};
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -336,11 +344,10 @@ const ProfileSection: React.FC = () => {
                       setErrors({ ...errors, gender: "" });
                     }
                   }}
-                  className={`flex-1 py-2 border rounded-lg transition ${
-                    formData.gender === g
+                  className={`flex-1 py-2 border rounded-lg transition ${formData.gender === g
                       ? "bg-primary text-white border-primary"
                       : "bg-white text-text-primary border-border-light hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   {g}
                 </button>
@@ -363,9 +370,8 @@ const ProfileSection: React.FC = () => {
               name="ageGroup"
               value={formData.ageGroup}
               onChange={handleChange}
-              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
-                errors.ageGroup ? "border-red-500" : "border-border-light"
-              }`}
+              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${errors.ageGroup ? "border-red-500" : "border-border-light"
+                }`}
             >
               <option value="10대">10대</option>
               <option value="20대">20대</option>
@@ -464,9 +470,8 @@ const InputField = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder || ""}
-      className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
-        error ? "border-red-500" : "border-border-light"
-      }`}
+      className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${error ? "border-red-500" : "border-border-light"
+        }`}
     />
     {error && (
       <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
@@ -507,9 +512,8 @@ const PasswordField = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder || ""}
-        className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-primary focus:outline-none ${
-          error ? "border-red-500" : "border-border-light"
-        }`}
+        className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-primary focus:outline-none ${error ? "border-red-500" : "border-border-light"
+          }`}
       />
       <button
         type="button"

@@ -11,15 +11,15 @@ import LoginPasswordReset from "@/pages/auth/LoginPasswordReset";
 import NoticePage from "@/pages/notice/NoticePage";
 
 // 마이페이지 관련 import
-import OrgMyPage from "@/pages/user/OrgMyPage";
-import UserMyPage from "@/pages/user/UserMyPage"
-import LearningSection from "@/components/user/LearningSection";
-import QuizSection from "@/components/user/QuizSection";
-import ScrapSection from "@/components/user/ScrapSection";
-import CommentSection from "@/components/user/CommentSection";
-import ProfileSection from "@/components/user/ProfileSection";
-import GroupSection from "@/components/user/OrganizationSection";
-import SettingsSection from "@/components/user/SettingsSection";
+import OrgMyPage from "@/pages/mypage/OrgMyPage";
+import UserMyPage from "@/pages/mypage/UserMyPage"
+import LearningSection from "@/components/mypage/org/LearningSection";
+import QuizSection from "@/components/mypage/org/QuizSection";
+import ScrapSection from "@/components/mypage/org/ScrapSection";
+import CommentSection from "@/components/mypage/org/CommentSection";
+import ProfileSection from "@/components/mypage/user/ProfileSection";
+import GroupSection from "@/components/mypage/user/OrganizationSection";
+import SettingsSection from "@/components/mypage/user/SettingsSection";
 
 // 관리자 페이지 관련 import
 import DashboardPage from "@/pages/admin/DashboardPage";

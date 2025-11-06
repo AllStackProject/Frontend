@@ -1,15 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Edit2, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
-
-interface UserInfo {
-  name: string;
-  email: string;
-  gender: string;
-  ageGroup: string;
-  phone: string;
-  organizations: string[];
-  avatar?: string;
-}
+import { getUserInfo } from "@/api/mypage/getUserInfo";
+import type { UserInfoResponse } from "@/types/user";
 
 // 전화번호 정규식
 const phoneRe = /^[0-9]{10,11}$/;
@@ -17,11 +9,11 @@ const phoneRe = /^[0-9]{10,11}$/;
 // 비밀번호 정책: 영문, 숫자, 특수문자 중 2종류 이상 조합 + 8자 이상
 const validatePassword = (password: string): boolean => {
   if (password.length < 8) return false;
-  
+
   const hasLetter = /[a-zA-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-  
+
   const typeCount = [hasLetter, hasNumber, hasSpecial].filter(Boolean).length;
   return typeCount >= 2;
 };
@@ -36,73 +28,118 @@ const getPasswordChecks = (password: string) => {
   };
 };
 
+interface UserInfo {
+  name: string;
+  email: string;
+  gender: string;
+  ageGroup: string;
+  phone: string;
+  organizations: string[];
+  avatar?: string;
+}
+
 const ProfileSection: React.FC = () => {
+  const [user, setUser] = useState<UserInfo>({
+    name: "",
+    email: "",
+    gender: "",
+    ageGroup: "",
+    phone: "",
+    organizations: [],
+    avatar: "/user-icon/user1.png",
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-  // 예시 데이터 (추후 API 연동 예정)
-  const [user, setUser] = useState<UserInfo>({
-    name: "홍길동",
-    email: "honggildong@example.com",
-    gender: "남성",
-    ageGroup: "20대",
-    phone: "01012345678",
-    organizations: ["우리 FISA", "PASTA EDU"],
-    avatar: "/user-icon/user1.png",
-  });
-
   const [formData, setFormData] = useState({
-    gender: user.gender,
-    ageGroup: user.ageGroup,
-    phone: user.phone,
+    gender: "",
+    ageGroup: "",
+    phone: "",
     password: "",
     passwordConfirm: "",
   });
 
+  // 사용자 정보 불러오기
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const data: UserInfoResponse = await getUserInfo();
+
+        const mappedGender = data.gender === "MALE" ? "남성" : "여성";
+        const mappedAge =
+          data.ages === 10
+            ? "10대"
+            : data.ages === 20
+            ? "20대"
+            : data.ages === 30
+            ? "30대"
+            : data.ages === 40
+            ? "40대"
+            : "50대 이상";
+
+        setUser({
+          name: data.name,
+          email: data.email,
+          gender: mappedGender,
+          ageGroup: mappedAge,
+          phone: data.phone_number,
+          organizations: data.organizations,
+          avatar: "/user-icon/user1.png",
+        });
+
+        setFormData({
+          gender: mappedGender,
+          ageGroup: mappedAge,
+          phone: data.phone_number,
+          password: "",
+          passwordConfirm: "",
+        });
+      } catch (err: any) {
+        console.error("🚨 사용자 정보 로드 실패:", err);
+        alert(err.message || "사용자 정보를 불러오지 못했습니다.");
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  // 입력 변경 핸들러
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    
-    // 입력 시 해당 필드 에러 제거
+
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
   };
 
+  // 폼 검증
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // 성별 검증
-    if (!formData.gender) {
-      newErrors.gender = "성별을 선택해 주세요.";
-    }
+    if (!formData.gender) newErrors.gender = "성별을 선택해 주세요.";
+    if (!formData.ageGroup) newErrors.ageGroup = "연령대를 선택해 주세요.";
 
-    // 연령대 검증
-    if (!formData.ageGroup) {
-      newErrors.ageGroup = "연령대를 선택해 주세요.";
-    }
-
-    // 전화번호 검증
     if (!formData.phone) {
       newErrors.phone = "전화번호를 입력해 주세요.";
     } else if (!phoneRe.test(formData.phone)) {
       newErrors.phone = "전화번호는 10~11자리 숫자로 입력해 주세요.";
     }
 
-    // 비밀번호 검증 (입력된 경우만)
     if (formData.password) {
       if (!validatePassword(formData.password)) {
-        newErrors.password = "영문, 숫자, 특수문자 중 2종류 이상을 조합하여 8자 이상 입력해 주세요.";
+        newErrors.password =
+          "영문, 숫자, 특수문자 중 2종류 이상을 조합하여 8자 이상 입력해 주세요.";
       } else if (formData.password !== formData.passwordConfirm) {
         newErrors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
       }
     }
 
-    // 비밀번호 확인이 입력되었는데 비밀번호가 없는 경우
     if (formData.passwordConfirm && !formData.password) {
       newErrors.password = "새 비밀번호를 입력해 주세요.";
     }
@@ -111,19 +148,17 @@ const ProfileSection: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // 저장 버튼
   const handleSave = () => {
-    // 검증 수행
     if (!validateForm()) {
-      // 첫 번째 에러 필드로 스크롤
       const firstErrorField = Object.keys(errors)[0];
       const element = document.querySelector(`[name="${firstErrorField}"]`);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       return;
     }
 
-    // 사용자 정보 업데이트
     setUser({
       ...user,
       gender: formData.gender,
@@ -131,13 +166,11 @@ const ProfileSection: React.FC = () => {
       phone: formData.phone,
     });
 
-    // TODO: 비밀번호가 입력되었으면 비밀번호 변경 API 호출
     if (formData.password) {
       console.log("비밀번호 변경:", formData.password);
-      // API 호출: await api.updatePassword({ password: formData.password });
+      // TODO: 비밀번호 변경 API 연결
     }
 
-    // TODO: 사용자 정보 변경 API 호출
     console.log("사용자 정보 변경:", {
       gender: formData.gender,
       ageGroup: formData.ageGroup,
@@ -169,7 +202,7 @@ const ProfileSection: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-base border border-border-light p-6">
-      {/* 상단 프로필 영역 */}
+      {/* 상단 프로필 */}
       <div className="flex items-center justify-between border-b border-border-light pb-5 mb-5">
         <div className="flex items-center gap-6">
           <img
@@ -177,11 +210,11 @@ const ProfileSection: React.FC = () => {
             alt="프로필 이미지"
             className="w-20 h-20 rounded-full object-cover shadow-sm"
           />
-          
-          {/* 수정 불가능한 정보 */}
           <div className="flex flex-col space-y-2">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-text-primary">{user.name}</h2>
+              <h2 className="text-xl font-semibold text-text-primary">
+                {user.name}
+              </h2>
               <Lock size={16} className="text-text-muted" />
             </div>
             <div className="flex items-center gap-2">
@@ -204,13 +237,10 @@ const ProfileSection: React.FC = () => {
       {!isEditing ? (
         <div className="space-y-6">
           <h3 className="text-lg font-semibold text-text-primary">계정 정보</h3>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <InfoRow label="성별" value={user.gender} />
             <InfoRow label="연령대" value={user.ageGroup} />
             <InfoRow label="전화번호" value={user.phone} />
-
-            {/* 여러 조직을 표시 */}
             <div className="sm:col-span-2 border-b border-border-light pb-3">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm text-text-secondary">소속된 조직명</span>
@@ -232,16 +262,19 @@ const ProfileSection: React.FC = () => {
       ) : (
         /* 수정 모드 */
         <div className="space-y-5">
-          <h3 className="text-lg font-semibold text-text-primary mb-2">정보 수정</h3>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
+            정보 수정
+          </h3>
 
           {/* 비밀번호 변경 */}
           <div className="bg-gray-50 p-4 rounded-lg space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-text-primary">비밀번호 변경</h4>
+              <h4 className="text-sm font-semibold text-text-primary">
+                비밀번호 변경
+              </h4>
               <span className="text-xs text-text-muted">(선택사항)</span>
             </div>
-            
-            {/* 새 비밀번호 */}
+
             <PasswordField
               label="새 비밀번호"
               name="password"
@@ -252,8 +285,7 @@ const ProfileSection: React.FC = () => {
               showPassword={showPassword}
               onTogglePassword={() => setShowPassword(!showPassword)}
             />
-            
-            {/* 비밀번호 강도 체크 */}
+
             {formData.password && (
               <div className="text-xs space-y-1.5 pl-1">
                 <PasswordCheckItem
@@ -272,8 +304,7 @@ const ProfileSection: React.FC = () => {
                 />
               </div>
             )}
-            
-            {/* 비밀번호 확인 */}
+
             <PasswordField
               label="비밀번호 확인"
               name="passwordConfirm"
@@ -282,7 +313,9 @@ const ProfileSection: React.FC = () => {
               placeholder="새 비밀번호를 다시 입력하세요"
               error={errors.passwordConfirm}
               showPassword={showPasswordConfirm}
-              onTogglePassword={() => setShowPasswordConfirm(!showPasswordConfirm)}
+              onTogglePassword={() =>
+                setShowPasswordConfirm(!showPasswordConfirm)
+              }
             />
           </div>
 
@@ -331,7 +364,7 @@ const ProfileSection: React.FC = () => {
               value={formData.ageGroup}
               onChange={handleChange}
               className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
-                errors.ageGroup ? 'border-red-500' : 'border-border-light'
+                errors.ageGroup ? "border-red-500" : "border-border-light"
               }`}
             >
               <option value="10대">10대</option>
@@ -359,7 +392,7 @@ const ProfileSection: React.FC = () => {
             error={errors.phone}
           />
 
-          {/* 조직명 (읽기 전용) */}
+          {/* 조직명 */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <label className="block text-sm font-medium text-text-secondary">
@@ -379,7 +412,7 @@ const ProfileSection: React.FC = () => {
             </div>
           </div>
 
-          {/* 저장 버튼 */}
+          {/* 저장/취소 */}
           <div className="pt-6 flex justify-end gap-3">
             <button
               onClick={handleCancel}
@@ -400,7 +433,8 @@ const ProfileSection: React.FC = () => {
   );
 };
 
-/* 재사용 InputField */
+/* ===== 재사용 컴포넌트 ===== */
+
 const InputField = ({
   label,
   name,
@@ -431,7 +465,7 @@ const InputField = ({
       onChange={onChange}
       placeholder={placeholder || ""}
       className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
-        error ? 'border-red-500' : 'border-border-light'
+        error ? "border-red-500" : "border-border-light"
       }`}
     />
     {error && (
@@ -443,7 +477,6 @@ const InputField = ({
   </div>
 );
 
-/* 비밀번호 입력 필드 (눈 아이콘 포함) */
 const PasswordField = ({
   label,
   name,
@@ -475,7 +508,7 @@ const PasswordField = ({
         onChange={onChange}
         placeholder={placeholder || ""}
         className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-primary focus:outline-none ${
-          error ? 'border-red-500' : 'border-border-light'
+          error ? "border-red-500" : "border-border-light"
         }`}
       />
       <button

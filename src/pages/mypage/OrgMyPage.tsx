@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Building2 } from "lucide-react";
-import OrgMyPageTabs from "@/components/user/OrgMyPageTabs";
+import OrgMyPageTabs from "@/components/mypage/org/OrgMyPageTabs";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
 
 const OrgMyPage: React.FC = () => {

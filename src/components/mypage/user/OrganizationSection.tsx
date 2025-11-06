@@ -1,7 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Building2, Plus, LogOut, Clock, CheckCircle, X, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import type { CreateOrgRequest } from "@/types/org";
+import { createOrganization } from "@/api/orgs/createOrg";
+import { getOrganizations } from "@/api/orgs/getOrg";
+import { exitOrganization } from "@/api/orgs/exitOrg";
+import { joinOrganization } from "@/api/orgs/joinOrg";
+
+// ✅ 로컬용 타입 정의
 interface Organization {
   id: number;
   name: string;
@@ -9,44 +16,22 @@ interface Organization {
   code: string;
   role: "관리자" | "멤버";
   joinedDate: string;
-  status: "active" | "pending";
+  status: "APPROVED" | "PENDING" | "REJECTED";
 }
 
 const OrganizationSection: React.FC = () => {
   const navigate = useNavigate();
-  const [organizations, setOrganizations] = useState<Organization[]>([
-    {
-      id: 1,
-      name: "우리 FISA",
-      logo: "/dummy/woori-logo.png",
-      code: "FISA2024",
-      role: "관리자",
-      joinedDate: "2024.01.15",
-      status: "active",
-    },
-    {
-      id: 2,
-      name: "PASTA EDU",
-      logo: "/dummy/woori-logo.png",
-      code: "PASTA2024",
-      role: "멤버",
-      joinedDate: "2024.03.20",
-      status: "active",
-    },
-    {
-      id: 3,
-      name: "Tech Academy",
-      logo: "/dummy/woori-logo.png",
-      code: "TECH2024",
-      role: "멤버",
-      joinedDate: "2024.10.15",
-      status: "pending",
-    },
-  ]);
 
-  // 필터 상태
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "pending">("all");
-  const [roleFilter, setRoleFilter] = useState<"all" | "관리자" | "멤버">("all");
+  // ✅ 상태 정의
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [statusFilter, setStatusFilter] = useState
+   < "all" | "APPROVED" | "PENDING" >("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "관리자" | "멤버">(
+    "all"
+  );
 
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -60,81 +45,147 @@ const OrganizationSection: React.FC = () => {
     logo: "",
   });
 
-  // 조직 가입 신청
-  const handleJoinOrganization = () => {
-    if (!joinCode.trim()) {
-      alert("조직 코드를 입력해주세요.");
-      return;
+  // ✅ 조직 목록 API
+  const fetchOrganizations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getOrganizations();
+
+      const formatted: Organization[] = data.map((org) => ({
+        id: org.id,
+        name: org.name,
+        logo: org.img_url || "/dummy/woori-logo.png",
+        code: org.code,
+        role: org.is_admin ? ("관리자" as const) : ("멤버" as const),
+        joinedDate: org.join_at.split("T")[0].replace(/-/g, "."),
+        status: org.join_status // 이제 타입이 맞습니다
+      }));
+
+      setOrganizations(formatted);
+    } catch (err: any) {
+      console.error("❌ 조직 목록 불러오기 실패:", err);
+      setError(err.message || "조직 목록을 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
     }
-
-    // TODO: API 호출 - 조직 가입 신청
-    const newOrg: Organization = {
-      id: Date.now(),
-      name: "새로운 조직",
-      code: joinCode,
-      role: "멤버",
-      joinedDate: new Date().toISOString().split("T")[0].replace(/-/g, "."),
-      status: "pending",
-    };
-
-    setOrganizations([...organizations, newOrg]);
-    setJoinCode("");
-    setShowJoinModal(false);
-    alert("조직 가입 신청이 완료되었습니다. 관리자 승인을 기다려주세요.");
   };
 
-  // 조직 생성
-  const handleCreateOrganization = () => {
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+  // ✅ 조직 생성
+  const handleCreateOrganization = async () => {
     if (!newOrgData.name.trim()) {
       alert("조직명을 입력해주세요.");
       return;
     }
 
-    const exists = organizations.some(
-      (org) =>
-        org.name.trim().toLowerCase() ===
-        newOrgData.name.trim().toLowerCase()
-    );
-    if (exists) {
-      alert("이미 존재하는 조직명입니다.");
+    try {
+      const payload: CreateOrgRequest = {
+        name: newOrgData.name,
+        img_url: newOrgData.logo || "",
+        desc: newOrgData.description,
+      };
+
+      const result = await createOrganization(payload);
+      console.log("✅ 생성 결과:", result);
+
+      const newOrg: Organization = {
+        id: Number(result.id),
+        name: newOrgData.name,
+        logo: newOrgData.logo,
+        code: result.code,
+        role: "관리자",
+        joinedDate: new Date().toISOString().split("T")[0].replace(/-/g, "."),
+        status: "APPROVED",
+      };
+
+      setOrganizations((prev) => [...prev, newOrg]);
+      setNewOrgData({ name: "", description: "", logo: "" });
+      setShowCreateModal(false);
+      alert(`🎉 조직이 생성되었습니다!\n조직 코드: ${result.code}`);
+    } catch (err: any) {
+      alert(err.message || "조직 생성 중 오류가 발생했습니다.");
+    }
+  };
+
+  // ✅ 조직 가입 신청
+  const handleJoinOrganization = async () => {
+    if (!joinCode.trim()) {
+      alert("조직 코드를 입력해주세요.");
       return;
     }
 
-    // TODO: API 호출 - 조직 생성
-    const generatedCode = `ORG${Date.now().toString().slice(-6)}`;
-    const newOrg: Organization = {
-      id: Date.now(),
-      name: newOrgData.name,
-      logo: newOrgData.logo,
-      code: generatedCode,
-      role: "관리자",
-      joinedDate: new Date().toISOString().split("T")[0].replace(/-/g, "."),
-      status: "active",
-    };
+    // 코드 유효성 검사: 영어+숫자 6자리
+    const codeRegex = /^[A-Za-z0-9]{6}$/;
+    if (!codeRegex.test(joinCode)) {
+      alert("조직 코드는 영어와 숫자가 섞인 6자리여야 합니다. (예: F1SA24)");
+      return;
+    }
 
-    setOrganizations([...organizations, newOrg]);
-    setNewOrgData({ name: "", description: "", logo: "" });
-    setShowCreateModal(false);
-    alert(`조직이 생성되었습니다!\n조직 코드: ${generatedCode}`);
+    try {
+      // orgId는 현재 선택한 조직 또는 조회된 조직 ID (예: 테스트용 1번)
+      const orgId = 1; // ⚠️ TODO: 실제 선택된 조직 ID로 교체
+
+      const success = await joinOrganization(orgId, joinCode);
+
+      if (success) {
+        alert("✅ 조직 가입 신청이 완료되었습니다. 관리자 승인을 기다려주세요.");
+        fetchOrganizations(); // 목록 새로고침
+      }
+
+      setJoinCode("");
+      setShowJoinModal(false);
+    } catch (err: any) {
+      alert(`🚨 ${err.message}`);
+    }
   };
 
-  // 조직 나가기
-  const handleLeaveOrganization = () => {
+  // ✅ 조직 나가기
+  const handleLeaveOrganization = async () => {
     if (!selectedOrg) return;
 
-    // TODO: API 호출 - 조직 탈퇴
-    setOrganizations(organizations.filter((org) => org.id !== selectedOrg.id));
-    setShowLeaveModal(false);
-    setSelectedOrg(null);
-    alert("조직에서 나갔습니다.");
+    try {
+      const success = await exitOrganization(selectedOrg.id);
+
+      if (success) {
+        alert("🚪 조직에서 성공적으로 나갔습니다.");
+        setOrganizations((prev) =>
+          prev.filter((org) => org.id !== selectedOrg.id)
+        );
+      } else {
+        alert("⚠️ 조직 나가기 요청이 실패했습니다. 다시 시도해주세요.");
+      }
+
+      setShowLeaveModal(false);
+      setSelectedOrg(null);
+    } catch (err: any) {
+      alert(err.message || "조직 나가기 중 오류가 발생했습니다.");
+    }
   };
 
-  // 필터링된 조직 목록
+  // ✅ 필터링된 조직 목록
   const filteredOrganizations = organizations.filter((org) => {
     const statusMatch = statusFilter === "all" || org.status === statusFilter;
     const roleMatch = roleFilter === "all" || org.role === roleFilter;
     return statusMatch && roleMatch;
   });
+
+  // ✅ 로딩 & 에러 처리
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-[300px] text-gray-500">
+        조직 목록 불러오는 중...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="flex justify-center items-center min-h-[300px] text-red-500">
+        {error}
+      </div>
+    );
 
   return (
     <div className="space-y-6">
@@ -170,33 +221,30 @@ const OrganizationSection: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setStatusFilter("all")}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  statusFilter === "all"
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-text-secondary hover:bg-gray-200"
-                }`}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${statusFilter === "all"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                  }`}
               >
                 전체 ({organizations.length})
               </button>
               <button
-                onClick={() => setStatusFilter("active")}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  statusFilter === "active"
-                    ? "bg-success text-white"
-                    : "bg-gray-100 text-text-secondary hover:bg-gray-200"
-                }`}
+                onClick={() => setStatusFilter("APPROVED")}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${statusFilter === "APPROVED"
+                  ? "bg-success text-white"
+                  : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                  }`}
               >
-                활성 ({organizations.filter((o) => o.status === "active").length})
+                활성 ({organizations.filter((o) => o.status === "APPROVED").length})
               </button>
               <button
-                onClick={() => setStatusFilter("pending")}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  statusFilter === "pending"
-                    ? "bg-warning text-white"
-                    : "bg-gray-100 text-text-secondary hover:bg-gray-200"
-                }`}
+                onClick={() => setStatusFilter("PENDING")}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${statusFilter === "PENDING"
+                  ? "bg-warning text-white"
+                  : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                  }`}
               >
-                대기 ({organizations.filter((o) => o.status === "pending").length})
+                대기 ({organizations.filter((o) => o.status === "PENDING").length})
               </button>
             </div>
           </div>
@@ -209,31 +257,28 @@ const OrganizationSection: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setRoleFilter("all")}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  roleFilter === "all"
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-text-secondary hover:bg-gray-200"
-                }`}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${roleFilter === "all"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                  }`}
               >
                 전체
               </button>
               <button
                 onClick={() => setRoleFilter("관리자")}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  roleFilter === "관리자"
-                    ? "bg-error text-white"
-                    : "bg-gray-100 text-text-secondary hover:bg-gray-200"
-                }`}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${roleFilter === "관리자"
+                  ? "bg-error text-white"
+                  : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                  }`}
               >
                 관리자 ({organizations.filter((o) => o.role === "관리자").length})
               </button>
               <button
                 onClick={() => setRoleFilter("멤버")}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  roleFilter === "멤버"
-                    ? "bg-info text-white"
-                    : "bg-gray-100 text-text-secondary hover:bg-gray-200"
-                }`}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${roleFilter === "멤버"
+                  ? "bg-info text-white"
+                  : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                  }`}
               >
                 멤버 ({organizations.filter((o) => o.role === "멤버").length})
               </button>
@@ -265,11 +310,10 @@ const OrganizationSection: React.FC = () => {
         {filteredOrganizations.map((org) => (
           <div
             key={org.id}
-            className={`bg-white border rounded-xl shadow-base p-5 transition-all ${
-              org.status === "pending"
-                ? "border-warning bg-warning/5"
-                : "border-border-light hover:shadow-lg"
-            }`}
+            className={`bg-white border rounded-xl shadow-base p-5 transition-all ${org.status === "PENDING"
+              ? "border-warning bg-warning/5"
+              : "border-border-light hover:shadow-lg"
+              }`}
           >
             {/* 조직 헤더 */}
             <div className="flex items-start justify-between mb-4">
@@ -297,10 +341,15 @@ const OrganizationSection: React.FC = () => {
               </div>
 
               {/* 상태 뱃지 */}
-              {org.status === "pending" ? (
+              {org.status === "PENDING" ? (
                 <div className="flex items-center gap-1 px-3 py-1 bg-warning/20 text-warning rounded-full">
                   <Clock size={14} />
                   <span className="text-xs font-medium">승인 대기</span>
+                </div>
+              ) : org.status === "REJECTED" ? (
+                <div className="flex items-center gap-1 px-3 py-1 bg-error/20 text-error rounded-full">
+                  <X size={14} />
+                  <span className="text-xs font-medium">거절됨</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 px-3 py-1 bg-success/20 text-success rounded-full">
@@ -315,9 +364,8 @@ const OrganizationSection: React.FC = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-text-secondary">역할</span>
                 <span
-                  className={`font-medium ${
-                    org.role === "관리자" ? "text-primary" : "text-text-primary"
-                  }`}
+                  className={`font-medium ${org.role === "관리자" ? "text-primary" : "text-text-primary"
+                    }`}
                 >
                   {org.role}
                 </span>
@@ -329,7 +377,7 @@ const OrganizationSection: React.FC = () => {
             </div>
 
             {/* 나가기 버튼 */}
-            {org.status === "active" && (
+            {org.status === "APPROVED" && (
               <div className="space-y-2">
                 {/* 관리자인 경우 관리 페이지 버튼 */}
                 {org.role === "관리자" && (

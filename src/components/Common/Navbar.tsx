@@ -1,25 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import {
-  Search,
-  ChevronDown,
-  ShieldUser,
-  BookOpen,
-  BellRing,
-  Megaphone,
-  Bookmark,
-  Home,
-  Bell,
-  Menu,
-  X,
-  Settings,
-  Building2,
-  User,
-  MessageSquare,
-  MessageCircle,
-  UserCircle,
-} from "lucide-react";
+import { Search, ChevronDown, ShieldUser, BookOpen, BellRing, Megaphone, Bookmark, Home, Bell, Menu, X, Settings, Building2, User, MessageSquare, MessageCircle, UserCircle, } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
+import { getUserInfo } from "@/api/mypage/getUserInfo";
+import { getOrganizations } from "@/api/orgs/getOrg";
+import type { OrganizationResponse } from "@/types/org";
+
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -27,10 +13,18 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [organization, setOrganization] = useState("우리 FISA");
 
-  // TODO: 실제로는 API나 전역 상태에서 가져올 사용자 권한
-  const [isAdmin] = useState(true); // 관리자 여부
+  const [userName, setUserName] = useState("사용자");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const [organization, setOrganization] = useState<string>(
+    localStorage.getItem("selectedOrgName") || "조직 선택 안됨"
+  );
+  const [orgId] = useState<number | null>(
+    localStorage.getItem("selectedOrgId")
+      ? Number(localStorage.getItem("selectedOrgId"))
+      : null
+  );
 
   const [notifications, setNotifications] = useState([
     { id: 1, text: "📢 새로운 강의 'AI 기초반'이 업로드되었습니다.", read: false },
@@ -43,6 +37,47 @@ const Navbar = () => {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  //  로그인 사용자 정보 불러오기
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await getUserInfo();
+        setUserName(data.name || "이름 없음");
+      } catch (err) {
+        console.error("🚨 사용자 정보 로드 실패:", err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // 조직 관리자 여부 확인
+  useEffect(() => {
+  const checkAdminStatus = async () => {
+    try {
+      const orgs: OrganizationResponse[] = await getOrganizations();
+
+      if (!orgId) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const selectedOrg = orgs.find((org) => org.id === orgId);
+
+      // 관리자이면서 승인된 조직일 때만 true
+      if (selectedOrg?.is_admin && selectedOrg.join_status === "APPROVED") {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (err) {
+      console.error("🚨 조직 정보 확인 실패:", err);
+      setIsAdmin(false);
+    }
+  };
+
+  checkAdminStatus();
+}, [orgId]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -134,25 +169,22 @@ const Navbar = () => {
         {/* 오른쪽: 관리자 버튼 + 알림 + 프로필 (중간 화면 이상) */}
         <div className="hidden md:flex items-center gap-3 lg:gap-4 px-2 sm:px-4 md:px-8">
 
-          {/* 관리자 버튼 (관리자만 표시) */}
+          {/* 관리자 버튼 */}
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
               className="group relative flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border border-purple-200 hover:border-purple-300 rounded-lg transition-all duration-200 hover:shadow-md"
               title="관리자 페이지"
             >
-              <div className="relative">
-                <Settings
-                  size={18}
-                  className="text-purple-600 group-hover:rotate-90 transition-transform duration-300"
-                />
-              </div>
+              <Settings
+                size={18}
+                className="text-purple-600 group-hover:rotate-90 transition-transform duration-300"
+              />
               <span className="text-xs font-semibold text-purple-700 hidden lg:block">
                 관리자
               </span>
             </button>
           )}
-
 
           {/* 공지사항 */}
           <button
@@ -196,8 +228,8 @@ const Navbar = () => {
                       <div
                         key={n.id}
                         className={`px-4 py-2 text-sm cursor-pointer transition ${n.read
-                            ? "text-gray-600 hover:bg-gray-50"
-                            : "bg-blue-50 text-gray-800 font-semibold hover:bg-blue-100"
+                          ? "text-gray-600 hover:bg-gray-50"
+                          : "bg-blue-50 text-gray-800 font-semibold hover:bg-blue-100"
                           }`}
                         onClick={() =>
                           setNotifications((prev) =>
@@ -228,7 +260,9 @@ const Navbar = () => {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <img src="/user-icon/user9.png" alt="user" className="rounded-full w-8 h-8 lg:w-10 lg:h-10" />
-              <span className="font-semibold text-gray-700 text-sm hidden lg:block">홍길동</span>
+              <span className="font-semibold text-gray-700 text-sm hidden lg:block">
+                {userName}
+              </span>
               <ChevronDown className="text-gray-500 w-4 h-4" />
             </button>
 
@@ -402,7 +436,10 @@ const Navbar = () => {
       <OrganizationSelectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSelect={(org) => setOrganization(org)}
+        onSelect={(org) => {
+          setOrganization(org);
+          localStorage.setItem("selectedOrgName", org);
+        }}
       />
     </>
   );

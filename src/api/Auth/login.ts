@@ -7,7 +7,7 @@ export const login = async (data: LoginRequest): Promise<LoginResponse> => {
     const token = response.headers["authorization"] || response.headers["Authorization"];
 
     if (token) {
-      localStorage.setItem("org_token", token.replace("Bearer ", ""));
+      localStorage.setItem("access_token", token.replace("Bearer ", ""));
     }
     
     return response.data.result;

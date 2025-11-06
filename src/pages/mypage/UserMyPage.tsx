@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import UserMyPageTabs from "@/components/user/UserMyPageTabs";
+import UserMyPageTabs from "@/components/mypage/user/UserMyPageTabs";
 
 const UserMyPage: React.FC = () => {
   const location = useLocation();

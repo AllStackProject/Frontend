@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Building2, ChevronRight, Plus, X } from "lucide-react";
 import { getOrganizations } from "@/api/orgs/getOrg";
 import { getUserInfo } from "@/api/mypage/getUserInfo";
-import { selectOrganization } from "@/api/orgs/selectOrg";
+import { useSelectOrganization } from "@/api/orgs/selectOrg";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import SuccessModal from "@/components/common/modals/SuccessModal";
+import { joinOrganization } from "@/api/orgs/joinOrg";
 
 interface Organization {
   id: number;
@@ -23,6 +24,7 @@ export default function LoginSelect() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { selectOrganization } = useSelectOrganization();
 
   // 모달 상태
   const [showAddModal, setShowAddModal] = useState(false);
@@ -61,55 +63,76 @@ export default function LoginSelect() {
     fetchData();
   }, []);
 
-  // 조직 선택 → PATCH /orgs/{orgId}
+  // 조직 선택
   const handleSelectOrg = async (orgId: number, orgName: string) => {
     try {
-      const success = await selectOrganization(orgId);
+      const success = await selectOrganization(orgId, orgName);
 
-      if (!success) {
-        alert("조직 토큰 발급에 실패했습니다.");
-        return;
-      }
+    if (!success) {
+      alert("조직 토큰 발급에 실패했습니다.");
+      return;
+    }
 
-      localStorage.setItem("selectedOrgName", orgName);
-      
-      navigate("/home");
+    navigate("/home", { replace: true })
     } catch (error: any) {
       alert(error.message || "조직 선택 중 오류가 발생했습니다.");
     }
   };
 
   // ✅ 조직 코드 입력 → 가입 신청 (TODO: /orgs/join API 연결 예정)
-  const handleAddOrganization = () => {
-    if (!orgCode.trim()) {
-      setErrorMessage("조직 코드를 입력해주세요.");
+  const handleAddOrganization = async () => {
+  if (!orgCode.trim()) {
+    setErrorMessage("조직 코드를 입력해주세요.");
+    setShowErrorModal(true);
+    return;
+  }
+
+  // ✅ 영어 + 숫자 조합 6자리 검증
+  if (orgCode.trim().length !== 6 || !/^[A-Za-z0-9]{6}$/.test(orgCode.trim())) {
+    setErrorMessage("조직 코드는 영문과 숫자가 섞인 6자리여야 합니다.");
+    setShowErrorModal(true);
+    return;
+  }
+
+  try {
+    // ✅ 조직 목록에서 일치하는 코드(또는 임시로 첫 조직)에 요청
+    // 실제로는 code 기반으로 orgId를 백엔드가 판별해야 하지만,
+    // 지금 구조에서는 테스트용으로 첫 조직을 사용합니다.
+    const targetOrg = organizations[0];
+    if (!targetOrg) {
+      setErrorMessage("조직을 찾을 수 없습니다.");
       setShowErrorModal(true);
       return;
     }
 
-    if (orgCode.trim().length !== 6 || !/^\d{6}$/.test(orgCode.trim())) {
-      setErrorMessage("조직 코드는 6자리 숫자여야 합니다.");
-      setShowErrorModal(true);
-      return;
+    const success = await joinOrganization(targetOrg.id, orgCode);
+
+    if (success) {
+      // ✅ UI 반영 (PENDING 상태 추가)
+      const newOrg: Organization = {
+        id: targetOrg.id,
+        name: targetOrg.name,
+        memberCount: targetOrg.memberCount,
+        image: targetOrg.image,
+        joinStatus: "PENDING",
+        isAdmin: false,
+      };
+
+      setOrganizations((prev) => [...prev, newOrg]);
+      setAddedOrgName(newOrg.name);
+      setShowAddModal(false);
+      setOrgCode("");
+      setShowSuccessModal(true);
+    } else {
+      throw new Error("조직 가입 요청이 실패했습니다.");
     }
+  } catch (err: any) {
+    setErrorMessage(err.message || "조직 가입 요청 중 오류가 발생했습니다.");
+    setShowErrorModal(true);
+  }
+};
 
-    const newOrg: Organization = {
-      id: Date.now(),
-      name: "새로운 조직",
-      memberCount: 0,
-      image: "/dummy/woori-logo.png",
-      joinStatus: "PENDING",
-      isAdmin: false,
-    };
-
-    setOrganizations([...organizations, newOrg]);
-    setAddedOrgName(newOrg.name);
-    setShowAddModal(false);
-    setOrgCode("");
-    setShowSuccessModal(true);
-  };
-
-  // 🎨 색상 관련
+  // 색상 관련
   const availableColors = [
     "blue",
     "purple",
@@ -142,7 +165,7 @@ export default function LoginSelect() {
     return colorStyles[color] || colorStyles.blue;
   };
 
-  // ✅ 로딩 & 에러 처리
+  // 로딩 & 에러 처리
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen text-gray-500">
@@ -157,7 +180,6 @@ export default function LoginSelect() {
       </div>
     );
 
-  // ✅ UI 렌더링
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
@@ -185,11 +207,10 @@ export default function LoginSelect() {
                   key={org.id}
                   onClick={() => handleSelectOrg(org.id, org.name)}
                   disabled={org.joinStatus === "PENDING"}
-                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${
-                    org.joinStatus === "PENDING"
+                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${org.joinStatus === "PENDING"
                       ? "opacity-60 cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                 >
                   {/* 상단 그라데이션 */}
                   <div className={`h-24 bg-gradient-to-br ${style.gradient} relative`}>
@@ -303,9 +324,9 @@ export default function LoginSelect() {
                 type="text"
                 value={orgCode}
                 onChange={(e) =>
-                  setOrgCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  setOrgCode(e.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 6))
                 }
-                placeholder="123456"
+                placeholder="A1B2C3"
                 maxLength={6}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-2xl font-mono font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />

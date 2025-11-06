@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { X, Plus } from "lucide-react";
 import { getOrganizations } from "@/api/orgs/getOrg";
-import { selectOrganization } from "@/api/orgs/selectOrg";
+import { useSelectOrganization } from "@/api/orgs/selectOrg";
+import { useAuth } from "@/context/AuthContext";
 
 interface OrganizationSelectModalProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ const OrganizationSelectModal = ({
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { orgId: currentOrgId } = useAuth();
+  const { selectOrganization } = useSelectOrganization();
 
   // 조직 목록 불러오기
   useEffect(() => {
@@ -103,7 +107,7 @@ const OrganizationSelectModal = ({
                     }
 
                     try {
-                      const isSuccess = await selectOrganization(org.id);
+                      const isSuccess = await selectOrganization(org.id, org.name);
                       if (!isSuccess) {
                         alert("조직 토큰 발급에 실패했습니다.");
                         return;
@@ -112,7 +116,7 @@ const OrganizationSelectModal = ({
                       onClose();
 
                       // ✅ 페이지 새로고침 or 이동 (필요시)
-                      //window.location.reload(); // 선택 후 토큰 반영 즉시 갱신
+                      window.location.reload(); // 선택 후 토큰 반영 즉시 갱신
                     } catch (error: any) {
                       alert(error.message || "조직 전환 중 오류가 발생했습니다.");
                     }

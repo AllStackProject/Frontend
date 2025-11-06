@@ -160,7 +160,6 @@ const ProfileSection: React.FC = () => {
 
   try {
     const body: Record<string, string> = {
-      // 🔹 "대" 제거 + 숫자만 문자열로 보냄 ("40대" → "40")
       changed_age: formData.ageGroup.replace("대", "").trim(),
       changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
       changed_phone_num: formData.phone,

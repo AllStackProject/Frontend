@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 // 페이지 import
 import Landing from "@/pages/home/Landing";
@@ -38,44 +39,97 @@ import SettingPage from "@/pages/admin/SettingPage";
 import UserLayout from "@/layouts/UserLayout";
 import AdminLayout from "@/layouts/AdminLayout";
 
+// ✅ 보호된 라우트 컴포넌트 (로그인 필요)
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, orgToken } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!orgToken) {
+    // 로그인은 했지만 조직을 아직 선택 안한 경우
+    return <Navigate to="/login/select" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// ✅ 공개 라우트 (로그인 상태면 /home으로 리다이렉트)
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, orgToken } = useAuth();
+  if (!isAuthenticated) return <>{children}</>;
+  return orgToken ? <Navigate to="/home" replace /> : <Navigate to="/login/select" replace />;
+};
+
+// ✅ 랜딩 페이지 라우트 (로그인 상태면 /home으로 리다이렉트)
+const LandingRoute = () => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/home" replace /> : <Landing />;
+};
+
 export const router = createBrowserRouter([
   // -----------------------------
   // 기본 페이지 (비로그인/메인)
   // -----------------------------
   {
     path: "/",
-    element: <Landing />,
+    element: <LandingRoute />, // 토큰 있으면 /home으로
   },
   {
     path: "register",
-    element: <Register />,
+    element: (
+      <PublicRoute>
+        <Register />
+      </PublicRoute>
+    ),
   },
   {
     path: "/login",
-    element: <LoginHome />,
+    element: (
+      <PublicRoute>
+        <LoginHome />
+      </PublicRoute>
+    ),
   },
   {
     path: "/login/select",
-    element: <LoginSelect />,
+    element: (
+      <PublicRoute>
+        <LoginSelect />
+      </PublicRoute>
+    ),
   },
   {
     path: "/reset-password",
-    element: <LoginPasswordReset />,
+    element: (
+      <PublicRoute>
+        <LoginPasswordReset />
+      </PublicRoute>
+    ),
   },
   {
     path: "/home",
-    element: <OrgMainPage />,
+    element: (
+      <ProtectedRoute>
+        <OrgMainPage />
+      </ProtectedRoute>
+    ),
   },
   {
-        path: "/notice",
-        element: <NoticePage />,
+    path: "/notice",
+    element: <NoticePage />,
   },
 
   // -----------------------------
   // 사용자 전용 레이아웃
   // -----------------------------
   {
-    element: <UserLayout />,
+    element: (
+      <ProtectedRoute>
+        <UserLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "/video/:id",
@@ -110,7 +164,11 @@ export const router = createBrowserRouter([
   // -----------------------------
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "videos", element: <VideosPage /> },
@@ -124,5 +182,13 @@ export const router = createBrowserRouter([
       { path: "reports", element: <ReportsPage /> },
       { path: "settings", element: <SettingPage /> },
     ],
+  },
+
+  // -----------------------------
+  // 404 페이지
+  // -----------------------------
+  {
+    path: "*",
+    element: <Navigate to="/" replace />,
   },
 ]);

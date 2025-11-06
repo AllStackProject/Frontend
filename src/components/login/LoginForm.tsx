@@ -56,17 +56,13 @@ export default function LoginForm() {
     const res = await login(values);
 
     if (res.is_success) {
-      //console.log("✅ 로그인 성공 - 토큰 저장 및 이동");
       navigate('/login/select');
     } else {
-      //console.warn("⚠️ 로그인 실패 - 응답 성공 false");
       setErrors({ general: '이메일 또는 비밀번호를 확인해주세요.' });
     }
   } catch (err: any) {
-    //console.error("❌ 로그인 요청 실패:", err.response || err.message);
     setErrors({ general: err.message || '로그인 중 오류가 발생했습니다.' });
   } finally {
-    //console.log("🔚 로그인 요청 종료");
     setLoading(false);
   }
 };

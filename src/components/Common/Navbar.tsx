@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, ChevronDown, ShieldUser, BookOpen, BellRing, Megaphone, Bookmark, Home, Bell, Menu, X, Settings, Building2, User, MessageSquare, MessageCircle, UserCircle, } from "lucide-react";
+import {
+  Search, ChevronDown, ShieldUser, BookOpen, BellRing, Megaphone,
+  Bookmark, Home, Bell, Menu, X, Settings, Building2, User,
+  MessageSquare, MessageCircle, UserCircle
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
 import { getUserInfo } from "@/api/mypage/getUserInfo";
 import { getOrganizations } from "@/api/orgs/getOrg";
 import type { OrganizationResponse } from "@/types/org";
-
+import { useLogout } from "@/api/auth/useLogout";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -13,18 +17,18 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const [userName, setUserName] = useState("사용자");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const [organization, setOrganization] = useState<string>(
-    localStorage.getItem("selectedOrgName") || "조직 선택 안됨"
+  const { openLogoutModal, LogoutModal } = useLogout(navigate);
+
+  const [organization, setOrganization] = useState(
+    localStorage.getItem("org_name") || "조직 선택 안됨"
   );
   const [orgId] = useState<number | null>(
-    localStorage.getItem("selectedOrgId")
-      ? Number(localStorage.getItem("selectedOrgId"))
-      : null
+    localStorage.getItem("selectedOrgId") ? Number(localStorage.getItem("selectedOrgId")) : null
   );
+
 
   const [notifications, setNotifications] = useState([
     { id: 1, text: "📢 새로운 강의 'AI 기초반'이 업로드되었습니다.", read: false },
@@ -304,7 +308,8 @@ const Navbar = () => {
                   );
                 })}
                 <hr className="my-2 border-gray-200" />
-                <div className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 cursor-pointer transition-colors">
+                <div className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 cursor-pointer transition-colors" 
+                onClick={openLogoutModal}>
                   로그아웃
                 </div>
               </div>
@@ -424,13 +429,15 @@ const Navbar = () => {
             <hr className="my-4" />
             <div
               className="px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 rounded-lg cursor-pointer"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
+              onClick={openLogoutModal}>
               로그아웃
             </div>
           </div>
         </div>
       )}
+      
+      {/* 로그아웃 모달 추가 */}
+      <LogoutModal />
 
       {/* 조직 선택 모달 */}
       <OrganizationSelectModal

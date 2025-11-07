@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  Search, ChevronDown, ShieldUser, BookOpen, BellRing, Megaphone,
-  Bookmark, Home, Bell, Menu, X, Settings, Building2, User,
+  Search, ChevronDown, ShieldUser, BookOpen, Megaphone,
+  Bookmark, Home, Menu, X, Settings, Building2, User,
   MessageSquare, MessageCircle, UserCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userName, setUserName] = useState("사용자");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -26,28 +25,17 @@ const Navbar = () => {
     localStorage.getItem("org_name") || "조직 선택 안됨"
   );
   const [orgId] = useState<number | null>(
-    localStorage.getItem("selectedOrgId") ? Number(localStorage.getItem("selectedOrgId")) : null
+    localStorage.getItem("org_id") ? Number(localStorage.getItem("org_id")) : null
   );
 
-
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "📢 새로운 강의 'AI 기초반'이 업로드되었습니다.", read: false },
-    { id: 2, text: "🎓 '데이터 분석' 수강평이 업데이트되었습니다.", read: false },
-    { id: 3, text: "⭐ 회원 등급이 'Pro'로 승급되었습니다.", read: true },
-    { id: 4, text: "📢 새로운 강의 'AI 기초반'이 업로드되었습니다.", read: true },
-    { id: 5, text: "🎓 '데이터 분석' 수강평이 업데이트되었습니다.", read: false },
-    { id: 6, text: "⭐ 회원 등급이 'Pro'로 승급되었습니다.", read: true },
-  ]);
-
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const notifRef = useRef<HTMLDivElement>(null);
 
   //  로그인 사용자 정보 불러오기
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const data = await getUserInfo();
-        setUserName(data.name || "이름 없음");
+        setUserName(data.name || "사용자");
       } catch (err) {
         console.error("🚨 사용자 정보 로드 실패:", err);
       }
@@ -89,21 +77,10 @@ const Navbar = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsDropdownOpen(false);
       }
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setIsNotifOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // 모두 읽음 처리
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  // 안 읽은 알림 개수
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   // 메뉴 아이템 타입 정의
   type MenuItem = {
@@ -126,8 +103,7 @@ const Navbar = () => {
     { type: "divider", label: "" },
     { icon: User, label: "마이페이지", path: "/usermypage", isParent: true },
     { icon: ShieldUser, label: "내 조직", path: "/usermypage/groups", isChild: true },
-    { icon: UserCircle, label: "내 정보", path: "/usermypage/profile", isChild: true },
-    { icon: BellRing, label: "알림 설정", path: "/usermypage/settings", isChild: true },
+    { icon: UserCircle, label: "내 정보", path: "/usermypage/profile", isChild: true }
   ];
 
   return (
@@ -198,64 +174,6 @@ const Navbar = () => {
           >
             <Megaphone size={22} />
           </button>
-
-          {/* 알림 */}
-          <div className="relative" ref={notifRef}>
-            <button
-              onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="relative p-2 text-gray-600 hover:text-blue-500 transition rounded-lg hover:bg-gray-50"
-            >
-              <Bell size={22} />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-              )}
-            </button>
-
-            {/* 알림 드롭다운 */}
-            {isNotifOpen && (
-              <div className="absolute right-0 mt-3 w-80 bg-white shadow-lg rounded-xl border border-gray-100 py-3 z-50 animate-fadeIn">
-                <div className="flex justify-between items-center px-4 pb-2 border-b border-gray-100">
-                  <span className="font-semibold text-gray-800">알림</span>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="text-xs text-blue-500 hover:underline"
-                    >
-                      모두 읽음 표시
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-60 overflow-y-auto">
-                  {notifications.length > 0 ? (
-                    notifications.map((n) => (
-                      <div
-                        key={n.id}
-                        className={`px-4 py-2 text-sm cursor-pointer transition ${n.read
-                          ? "text-gray-600 hover:bg-gray-50"
-                          : "bg-blue-50 text-gray-800 font-semibold hover:bg-blue-100"
-                          }`}
-                        onClick={() =>
-                          setNotifications((prev) =>
-                            prev.map((m) =>
-                              m.id === n.id ? { ...m, read: true } : m
-                            )
-                          )
-                        }
-                      >
-                        {n.text}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-4 text-sm text-gray-400 text-center">
-                      새로운 알림이 없습니다.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
 
           {/* 프로필 */}
           <div className="relative" ref={dropdownRef}>
@@ -368,27 +286,6 @@ const Navbar = () => {
                 </button>
               </div>
             )}
-
-            {/* 알림 */}
-            <div className="mb-4">
-              <div
-                className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsNotifOpen(true);
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <Bell size={18} className="text-gray-500" />
-                  <span className="text-sm text-gray-700">알림</span>
-                </div>
-                {unreadCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {unreadCount}
-                  </span>
-                )}
-              </div>
-            </div>
 
             {/* 메뉴 */}
             {menuItems.map((item, index) => {

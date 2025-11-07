@@ -20,7 +20,6 @@ import ScrapSection from "@/components/mypage/org/ScrapSection";
 import CommentSection from "@/components/mypage/org/CommentSection";
 import ProfileSection from "@/components/mypage/user/ProfileSection";
 import GroupSection from "@/components/mypage/user/OrganizationSection";
-import SettingsSection from "@/components/mypage/user/SettingsSection";
 
 // 관리자 페이지 관련 import
 import DashboardPage from "@/pages/admin/DashboardPage";
@@ -152,7 +151,6 @@ export const router = createBrowserRouter([
         children: [
           { path: "profile", element: <ProfileSection /> },
           { path: "groups", element: <GroupSection /> },
-          { path: "settings", element: <SettingsSection /> },
           { index: true, element: <GroupSection /> }, // 기본 탭
         ],
       },

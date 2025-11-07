@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Play, Pause, Settings, Maximize, Volume2, Volume1, VolumeX } from "lucide-react";
 import { useVideoAnalytics } from "@/hooks/video/useVideoAnalytics";
+import VideoHeatMap from "@/components/video/VideoHeatMap";
+import { fetchVideoHeatMap, convertToSegments, normalizeHeatMapData } from "@/api/video/videoHeatmap";
+import type { NormalizedSegment } from "@/types/videoHeatmap";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -28,7 +31,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [volume, setVolume] = useState(0.7);
+  const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [thumbnail, setThumbnail] = useState<string>("");
@@ -36,12 +39,40 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const progressRef = useRef<HTMLDivElement>(null);
   const hideControlsTimeout = useRef<number | null>(null);
 
+  // ---- Heat Map 관련 state
+  const [heatMapData, setHeatMapData] = useState<NormalizedSegment[]>([]);
+  const [showHeatMap, setShowHeatMap] = useState(false);
+
   const analytics = useVideoAnalytics({
     userId,
     videoId,
     orgId,
     getVideoEl: () => videoRef.current,
   });
+
+  // ---- Heat Map 데이터 로드
+  useEffect(() => {
+    const loadHeatMap = async () => {
+      try {
+        // 서버에서 배열 형식으로 받아옴: [12, 23, 56, 48, ...]
+        const viewCounts = await fetchVideoHeatMap(videoId);
+
+        // 배열을 VideoSegment 형식으로 변환 (10초 단위)
+        const segments = convertToSegments(viewCounts, 10);
+
+        // 정규화 (0~1 사이 값으로)
+        const normalized = normalizeHeatMapData(segments);
+
+        setHeatMapData(normalized);
+      } catch (error) {
+        console.error("Failed to load heat map data:", error);
+      }
+    };
+
+    if (videoId) {
+      loadHeatMap();
+    }
+  }, [videoId]);
 
   // ---- 썸네일 생성
   useEffect(() => {
@@ -67,7 +98,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     const handleMouseMove = () => {
       setShowControls(true);
-      
+
       // 기존 타이머 제거
       if (hideControlsTimeout.current) {
         clearTimeout(hideControlsTimeout.current);
@@ -299,10 +330,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const settingsMenu = [
     { id: "quality", label: "화질", value: quality },
     { id: "speed", label: "재생 속도", value: `${playbackRate}x` },
+    { id: "volume", label: "볼륨", value: isMuted ? "음소거" : `${Math.round(volume * 100)}%` },
   ];
 
   const subMenus: Record<string, { label: string; value: any }[]> = {
-    quality: [{ label: "자동", value: "auto" }],
+    quality: [
+      { label: "자동", value: "auto" },
+      { label: "720p", value: "720" },
+      { label: "480p", value: "480" },
+      { label: "360p", value: "360" },
+    ],
     speed: [
       { label: "2.0x", value: 2 },
       { label: "1.5x", value: 1.5 },
@@ -311,6 +348,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       { label: "0.75x", value: 0.75 },
       { label: "0.5x", value: 0.5 },
     ],
+    volume: [],
   };
 
   const handleSubMenuClick = (menuId: string, value: any) => {
@@ -319,12 +357,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       videoRef.current.playbackRate = value;
       setPlaybackRate(value);
     }
-    setShowSubMenu(null);
-    setShowSettings(false);
+    if (menuId !== "volume") {
+      setShowSubMenu(null);
+      setShowSettings(false);
+    }
   };
-
   return (
-    <div 
+    <div
       ref={containerRef}
       className="relative w-full bg-black rounded-xl overflow-hidden shadow-md group"
       style={{ cursor: showControls ? 'default' : 'none' }}
@@ -341,7 +380,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       {/* 중앙 재생 버튼 (일시정지 시만 표시) */}
       {!isPlaying && showControls && (
-        <div 
+        <div
           className="absolute inset-0 flex items-center justify-center cursor-pointer"
           onClick={togglePlay}
         >
@@ -352,137 +391,162 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       )}
 
       {/* 컨트롤러 */}
-      <div 
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4 flex items-center gap-3 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0'
-        }`}
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
+          }`}
       >
-        {/* ▶ 재생 버튼 */}
-        <button
-          onClick={togglePlay}
-          className="text-white hover:text-yellow-400 p-2 rounded transition"
-        >
-          {isPlaying ? (
-            <Pause size={20} strokeWidth={2.5} />
-          ) : (
-            <Play size={20} strokeWidth={2.5} fill="white" />
-          )}
-        </button>
-
-        {/* 시간 표시 */}
-        <div className="text-white text-xs font-medium min-w-[90px] flex items-center gap-1 select-none">
-          <span>{formatTime(currentTime)}</span>
-          <span className="text-gray-400">/</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-
-        {/* 진행바 */}
-        <div
-          ref={progressRef}
-          className="flex-1 h-[6px] bg-white/30 rounded cursor-pointer relative group/progress"
-          onClick={handleProgressClick}
-        >
+        {/* 재생바 + Heat Map (상단) */}
+        <div className="px-4 pb-2">
           <div
-            className="h-full bg-blue-500 rounded relative"
-            style={{ width: `${progress}%` }}
+            ref={progressRef}
+            className="h-[4px] bg-white/30 rounded cursor-pointer relative group/progress"
+            onClick={handleProgressClick}
+            onMouseEnter={() => setShowHeatMap(true)}
+            onMouseLeave={() => setShowHeatMap(false)}
           >
-            <div
-              className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-yellow-400 rounded-full shadow cursor-grab group-hover/progress:scale-110 transition-transform"
-              onMouseDown={() => setIsDragging(true)}
-            />
-          </div>
-        </div>
-
-        {/* 🔊 볼륨 컨트롤 */}
-        <div className="relative flex items-center ml-2 group/volume text-white">
-          {/* 아이콘 */}
-          <button
-            onClick={toggleMute}
-            className="hover:text-yellow-400 p-2 rounded transition"
-          >
-            <VolumeIcon />
-          </button>
-
-          {/* 슬라이더 (hover 시만 표시) */}
-          <div
-            className="overflow-hidden transition-all duration-300 ease-in-out w-0 opacity-0 group-hover/volume:w-20 group-hover/volume:opacity-100"
-          >
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={isMuted ? 0 : volume}
-              onChange={handleVolumeChange}
-              className="ml-2 w-16 h-1 cursor-pointer accent-yellow-400 appearance-none bg-white/30 rounded-full"
-              style={{
-                background: `linear-gradient(to right, #facc15 0%, #facc15 ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) 100%)`
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 설정 / 전체화면 */}
-        <div className="flex items-center gap-2 ml-2">
-          <div className="relative" ref={settingsRef}>
-            <button
-              onClick={() => {
-                setShowSettings(!showSettings);
-                setShowSubMenu(null);
-              }}
-              className="text-white hover:text-yellow-400 p-2 rounded transition"
-            >
-              <Settings size={20} />
-            </button>
-
-            {showSettings && (
-              <div className="absolute bottom-full right-0 mb-3 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-[260px] overflow-y-auto z-10">
-                {showSubMenu ? (
-                  <>
-                    <div
-                      className="flex items-center gap-2 p-3 border-b text-blue-600 font-semibold cursor-pointer hover:bg-gray-50"
-                      onClick={() => setShowSubMenu(null)}
-                    >
-                      ← {settingsMenu.find((m) => m.id === showSubMenu)?.label}
-                    </div>
-                    {subMenus[showSubMenu]?.map((item, i) => (
-                      <div
-                        key={i}
-                        onClick={() => handleSubMenuClick(showSubMenu, item.value)}
-                        className={`px-4 py-2 text-sm cursor-pointer flex justify-between hover:bg-gray-100 ${(showSubMenu === "subtitle" && item.value === subtitle) ||
-                            (showSubMenu === "speed" && item.value === playbackRate)
-                            ? "bg-blue-50 text-blue-600 font-semibold"
-                            : "text-gray-700"
-                          }`}
-                      >
-                        {item.label}
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  settingsMenu.map((option) => (
-                    <div
-                      key={option.id}
-                      className="flex justify-between items-center px-4 py-2 text-sm cursor-pointer hover:bg-gray-50"
-                      onClick={() => setShowSubMenu(option.id)}
-                    >
-                      <span>{option.label}</span>
-                      <span className="text-gray-500 text-xs">
-                        {option.value} ›
-                      </span>
-                    </div>
-                  ))
-                )}
+            {/* Heat Map 그래프 (hover 시 표시) */}
+            {showHeatMap && heatMapData.length > 0 && duration > 0 && (
+              <div className="absolute bottom-5 left-0 w-full h-[40px] -translate-y-ful ">
+                <VideoHeatMap
+                  segments={heatMapData}
+                  duration={duration}
+                  height={50}
+                  color="#3674B5"
+                  opacity={0.7}
+                />
               </div>
             )}
-          </div>
 
+            {/* 진행바 */}
+            <div
+              className="h-full bg-blue-500 rounded relative"
+              style={{ width: `${progress}%` }}
+            >
+              <div
+                className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-yellow-400 rounded-full shadow cursor-grab group-hover/progress:scale-110 transition-transform"
+                onMouseDown={() => setIsDragging(true)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 컨트롤 버튼들 (하단) */}
+        <div className="px-4 pb-4 flex items-center gap-3">
+          {/* ▶ 재생 버튼 */}
           <button
-            onClick={toggleFullscreen}
+            onClick={togglePlay}
             className="text-white hover:text-yellow-400 p-2 rounded transition"
           >
-            <Maximize size={20} />
+            {isPlaying ? (
+              <Pause size={20} strokeWidth={2.5} />
+            ) : (
+              <Play size={20} strokeWidth={2.5} fill="white" />
+            )}
           </button>
+
+          {/* 시간 표시 */}
+          <div className="text-white text-xs font-medium min-w-[90px] flex items-center gap-1 select-none">
+            <span>{formatTime(currentTime)}</span>
+            <span className="text-gray-400">/</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+
+          {/* 가운데 빈 공간 (flex-1로 차지) */}
+          <div className="flex-1"></div>
+
+          {/* 설정 / 전체화면 */}
+          <div className="flex items-center gap-2 ml-2">
+            <div className="relative" ref={settingsRef}>
+              <button
+                onClick={() => {
+                  setShowSettings(!showSettings);
+                  setShowSubMenu(null);
+                }}
+                className="text-white hover:text-yellow-400 p-2 rounded transition"
+              >
+                <Settings size={20} />
+              </button>
+
+              {showSettings && (
+                <div className="absolute bottom-full right-0 mb-3 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-[260px] overflow-y-auto z-10">
+                  {showSubMenu ? (
+                    <>
+                      <div
+                        className="flex items-center gap-2 p-3 border-b text-blue-600 font-semibold cursor-pointer hover:bg-gray-50"
+                        onClick={() => setShowSubMenu(null)}
+                      >
+                        ← {settingsMenu.find((m) => m.id === showSubMenu)?.label}
+                      </div>
+
+                      {/* 볼륨 서브메뉴 (슬라이더) */}
+                      {showSubMenu === "volume" ? (
+                        <div className="px-4 py-6">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={toggleMute}
+                              className="text-gray-700 hover:text-blue-600 transition p-1"
+                            >
+                              <VolumeIcon />
+                            </button>
+                            <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.05"
+                              value={isMuted ? 0 : volume}
+                              onChange={handleVolumeChange}
+                              className="flex-1 h-2 cursor-pointer accent-blue-500 appearance-none bg-gray-200 rounded-full"
+                              style={{
+                                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(isMuted ? 0 : volume) * 100}%, #e5e7eb ${(isMuted ? 0 : volume) * 100}%, #e5e7eb 100%)`
+                              }}
+                            />
+                            <span className="text-sm text-gray-600 font-medium min-w-[40px] text-right">
+                              {isMuted ? "0%" : `${Math.round(volume * 100)}%`}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        /* 다른 서브메뉴 (재생속도 등) */
+                        subMenus[showSubMenu]?.map((item, i) => (
+                          <div
+                            key={i}
+                            onClick={() => handleSubMenuClick(showSubMenu, item.value)}
+                            className={`px-4 py-2 text-sm cursor-pointer flex justify-between hover:bg-gray-100 ${(showSubMenu === "subtitle" && item.value === subtitle) ||
+                              (showSubMenu === "speed" && item.value === playbackRate)
+                              ? "bg-blue-50 text-blue-600 font-semibold"
+                              : "text-gray-700"
+                              }`}
+                          >
+                            {item.label}
+                          </div>
+                        ))
+                      )}
+                    </>
+                  ) : (
+                    settingsMenu.map((option) => (
+                      <div
+                        key={option.id}
+                        className="flex justify-between items-center px-4 py-2 text-sm cursor-pointer hover:bg-gray-50"
+                        onClick={() => setShowSubMenu(option.id)}
+                      >
+                        <span>{option.label}</span>
+                        <span className="text-gray-500 text-xs">
+                          {option.value} ›
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={toggleFullscreen}
+              className="text-white hover:text-yellow-400 p-2 rounded transition"
+            >
+              <Maximize size={20} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import VideoCard from "@/components/Home/VideoCard";
-import HashtagSelect from "@/components/Home/HashtagSelect";
+import VideoCard from "@/components/home/VideoCard";
+import HashtagSelect from "@/components/home/HashtagSelect";
 import { HiOutlineFire, HiOutlineClock, HiOutlineStar, HiChevronDown } from "react-icons/hi";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

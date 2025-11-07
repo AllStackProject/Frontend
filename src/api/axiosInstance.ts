@@ -1,4 +1,10 @@
-import axios, { type AxiosInstance } from "axios";
+import axios, { AxiosHeaders } from "axios";
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+
+// ✅ 커스텀 설정 타입
+export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  tokenType?: "user" | "org" | "none";
+}
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080",
@@ -6,26 +12,27 @@ const api: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-// 요청 인터셉터
+// ✅ 요청 인터셉터
 api.interceptors.request.use(
-  (config) => {
-    const userToken = localStorage.getItem("access_token");
+  (config: CustomAxiosRequestConfig): InternalAxiosRequestConfig => {
+    const accessToken = localStorage.getItem("access_token");
     const orgToken = localStorage.getItem("org_token");
+    const tokenType = config.tokenType || "user";
 
-    if (userToken) {
-      config.headers["Authorization"] = `Bearer ${userToken}`;
+    // ✅ headers 인스턴스 타입 안전하게 접근
+    if (config.headers && config.headers instanceof AxiosHeaders) {
+      if (tokenType === "user" && accessToken) {
+        config.headers.set("Authorization", `Bearer ${accessToken}`);
+      } else if (tokenType === "org" && orgToken) {
+        config.headers.set("Authorization", `Bearer ${orgToken}`);
+      }
     }
-
-    if (orgToken) {
-      config.headers["X-Organization-Authorization"] = `Bearer ${orgToken}`;
-    }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 응답 인터셉터
+// ✅ 응답 인터셉터
 api.interceptors.response.use(
   (response) => response,
   (error) => {

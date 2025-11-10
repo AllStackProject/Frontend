@@ -1,8 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { joinOrganization } from "@/api/orgs/joinOrg";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { getUserInfo } from "@/api/mypage/getUserInfo";
+
+// (임시) 닉네임 중복 확인 API
+const checkNicknameAvailability = async (nickname: string): Promise<boolean> => {
+  await new Promise((r) => setTimeout(r, 300));
+  const takenNicknames = ["관리자", "운영자", "테스트"];
+  return !takenNicknames.includes(nickname.trim());
+};
 
 interface JoinOrgModalProps {
   onClose: () => void;
@@ -11,6 +19,9 @@ interface JoinOrgModalProps {
 
 const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
   const [joinCode, setJoinCode] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [isNicknameChecked, setIsNicknameChecked] = useState(false);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{
     title: string;
     message: string;
@@ -19,38 +30,114 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
     onConfirm: () => void;
   } | null>(null);
 
+  const handleNickname = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNickname(e.target.value);
+    setIsNicknameChecked(false);
+  };
+
+  // 로그인 사용자 이름을 닉네임 초기값으로 설정
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await getUserInfo();
+        setNickname(data.name || "");
+      } catch (err) {
+        console.error("🚨 사용자 정보 로드 실패:", err);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // 닉네임 중복 확인
+  const handleCheckNickname = async () => {
+    if (joinCode.length !== 6) {
+      setConfirmModal({
+        title: "조직 코드 필요",
+        message: "닉네임 중복 확인 전에 유효한 조직 코드를 입력해주세요.",
+        color: "yellow",
+        confirmText: "확인",
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
+    if (!nickname.trim()) {
+      setConfirmModal({
+        title: "입력 필요",
+        message: "닉네임을 입력해주세요.",
+        color: "yellow",
+        confirmText: "확인",
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
+
+    const available = await checkNicknameAvailability(nickname);
+    if (available) {
+      setIsNicknameChecked(true);
+      setConfirmModal({
+        title: "사용 가능",
+        message: `"${nickname}"은(는) 사용 가능한 닉네임입니다!`,
+        color: "green",
+        confirmText: "확인",
+        onConfirm: () => setConfirmModal(null),
+      });
+    } else {
+      setIsNicknameChecked(false);
+      setConfirmModal({
+        title: "중복된 닉네임",
+        message: `"${nickname}"은(는) 이미 사용 중입니다.`,
+        color: "red",
+        confirmText: "확인",
+        onConfirm: () => setConfirmModal(null),
+      });
+    }
+  };
+
+  // 조직 가입
   const handleJoin = async () => {
+    if (!joinCode.trim() || !nickname.trim()) {
+      setConfirmModal({
+        title: "입력 오류",
+        message: "조직 코드와 닉네임을 모두 입력해주세요.",
+        color: "yellow",
+        confirmText: "확인",
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
+
+    if (!isNicknameChecked) {
+      setConfirmModal({
+        title: "확인 필요",
+        message: "닉네임 중복 확인을 완료해주세요.",
+        color: "yellow",
+        confirmText: "확인",
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
+
+    const codeRegex = /^[A-Za-z0-9]{6}$/;
+    if (!codeRegex.test(joinCode)) {
+      setConfirmModal({
+        title: "입력 오류",
+        message: "조직 코드는 영어+숫자 6자리여야 합니다.",
+        color: "yellow",
+        confirmText: "확인",
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
+
     try {
-      if (!joinCode.trim()) {
-        setConfirmModal({
-          title: "입력 오류",
-          message: "조직 코드를 입력해주세요.",
-          color: "yellow",
-          confirmText: "확인",
-          onConfirm: () => setConfirmModal(null),
-        });
-        return;
-      }
-
-      const codeRegex = /^[A-Za-z0-9]{6}$/;
-      if (!codeRegex.test(joinCode)) {
-        setConfirmModal({
-          title: "입력 오류",
-          message: "조직 코드는 영어+숫자 6자리여야 합니다.\n\n예: F1SA24",
-          color: "yellow",
-          confirmText: "확인",
-          onConfirm: () => setConfirmModal(null),
-        });
-        return;
-      }
-
       const orgId = 1; // TODO: 실제 선택된 조직 ID 로직 적용
       const success = await joinOrganization(orgId, joinCode);
-
       if (success) {
         setConfirmModal({
           title: "가입 신청 완료",
-          message: "✅ 가입 신청이 완료되었습니다.\n승인 대기 중입니다.",
+          message: `✅ "${nickname}" 님의 가입 신청이 완료되었습니다.`,
           color: "green",
           confirmText: "확인",
           onConfirm: () => {
@@ -74,8 +161,17 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
   return (
     <>
       {createPortal(
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          style={{ zIndex: 9999 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative"
+            style={{ zIndex: 10000 }}
+          >
             {/* 닫기 버튼 */}
             <button
               onClick={onClose}
@@ -84,16 +180,16 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
               <X size={20} />
             </button>
 
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+            <h2 className="text-lg font-semibold text-text-primary mb-4 text-center">
               조직 가입
             </h2>
 
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-              <span className="font-semibold">💡 Tip:</span> 조직 관리자에게 받은
-              <strong> 6자리 코드</strong>를 입력하세요.
+            <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg text-sm text-primary">
+              <span className="font-semibold">💡 조직 코드와 사용할 닉네임을 입력하세요.</span>
             </div>
 
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            {/* 조직 코드 입력 */}
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               조직 코드
             </label>
             <input
@@ -104,23 +200,57 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
               }
               placeholder="예: A12B3C"
               maxLength={6}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-border-light rounded-lg px-4 py-3 text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-primary focus:outline-none"
             />
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              {joinCode.length}/6 자리
-            </p>
 
-            <div className="flex justify-end gap-3 mt-6">
+            {/* 닉네임 입력 */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                조직에서 사용할 닉네임 *
+              </label>
+              <div className="flex gap-2">
+                <input
+                  name="nickname"
+                  value={nickname}
+                  onChange={handleNickname}
+                  placeholder={isLoadingUser ? "로딩 중..." : "사용할 닉네임을 입력하세요"}
+                  disabled={isLoadingUser}
+                  className="flex-1 border border-border-light rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-wait"
+                />
+                <button
+                  onClick={handleCheckNickname}
+                  disabled={isLoadingUser || joinCode.length !== 6}
+                  className={`px-3 py-2 text-sm rounded-lg text-white transition whitespace-nowrap ${joinCode.length === 6
+                      ? "bg-primary hover:bg-primary-light"
+                      : "bg-gray-300 cursor-not-allowed"
+                    }`}
+                >
+                  중복 확인
+                </button>
+              </div>
+              {!isLoadingUser && (
+                <p className="text-xs text-gray-500 mt-1">
+                  초기값은 회원가입 시 이름이며, 자유롭게 수정 가능합니다.
+                </p>
+              )}
+              {isNicknameChecked && (
+                <p className="text-xs text-green-600 mt-1">사용 가능한 닉네임입니다.</p>
+              )}
+
+            </div>
+
+            {/* 버튼 */}
+            <div className="flex justify-end gap-3 mt-8">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-gray-50 transition"
               >
                 취소
               </button>
               <button
                 onClick={handleJoin}
-                disabled={joinCode.length !== 6}
-                className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={joinCode.length !== 6 || !isNicknameChecked}
+                className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary-light transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 가입 신청
               </button>
@@ -130,7 +260,7 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
         document.body
       )}
 
-      {/* ConfirmActionModal 렌더링 */}
+      {/* ConfirmActionModal */}
       {confirmModal && (
         <ConfirmActionModal
           title={confirmModal.title}

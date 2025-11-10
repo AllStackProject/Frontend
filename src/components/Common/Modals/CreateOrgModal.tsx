@@ -88,15 +88,17 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
 
   return createPortal(
     <>
-      {/* ✅ 메인 모달 */}
+      {/* 메인 모달 */}
       <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
         <div className="bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md">
           {/* 헤더 */}
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-text-primary">조직 생성</h3>
+          <div className="relative mb-4">
+            <h3 className="text-lg font-semibold text-text-primary text-center">
+              조직 생성
+            </h3>
             <button
               onClick={onClose}
-              className="text-text-muted hover:text-text-primary"
+              className="absolute top-0 right-0 text-text-muted hover:text-text-primary"
             >
               <X size={20} />
             </button>
@@ -199,7 +201,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
             </div>
 
             <div className="bg-success/10 border border-success/30 rounded-lg p-3 text-xs text-success">
-              ✅ 조직 생성 시 자동으로 슈퍼관리자 권한이 부여되며, 고유한 조직 코드가 발급됩니다.
+              조직 생성 시 자동으로 슈퍼관리자 권한이 부여되며, 고유한 조직 코드가 발급됩니다.
             </div>
           </div>
 
@@ -221,7 +223,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
         </div>
       </div>
 
-      {/* ✅ ConfirmActionModal 공통 알림 */}
+      {/* ConfirmActionModal 공통 알림 */}
       {confirmModal && (
         <ConfirmActionModal
           title={confirmModal.title}

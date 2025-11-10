@@ -12,9 +12,10 @@ const VideoDetailPage: React.FC = () => {
   // 임시 데이터
   const videoData = {
     id: id || "1",
-    title: "동영상제목입니다 동영상 제목 동영상 제목 동영상 제목",
+    title: "[보안교육] 사이버 보안 위협, 일단 어떤 위협이 있는지 알아야 대비하지 않겠어??!",
     channel: "우리 FISA",
     views: 1234,
+    description: "소오름… 세상이 편리해진다고 다 좋은 게 아니었다니ㅠㅠㅠ언제든지 우리의 일상을 파괴할 수 있는 사이버 보안 위협, 일단 어떤 위협이 있는지 알아야 대비하지 않겠어??!",
     uploadDate: "2024.01.01",
     categories: ["AI", "머신러닝", "교육", "FISA"],
     videoUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
@@ -119,6 +120,7 @@ const VideoDetailPage: React.FC = () => {
            videoId={videoData.id}
             title={videoData.title}
             channel={videoData.channel}
+            description={videoData.description}
             views={videoData.views}
             uploadDate={videoData.uploadDate}
             categories={videoData.categories}

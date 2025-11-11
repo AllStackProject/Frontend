@@ -87,7 +87,7 @@ export function useVideoAnalytics({ userId, videoId, orgId, getVideoEl }: Params
 
             // 클라이언트에서 즉시 sessionId 생성
             sessionId.current = crypto.randomUUID();
-            console.log(`🆔 [세션 생성] sessionId=${sessionId.current}`);
+            //console.log(`🆔 [세션 생성] sessionId=${sessionId.current}`);
 
             // JOIN 이벤트 추가
             addEvent("JOIN", 0, { startedAt: startedAt.current, orgId, videoId, userId });

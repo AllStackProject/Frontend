@@ -1,16 +1,13 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 import type {
-  Comment,
   ChildComment,
   CommentWithReplies,
   CommentsResponse,
 } from "@/types/comment";
 
 /**
- * 🧩 댓글 조회 (GET /{orgId}/video/{videoId}/comments)
- * - org_token 필요
- * - comments + child_comments → 병합
+ * 댓글 조회 (GET /{orgId}/video/{videoId}/comments)
  */
 export const getVideoComments = async (
   orgId: number,
@@ -20,7 +17,7 @@ export const getVideoComments = async (
     const orgToken = localStorage.getItem("org_token");
     if (!orgToken) throw new Error("조직 토큰이 없습니다. 다시 로그인해주세요.");
 
-    // ✅ GET 요청
+    // GET 요청
     const response = await api.get<CommentsResponse>(
       `/${orgId}/video/${videoId}/comments`,
       { tokenType: "org" } as CustomAxiosRequestConfig
@@ -31,7 +28,7 @@ export const getVideoComments = async (
 
     const { comments, child_comments } = result;
 
-    // ✅ parent_comment_id 기준으로 대댓글 묶기
+    // parent_comment_id 기준으로 대댓글 묶기
     const childMap: Record<number, ChildComment[]> = {};
     child_comments.forEach((child) => {
       const parentId = child.parent_comment_id;
@@ -44,7 +41,7 @@ export const getVideoComments = async (
       });
     });
 
-    // ✅ 부모 댓글 + 대댓글 합치기
+    // 부모 댓글 + 대댓글 합치기
     const merged: CommentWithReplies[] = comments.map((c) => ({
       ...c,
       user_name: c.user_name || "사용자",
@@ -53,7 +50,6 @@ export const getVideoComments = async (
       replies: childMap[c.id] || [],
     }));
 
-    console.log("✅ [getVideoComments] merged:", merged);
     return merged;
   } catch (error: any) {
     console.error("🚨 댓글 조회 실패:", error);
@@ -65,7 +61,7 @@ export const getVideoComments = async (
 };
 
 /**
- * 💬 댓글 작성 (POST /{orgId}/video/{videoId}/comment)
+ * 댓글 작성 (POST /{orgId}/video/{videoId}/comment)
  * - parent_comment_id: null → 일반 댓글
  * - parent_comment_id: number → 대댓글
  */

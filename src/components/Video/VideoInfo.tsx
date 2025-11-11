@@ -1,20 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, Calendar, Clock } from "lucide-react";
 import { HiHeart, HiOutlineHeart } from "react-icons/hi";
+import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
+
 
 interface VideoInfoProps {
-  videoId: string;
+  orgId: number;
+  videoId: number;
   title: string;
   views: number;
   description: string;
   uploadDate: string;
-  duration?: string; // 동영상 길이 (예: "15:30")
+  duration?: string;
   categories?: string[];
   initialFavorite?: boolean;
-  onFavoriteToggle?: (videoId: string, isFavorite: boolean) => void;
 }
 
 const VideoInfo: React.FC<VideoInfoProps> = ({
+  orgId,
   videoId,
   title,
   views,
@@ -22,18 +25,42 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
   description,
   duration,
   categories = [],
-  initialFavorite = false,
-  onFavoriteToggle,
+  initialFavorite,
 }) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // 즐겨찾기 토글
-  const handleFavoriteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  /** ✅ 서버 데이터 변경 시 하트 상태 갱신 */
+  useEffect(() => {
+  if (initialFavorite !== undefined && initialFavorite !== null) {
+    setIsFavorite(initialFavorite);
+  }
+}, [initialFavorite]);
+
+  /** ✅ 스크랩 등록/해제 */
+  const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    const newState = !isFavorite;
-    setIsFavorite(newState);
-    onFavoriteToggle?.(videoId, newState);
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      if (isFavorite) {
+        const res = await deleteVideoScrap(orgId, videoId);
+        if (res.is_success) setIsFavorite(false);
+      } else {
+        const res = await postVideoScrap(orgId, videoId);
+        if (res.is_success) setIsFavorite(true);
+      }
+    } catch (error: any) {
+      if (error.message?.includes("이미 스크랩")) {
+        setIsFavorite(true);
+      } else {
+        alert(error.message || "스크랩 처리 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 설명 더보기/접기
@@ -115,11 +142,12 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
             <button
               type="button"
               onClick={handleFavoriteClick}
+              disabled={loading}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all font-semibold text-sm ${
                 isFavorite
-                  ? "bg-red-50 border-red-200 text-red-600"
-                  : "bg-white border-gray-300 text-gray-700"
-              }`}
+                  ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               title={isFavorite ? "스크랩 해제" : "스크랩 추가"}
             >
               {isFavorite ? (

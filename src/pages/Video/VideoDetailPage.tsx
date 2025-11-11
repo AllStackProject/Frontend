@@ -25,7 +25,6 @@ const VideoDetailPage: React.FC = () => {
 
         const data = await startVideoSession(orgId, Number(id));
         setSessionData(data);
-        console.log("🎬 영상 세션 시작 성공:", data);
       } catch (err: any) {
         console.error("🚨 영상 세션 시작 실패:", err);
         setError(err.message || "영상 정보를 불러오지 못했습니다.");
@@ -82,12 +81,14 @@ const VideoDetailPage: React.FC = () => {
         {/* 동영상 정보 + AI 퀴즈 */}
         <div className="flex flex-col gap-6">
           <VideoInfo
+            orgId={orgId}
             videoId={video.id}
             title={video.title}
             description={video.desc}
             views={video.watch_cnt}
             uploadDate={new Date(video.created_at).toLocaleDateString("ko-KR")}
             categories={hashtags}
+            initialFavorite={sessionData.is_scrapped}
           />
 
           <AIQuizSection

@@ -6,7 +6,9 @@ export interface WatchedVideo {
   name: string;
   img: string;
   watch_rate: number;
-  recent_watch: string; // ISO date string
+  recent_watch: string;
+  whole_time: number;
+  is_scrapped?: boolean;
 }
 
 /* 비디오 데이터 */

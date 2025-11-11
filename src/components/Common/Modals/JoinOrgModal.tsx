@@ -4,13 +4,7 @@ import { X } from "lucide-react";
 import { joinOrganization } from "@/api/orgs/joinOrg";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import { getUserInfo } from "@/api/mypage/getUserInfo";
-
-// (임시) 닉네임 중복 확인 API
-const checkNicknameAvailability = async (nickname: string): Promise<boolean> => {
-  await new Promise((r) => setTimeout(r, 300));
-  const takenNicknames = ["관리자", "운영자", "테스트"];
-  return !takenNicknames.includes(nickname.trim());
-};
+import { checkNicknameAvailability } from "@/api/orgs/joinOrg";
 
 interface JoinOrgModalProps {
   onClose: () => void;
@@ -73,21 +67,32 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
       return;
     }
 
-    const available = await checkNicknameAvailability(nickname);
-    if (available) {
-      setIsNicknameChecked(true);
+    try {
+      const available = await checkNicknameAvailability(joinCode, nickname);
+
+      if (available) {
+        setIsNicknameChecked(true);
+        setConfirmModal({
+          title: "사용 가능",
+          message: `"${nickname}"은(는) 사용 가능한 닉네임입니다!`,
+          color: "green",
+          confirmText: "확인",
+          onConfirm: () => setConfirmModal(null),
+        });
+      } else {
+        setIsNicknameChecked(false);
+        setConfirmModal({
+          title: "중복된 닉네임",
+          message: `"${nickname}"은(는) 이미 사용 중입니다.`,
+          color: "red",
+          confirmText: "확인",
+          onConfirm: () => setConfirmModal(null),
+        });
+      }
+    } catch (err: any) {
       setConfirmModal({
-        title: "사용 가능",
-        message: `"${nickname}"은(는) 사용 가능한 닉네임입니다!`,
-        color: "green",
-        confirmText: "확인",
-        onConfirm: () => setConfirmModal(null),
-      });
-    } else {
-      setIsNicknameChecked(false);
-      setConfirmModal({
-        title: "중복된 닉네임",
-        message: `"${nickname}"은(는) 이미 사용 중입니다.`,
+        title: "오류 발생",
+        message: err.message || "닉네임 중복 확인 중 오류가 발생했습니다.",
         color: "red",
         confirmText: "확인",
         onConfirm: () => setConfirmModal(null),
@@ -132,12 +137,11 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
     }
 
     try {
-      const orgId = 1; // TODO: 실제 선택된 조직 ID 로직 적용
-      const success = await joinOrganization(orgId, joinCode);
-      if (success) {
+      const res = await joinOrganization(joinCode, nickname);
+      if (res.success) {
         setConfirmModal({
           title: "가입 신청 완료",
-          message: `✅ "${nickname}" 님의 가입 신청이 완료되었습니다.`,
+          message: `"${nickname}" 님의 가입 신청이 완료되었습니다.`,
           color: "green",
           confirmText: "확인",
           onConfirm: () => {
@@ -221,8 +225,8 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
                   onClick={handleCheckNickname}
                   disabled={isLoadingUser || joinCode.length !== 6}
                   className={`px-3 py-2 text-sm rounded-lg text-white transition whitespace-nowrap ${joinCode.length === 6
-                      ? "bg-primary hover:bg-primary-light"
-                      : "bg-gray-300 cursor-not-allowed"
+                    ? "bg-primary hover:bg-primary-light"
+                    : "bg-gray-300 cursor-not-allowed"
                     }`}
                 >
                   중복 확인

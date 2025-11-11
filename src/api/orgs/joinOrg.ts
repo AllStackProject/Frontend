@@ -41,7 +41,7 @@ export const checkNicknameAvailability = async (code: string, nickname: string) 
       throw new Error("로그인이 만료되었습니다. 다시 로그인해주세요.");
     }
 
-    // 실제 API 호출
+    // API 호출
     const response = await api.get(
       `/orgs/availability/nickname`,
       {

@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, ChevronRight, Plus, } from "lucide-react";
+import { Building2, ChevronRight, Plus } from "lucide-react";
 import { getOrganizations } from "@/api/orgs/getOrg";
 import { getUserInfo } from "@/api/mypage/user";
 import { useSelectOrganization } from "@/api/orgs/selectOrg";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import SuccessModal from "@/components/common/modals/SuccessModal";
-import { joinOrganization } from "@/api/orgs/joinOrg";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
 
@@ -31,11 +29,8 @@ export default function LoginSelect() {
   // 모달 상태
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [orgCode, setOrgCode] = useState("");
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [addedOrgName, setAddedOrgName] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // 유저 정보 & 조직 목록 불러오기
   useEffect(() => {
@@ -66,73 +61,39 @@ export default function LoginSelect() {
     fetchData();
   }, []);
 
+  // 조직 목록 새로고침
+  const refreshOrganizations = async () => {
+    try {
+      const orgs = await getOrganizations();
+      const formatted = orgs.map((org: any) => ({
+        id: org.id,
+        name: org.name,
+        image: org.img_url || "/dummy/woori-logo.png",
+        memberCount: 0,
+        joinStatus: org.join_status,
+        isAdmin: org.is_admin,
+      }));
+      setOrganizations(formatted);
+    } catch (err) {
+      console.error("조직 목록 새로고침 실패:", err);
+    }
+  };
+
   // 조직 선택
   const handleSelectOrg = async (orgId: number, orgName: string) => {
     try {
       const success = await selectOrganization(orgId, orgName);
 
       if (!success) {
-        alert("조직 토큰 발급에 실패했습니다.");
-        return;
-      }
-
-      navigate("/home", { replace: true })
-    } catch (error: any) {
-      alert(error.message || "조직 선택 중 오류가 발생했습니다.");
-    }
-  };
-
-  // ✅ 조직 코드 입력 → 가입 신청 (TODO: /orgs/join API 연결 예정)
-  const handleAddOrganization = async () => {
-    if (!orgCode.trim()) {
-      setErrorMessage("조직 코드를 입력해주세요.");
-      setShowErrorModal(true);
-      return;
-    }
-
-    // ✅ 영어 + 숫자 조합 6자리 검증
-    if (orgCode.trim().length !== 6 || !/^[A-Za-z0-9]{6}$/.test(orgCode.trim())) {
-      setErrorMessage("조직 코드는 영문과 숫자가 섞인 6자리여야 합니다.");
-      setShowErrorModal(true);
-      return;
-    }
-
-    try {
-      // ✅ 조직 목록에서 일치하는 코드(또는 임시로 첫 조직)에 요청
-      // 실제로는 code 기반으로 orgId를 백엔드가 판별해야 하지만,
-      // 지금 구조에서는 테스트용으로 첫 조직을 사용합니다.
-      const targetOrg = organizations[0];
-      if (!targetOrg) {
-        setErrorMessage("조직을 찾을 수 없습니다.");
-        setShowErrorModal(true);
-        return;
-      }
-
-      const success = await joinOrganization(targetOrg.id, orgCode);
-
-      if (success) {
-        // ✅ UI 반영 (PENDING 상태 추가)
-        const newOrg: Organization = {
-          id: targetOrg.id,
-          name: targetOrg.name,
-          memberCount: targetOrg.memberCount,
-          image: targetOrg.image,
-          joinStatus: "PENDING",
-          isAdmin: false,
-        };
-
-        setOrganizations((prev) => [...prev, newOrg]);
-        setAddedOrgName(newOrg.name);
-        setShowCreateModal(false);
-        setShowJoinModal(false);
-        setOrgCode("");
+        setSuccessMessage("조직 토큰 발급에 실패했습니다.");
         setShowSuccessModal(true);
-      } else {
-        throw new Error("조직 가입 요청이 실패했습니다.");
+        return;
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || "조직 가입 요청 중 오류가 발생했습니다.");
-      setShowErrorModal(true);
+
+      navigate("/home", { replace: true });
+    } catch (error: any) {
+      setSuccessMessage(error.message || "조직 선택 중 오류가 발생했습니다.");
+      setShowSuccessModal(true);
     }
   };
 
@@ -211,10 +172,9 @@ export default function LoginSelect() {
                   key={org.id}
                   onClick={() => handleSelectOrg(org.id, org.name)}
                   disabled={org.joinStatus === "PENDING"}
-                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${org.joinStatus === "PENDING"
-                    ? "opacity-60 cursor-not-allowed"
-                    : ""
-                    }`}
+                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${
+                    org.joinStatus === "PENDING" ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
                 >
                   {/* 상단 그라데이션 */}
                   <div className={`h-28 bg-gradient-to-br ${style.gradient} relative`}>
@@ -246,13 +206,16 @@ export default function LoginSelect() {
                     </h3>
 
                     {org.joinStatus === "PENDING" ? (
-                      <p className="text-xs text-yellow-600 text-center mt-1">
-                        승인 대기 중
-                      </p>
+                      <p className="text-xs text-yellow-600 text-center mt-1">승인 대기 중</p>
                     ) : (
-                      <div className={`flex items-center justify-center gap-2 text-xs font-semibold ${style.text} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
+                      <div
+                        className={`flex items-center justify-center gap-2 text-xs font-semibold ${style.text} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                      >
                         <span>입장하기</span>
-                        <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight
+                          size={14}
+                          className="group-hover:translate-x-1 transition-transform"
+                        />
                       </div>
                     )}
                   </div>
@@ -267,13 +230,18 @@ export default function LoginSelect() {
             >
               <div className="h-full flex flex-col items-center justify-center p-4 min-h-[220px]">
                 <div className="w-20 h-20 rounded-full bg-gray-100 group-hover:bg-blue-50 flex items-center justify-center mb-3 transition-colors duration-300">
-                  <Plus size={32} className="text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
+                  <Plus
+                    size={32}
+                    className="text-gray-400 group-hover:text-blue-500 transition-colors duration-300"
+                  />
                 </div>
                 <h3 className="text-base font-bold text-gray-600 group-hover:text-blue-600 transition-colors duration-300">
                   조직 가입하기
                 </h3>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  조직 코드로<br />새로운 조직에 참여하세요
+                  조직 코드로
+                  <br />
+                  새로운 조직에 참여하세요
                 </p>
               </div>
             </button>
@@ -285,13 +253,18 @@ export default function LoginSelect() {
             >
               <div className="h-full flex flex-col items-center justify-center p-4 min-h-[220px]">
                 <div className="w-20 h-20 rounded-full bg-gray-100 group-hover:bg-blue-50 flex items-center justify-center mb-3 transition-colors duration-300">
-                  <Plus size={32} className="text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
+                  <Plus
+                    size={32}
+                    className="text-gray-400 group-hover:text-blue-500 transition-colors duration-300"
+                  />
                 </div>
                 <h3 className="text-base font-bold text-gray-600 group-hover:text-blue-600 transition-colors duration-300">
                   조직 생성하기
                 </h3>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  내 조직을<br />생성해보세요
+                  내 조직을
+                  <br />
+                  생성해보세요
                 </p>
               </div>
             </button>
@@ -311,20 +284,10 @@ export default function LoginSelect() {
       {showJoinModal && (
         <JoinOrgModal
           onClose={() => setShowJoinModal(false)}
-          refresh={() => {
-            setShowJoinModal(false);
-            // 새로 조직을 불러오고 목록 갱신
-            getOrganizations().then((orgs) => {
-              const formatted = orgs.map((org: any) => ({
-                id: org.id,
-                name: org.name,
-                image: org.img_url || "/dummy/woori-logo.png",
-                memberCount: 0,
-                joinStatus: org.join_status,
-                isAdmin: org.is_admin,
-              }));
-              setOrganizations(formatted);
-            });
+          refresh={refreshOrganizations}
+          onSuccess={(nickname) => {
+            setSuccessMessage(`"${nickname}" 님의 가입 신청이 완료되었습니다.`);
+            setShowSuccessModal(true);
           }}
         />
       )}
@@ -333,43 +296,18 @@ export default function LoginSelect() {
       {showCreateModal && (
         <CreateOrgModal
           onClose={() => setShowCreateModal(false)}
-          refresh={() => {
-            setShowCreateModal(false);
-            // 동일하게 목록 새로고침
-            getOrganizations().then((orgs) => {
-              const formatted = orgs.map((org: any) => ({
-                id: org.id,
-                name: org.name,
-                image: org.img_url || "/dummy/woori-logo.png",
-                memberCount: 0,
-                joinStatus: org.join_status,
-                isAdmin: org.is_admin,
-              }));
-              setOrganizations(formatted);
-            });
-          }}
-        />
-      )}
-
-      {/* 에러 모달 */}
-      {showErrorModal && (
-        <ConfirmActionModal
-          title="입력 오류"
-          message={errorMessage}
-          confirmText="확인"
-          color="red"
-          onConfirm={() => setShowErrorModal(false)}
-          onClose={() => setShowErrorModal(false)}
+          refresh={refreshOrganizations}
         />
       )}
 
       {/* 성공 모달 */}
       {showSuccessModal && (
-        <SuccessModal
-          title="조직 추가 완료"
-          message={`"${addedOrgName}" 조직이 추가되었습니다!`}
-          autoClose
-          autoCloseDelay={2000}
+        <ConfirmActionModal
+          title="가입 신청 완료"
+          message={successMessage}
+          confirmText="확인"
+          color="green"
+          onConfirm={() => setShowSuccessModal(false)}
           onClose={() => setShowSuccessModal(false)}
         />
       )}

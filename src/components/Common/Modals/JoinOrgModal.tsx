@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { joinOrganization } from "@/api/orgs/joinOrg";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import { getUserInfo } from "@/api/mypage/user";
-import { checkNicknameAvailability } from "@/api/orgs/joinOrg";
+import { joinOrganization, checkNicknameAvailability } from "@/api/orgs/joinOrg";
 
 interface JoinOrgModalProps {
   onClose: () => void;
   refresh: () => void;
+  onSuccess: (nickname: string) => void; 
 }
 
-const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
+const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess }) => {
   const [joinCode, setJoinCode] = useState("");
   const [nickname, setNickname] = useState("");
+  const [nicknameMessage, setNicknameMessage] = useState("");
+  const [nicknameMessageColor, setNicknameMessageColor] = useState<"red" | "green" | "gray">("gray");
+
   const [isNicknameChecked, setIsNicknameChecked] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{
@@ -46,24 +49,17 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
 
   // 닉네임 중복 확인
   const handleCheckNickname = async () => {
+    setNicknameMessage(""); // 초기화
+
     if (joinCode.length !== 6) {
-      setConfirmModal({
-        title: "조직 코드 필요",
-        message: "닉네임 중복 확인 전에 유효한 조직 코드를 입력해주세요.",
-        color: "yellow",
-        confirmText: "확인",
-        onConfirm: () => setConfirmModal(null),
-      });
+      setNicknameMessageColor("red");
+      setNicknameMessage("조직 코드를 먼저 입력해주세요.");
       return;
     }
+
     if (!nickname.trim()) {
-      setConfirmModal({
-        title: "입력 필요",
-        message: "닉네임을 입력해주세요.",
-        color: "yellow",
-        confirmText: "확인",
-        onConfirm: () => setConfirmModal(null),
-      });
+      setNicknameMessageColor("red");
+      setNicknameMessage("닉네임을 입력해주세요.");
       return;
     }
 
@@ -72,31 +68,16 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
 
       if (available) {
         setIsNicknameChecked(true);
-        setConfirmModal({
-          title: "사용 가능",
-          message: `"${nickname}"은(는) 사용 가능한 닉네임입니다!`,
-          color: "green",
-          confirmText: "확인",
-          onConfirm: () => setConfirmModal(null),
-        });
+        setNicknameMessageColor("green");
+        setNicknameMessage(`"${nickname}"은(는) 사용 가능한 닉네임입니다.`);
       } else {
         setIsNicknameChecked(false);
-        setConfirmModal({
-          title: "중복된 닉네임",
-          message: `"${nickname}"은(는) 이미 사용 중입니다.`,
-          color: "red",
-          confirmText: "확인",
-          onConfirm: () => setConfirmModal(null),
-        });
+        setNicknameMessageColor("red");
+        setNicknameMessage(`"${nickname}"은(는) 이미 사용 중입니다.`);
       }
     } catch (err: any) {
-      setConfirmModal({
-        title: "오류 발생",
-        message: err.message || "닉네임 중복 확인 중 오류가 발생했습니다.",
-        color: "red",
-        confirmText: "확인",
-        onConfirm: () => setConfirmModal(null),
-      });
+      setNicknameMessageColor("red");
+      setNicknameMessage(err.message || "닉네임 중복 확인 중 오류가 발생했습니다.");
     }
   };
 
@@ -139,17 +120,9 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
     try {
       const res = await joinOrganization(joinCode, nickname);
       if (res.success) {
-        setConfirmModal({
-          title: "가입 신청 완료",
-          message: `"${nickname}" 님의 가입 신청이 완료되었습니다.`,
-          color: "green",
-          confirmText: "확인",
-          onConfirm: () => {
-            setConfirmModal(null);
-            refresh();
-            onClose();
-          },
-        });
+        onClose();
+        onSuccess(nickname);
+        refresh();
       }
     } catch (err: any) {
       setConfirmModal({
@@ -166,16 +139,12 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
     <>
       {createPortal(
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-          style={{ zIndex: 9999 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
-          <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative"
-            style={{ zIndex: 10000 }}
-          >
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative">
             {/* 닫기 버튼 */}
             <button
               onClick={onClose}
@@ -224,10 +193,11 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
                 <button
                   onClick={handleCheckNickname}
                   disabled={isLoadingUser || joinCode.length !== 6}
-                  className={`px-3 py-2 text-sm rounded-lg text-white transition whitespace-nowrap ${joinCode.length === 6
-                    ? "bg-primary hover:bg-primary-light"
-                    : "bg-gray-300 cursor-not-allowed"
-                    }`}
+                  className={`px-3 py-2 text-sm rounded-lg text-white transition whitespace-nowrap ${
+                    joinCode.length === 6
+                      ? "bg-primary hover:bg-primary-light"
+                      : "bg-gray-300 cursor-not-allowed"
+                  }`}
                 >
                   중복 확인
                 </button>
@@ -237,10 +207,20 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
                   초기값은 회원가입 시 이름이며, 자유롭게 수정 가능합니다.
                 </p>
               )}
-              {isNicknameChecked && (
-                <p className="text-xs text-green-600 mt-1">사용 가능한 닉네임입니다.</p>
+              {/* 하단 메시지 출력 */}
+              {nicknameMessage && (
+                <p
+                  className={`text-xs mt-1 ${
+                    nicknameMessageColor === "red"
+                      ? "text-red-600"
+                      : nicknameMessageColor === "green"
+                      ? "text-green-600"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {nicknameMessage}
+                </p>
               )}
-
             </div>
 
             {/* 버튼 */}
@@ -264,17 +244,19 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh }) => {
         document.body
       )}
 
-      {/* ConfirmActionModal */}
-      {confirmModal && (
-        <ConfirmActionModal
-          title={confirmModal.title}
-          message={confirmModal.message}
-          color={confirmModal.color}
-          confirmText={confirmModal.confirmText}
-          cancelText="취소"
-          onConfirm={confirmModal.onConfirm}
-          onClose={() => setConfirmModal(null)}
-        />
+      {/* ConfirmActionModal - 더 높은 z-index */}
+      {confirmModal && createPortal(
+        <div className="fixed inset-0 z-[100]">
+          <ConfirmActionModal
+            title={confirmModal.title}
+            message={confirmModal.message}
+            color={confirmModal.color}
+            confirmText={confirmModal.confirmText}
+            onConfirm={confirmModal.onConfirm}
+            onClose={() => setConfirmModal(null)}
+          />
+        </div>,
+        document.body
       )}
     </>
   );

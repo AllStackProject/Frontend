@@ -57,8 +57,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // ✅ 공개 라우트 (로그인 상태면 /home으로 리다이렉트)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, orgToken } = useAuth();
+
+  // 비로그인: 공개 페이지 사용 가능
   if (!isAuthenticated) return <>{children}</>;
-  return orgToken ? <Navigate to="/home" replace /> : <Navigate to="/login/select" replace />;
+
+  // 로그인 + 조직 선택 완료: 홈으로
+  if (orgToken) return <Navigate to="/home" replace />;
+
+  // 로그인 + 아직 조직 선택 전: 공개 페이지를 그대로 보여줌 (자기 자신으로 리다이렉트 금지)
+  return <>{children}</>;
 };
 
 // ✅ 랜딩 페이지 라우트 (로그인 상태면 /home으로 리다이렉트)

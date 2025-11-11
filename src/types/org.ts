@@ -3,6 +3,7 @@ export interface CreateOrgRequest {
   name: string;
   img_url: string;
   desc: string;
+  nickname: string;
 }
 
 /** 조직 생성 응답 */

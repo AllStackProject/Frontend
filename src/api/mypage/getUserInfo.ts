@@ -6,7 +6,7 @@ import type { UserInfoResponse } from "@/types/user";
  */
 export const getUserInfo = async (): Promise<UserInfoResponse> => {
   try {
-    const response = await api.get("/mypage/info");
+    const response = await api.get("/user/info");
     
     return response.data.result;
   } catch (error: any) {

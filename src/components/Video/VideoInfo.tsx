@@ -5,7 +5,6 @@ import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 interface VideoInfoProps {
   videoId: string;
   title: string;
-  channel: string;
   views: number;
   description: string;
   uploadDate: string;
@@ -18,7 +17,6 @@ interface VideoInfoProps {
 const VideoInfo: React.FC<VideoInfoProps> = ({
   videoId,
   title,
-  channel,
   views,
   uploadDate,
   description,
@@ -58,7 +56,6 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
           <h1 className="text-xl font-bold text-gray-900 leading-tight">
             {title}
           </h1>
-          <p className="text-sm text-gray-500 font-medium mt-1">{channel}</p>
         </div>
 
         {/* 카테고리 태그 */}

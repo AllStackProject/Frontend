@@ -15,9 +15,9 @@ export interface Comment {
   id: number;
   text: string;
   created_at?: string;
-  user_id?: number;
-  user_name?: string;
-  user_avatar?: string;
+  video_id: number;
+  video_name?: string;
+  video_img?: string;
 }
 
 /**

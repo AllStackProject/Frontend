@@ -98,6 +98,9 @@ const formatDuration = (seconds?: number): string => {
         <p className="text-text-muted text-sm">
           {orgName}에 스크랩한 영상이 없습니다.
         </p>
+        <p className="text-text-muted text-xs mt-2">
+          다시 보고 싶은 영상을 스크랩해 보세요!
+        </p>
       </div>
     );
 

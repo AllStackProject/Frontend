@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { HiClock } from "react-icons/hi";
 import { getWatchedVideos } from "@/api/myactivity/getWatchedVideos";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
-import { Heart, HeartOff } from "lucide-react";
+import { Heart, HeartOff, PlayCircle, Loader2 } from "lucide-react";
 import type { WatchedVideo } from "@/types/video";
 
 const LearningSection: React.FC = () => {
@@ -15,6 +15,7 @@ const LearningSection: React.FC = () => {
   const [loadingId, setLoadingId] = useState<number | null>(null);
 
   const orgId = Number(localStorage.getItem("org_id"));
+  const orgName = localStorage.getItem("org_name") || "조직";
 
   /** 시청 기록 + 스크랩 목록 병합 로드 */
   useEffect(() => {
@@ -22,6 +23,7 @@ const LearningSection: React.FC = () => {
       try {
         if (!orgId) {
           setError("조직 정보가 없습니다.");
+          setLoading(false);
           return;
         }
         setLoading(true);
@@ -92,22 +94,35 @@ const LearningSection: React.FC = () => {
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
-  if (loading)
+
+  if (loading) {
     return (
-      <div className="flex justify-center py-10 text-gray-500">
-        시청 기록 불러오는 중...
+      <div className="flex items-center justify-center py-16 text-gray-500">
+        <Loader2 className="animate-spin mr-2" size={20} />
+        불러오는 중...
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
-      <div className="text-center py-10 text-red-500">{error}</div>
+      <div className="text-center py-16 text-red-500 text-sm">{error}</div>
     );
-  if (videos.length === 0)
+  }
+
+  if (videos.length === 0) {
     return (
-      <div className="text-center py-16 text-text-muted">
-        <p>아직 시청한 영상이 없습니다.</p>
+      <div className="text-center py-16 bg-white rounded-lg border border-border-light">
+        <PlayCircle className="mx-auto mb-4 text-gray-300" size={48} />
+        <p className="text-text-muted text-sm">
+          {orgName}에서 시청한 영상이 없습니다.
+        </p>
+        <p className="text-text-muted text-xs mt-2">
+          영상을 시청해보세요!
+        </p>
       </div>
     );
+  }
 
   const videosToShow = isExpanded ? videos : videos.slice(0, 3);
 
@@ -117,11 +132,7 @@ const LearningSection: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-text-primary">최근 시청 기록</h2>
-          {videos.length > 0 && (
-            <span className="text-sm text-text-muted">
-              ({videos.length}개)
-            </span>
-          )}
+          <span className="text-sm text-text-muted">({videos.length}개)</span>
         </div>
 
         {/* 더보기 / 접기 버튼 */}
@@ -159,8 +170,9 @@ const LearningSection: React.FC = () => {
               <button
                 onClick={(e) => toggleScrap(e, video.id, video.is_scrapped)}
                 disabled={loadingId === video.id}
-                className={`absolute top-3 right-3 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition z-10 ${loadingId === video.id ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                className={`absolute top-3 right-3 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition z-10 ${
+                  loadingId === video.id ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 {video.is_scrapped ? (
                   <Heart

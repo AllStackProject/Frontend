@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
-import { getUserInfo } from "@/api/mypage/getUserInfo";
+import { getUserInfo } from "@/api/mypage/user";
 import { getOrganizations } from "@/api/orgs/getOrg";
 import type { OrganizationResponse } from "@/types/org";
 import { useLogout } from "@/api/auth/useLogout";

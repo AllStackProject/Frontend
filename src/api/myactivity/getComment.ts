@@ -1,12 +1,12 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
-import type { MyComment } from "@/types/comment";
+import type { Comment } from "@/types/comment";
 
 /**
  * 내가 작성한 댓글 조회
  * @param orgId 조직 ID
  */
-export const getMyComments = async (orgId: number): Promise<MyComment[]> => {
+export const getMyComments = async (orgId: number): Promise<Comment[]> => {
   try {
     const orgToken = localStorage.getItem("org_token");
     const storedOrgId = localStorage.getItem("org_id");

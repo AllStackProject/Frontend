@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Send, MessageCircle, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
 import type { CommentWithReplies } from "@/types/comment";
 import { getVideoComments, postVideoComment } from "@/api/video/comment";
-import { getUserInfo } from "@/api/mypage/getUserInfo";
+import { getUserInfo } from "@/api/mypage/user";
 
 interface CommentSectionProps {
   orgId: number;

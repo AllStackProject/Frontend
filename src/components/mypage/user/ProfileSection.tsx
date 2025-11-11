@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Edit2, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { getUserInfo } from "@/api/mypage/getUserInfo";
+import { Edit2, Lock, AlertCircle, Eye, EyeOff, UserX } from "lucide-react";
+import { getUserInfo } from "@/api/mypage/user";
 import type { UserInfoResponse } from "@/types/user";
 import { updateUserInfo } from "@/api/mypage/updateUserInfo";
+import { deleteUser } from "@/api/mypage/user";
+import ConfirmDeleteModal from "@/components/common/modals/ConfirmDeleteModal";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 // 전화번호 정규식
 const phoneRe = /^[0-9]{10,11}$/;
@@ -54,6 +57,34 @@ const ProfileSection: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // 공통 알림 모달
+  const [alertModal, setAlertModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    color: "blue" | "red" | "green" | "yellow";
+  }>({
+    show: false,
+    title: "",
+    message: "",
+    color: "blue",
+  });
+
+  // 알림 모달 표시 헬퍼
+  const showAlert = (
+    title: string,
+    message: string,
+    color: "blue" | "red" | "green" | "yellow" = "blue"
+  ) => {
+    setAlertModal({ show: true, title, message, color });
+  };
+
+  const closeAlert = () => {
+    setAlertModal({ show: false, title: "", message: "", color: "blue" });
+  };
 
   const [formData, setFormData] = useState({
     gender: "",
@@ -100,7 +131,11 @@ const ProfileSection: React.FC = () => {
         });
       } catch (err: any) {
         console.error("🚨 사용자 정보 로드 실패:", err);
-        alert(err.message || "사용자 정보를 불러오지 못했습니다.");
+        showAlert(
+          "정보 로드 실패",
+          err.message || "사용자 정보를 불러오지 못했습니다.",
+          "red"
+        );
       }
     };
 
@@ -151,49 +186,61 @@ const ProfileSection: React.FC = () => {
 
   // 수정후 저장
   const handleSave = async () => {
-  if (!validateForm()) {
-    const firstErrorField = Object.keys(errors)[0];
-    const element = document.querySelector(`[name="${firstErrorField}"]`);
-    if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
-  }
-
-  try {
-    const body: Record<string, string> = {
-      changed_age: formData.ageGroup.replace("대", "").trim(),
-      changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
-      changed_phone_num: formData.phone,
-    };
-
-    if (formData.password && formData.passwordConfirm) {
-      body.newPassword = formData.password;
-      body.confirmPassword = formData.passwordConfirm;
+    if (!validateForm()) {
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.querySelector(`[name="${firstErrorField}"]`);
+      if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
     }
 
-    const success = await updateUserInfo(body);
+    try {
+      const body: Record<string, string> = {
+        changed_age: formData.ageGroup.replace("대", "").trim(),
+        changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
+        changed_phone_num: formData.phone,
+      };
 
-    if (success) {
-      alert("✅ 사용자 정보가 성공적으로 수정되었습니다.");
-      setUser({
-        ...user,
-        gender: formData.gender,
-        ageGroup: formData.ageGroup,
-        phone: formData.phone,
-      });
-      setIsEditing(false);
-      setFormData({
-        ...formData,
-        password: "",
-        passwordConfirm: "",
-      });
-    } else {
-      alert("❌ 사용자 정보 수정에 실패했습니다.");
+      if (formData.password && formData.passwordConfirm) {
+        body.newPassword = formData.password;
+        body.confirmPassword = formData.passwordConfirm;
+      }
+
+      const success = await updateUserInfo(body);
+
+      if (success) {
+        setUser({
+          ...user,
+          gender: formData.gender,
+          ageGroup: formData.ageGroup,
+          phone: formData.phone,
+        });
+        setIsEditing(false);
+        setFormData({
+          ...formData,
+          password: "",
+          passwordConfirm: "",
+        });
+        showAlert(
+          "수정 완료",
+          "사용자 정보가 성공적으로 수정되었습니다.",
+          "green"
+        );
+      } else {
+        showAlert(
+          "수정 실패",
+          "사용자 정보 수정에 실패했습니다.",
+          "red"
+        );
+      }
+    } catch (err: any) {
+      console.error(err);
+      showAlert(
+        "오류 발생",
+        err.message || "정보 수정 중 오류가 발생했습니다.",
+        "red"
+      );
     }
-  } catch (err: any) {
-    console.error(err);
-    alert(err.message || "정보 수정 중 오류가 발생했습니다.");
-  }
-};
+  };
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -207,234 +254,324 @@ const ProfileSection: React.FC = () => {
     });
   };
 
+  // 회원 탈퇴 핸들러
+  const handleDeleteAccount = async () => {
+    try {
+      const success = await deleteUser();
+      if (success) {
+        setShowDeleteModal(false);
+        setShowSuccessModal(true);
+      } else {
+        showAlert(
+          "탈퇴 실패",
+          "회원 탈퇴에 실패했습니다.\n잠시 후 다시 시도해주세요.",
+          "red"
+        );
+      }
+    } catch (err: any) {
+      showAlert(
+        "오류 발생",
+        err.message || "회원 탈퇴 중 오류가 발생했습니다.",
+        "red"
+      );
+    }
+  };
+
+  // 탈퇴 성공 후 로그인 페이지로 이동
+  const handleSuccessConfirm = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  };
+
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-base border border-border-light p-6">
-      {/* 상단 프로필 */}
-      <div className="flex items-center justify-between border-b border-border-light pb-5 mb-5">
-        <div className="flex items-center gap-6">
-          <img
-            src={user.avatar}
-            alt="프로필 이미지"
-            className="w-20 h-20 rounded-full object-cover shadow-sm"
-          />
-          <div className="flex flex-col space-y-2">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-text-primary">
-                {user.name}
-              </h2>
-              <Lock size={16} className="text-text-muted" />
-            </div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-text-secondary">{user.email}</p>
-              <Lock size={14} className="text-text-muted" />
+    <>
+      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-base border border-border-light p-6">
+        {/* 상단 프로필 */}
+        <div className="flex items-center justify-between border-b border-border-light pb-5 mb-5">
+          <div className="flex items-center gap-6">
+            <img
+              src={user.avatar}
+              alt="프로필 이미지"
+              className="w-20 h-20 rounded-full object-cover shadow-sm"
+            />
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-text-primary">
+                  {user.name}
+                </h2>
+                <Lock size={16} className="text-text-muted" />
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-text-secondary">{user.email}</p>
+                <Lock size={14} className="text-text-muted" />
+              </div>
             </div>
           </div>
+
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
+          >
+            <Edit2 size={16} />
+            {isEditing ? "수정 취소" : "정보 수정"}
+          </button>
         </div>
 
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
-        >
-          <Edit2 size={16} />
-          {isEditing ? "수정 취소" : "정보 수정"}
-        </button>
-      </div>
+        {/* 보기 모드 */}
+        {!isEditing ? (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-text-primary">계정 정보</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <InfoRow label="성별" value={user.gender} />
+              <InfoRow label="연령대" value={user.ageGroup} />
+              <InfoRow label="전화번호" value={user.phone} />
+              <div className="sm:col-span-2 border-b border-border-light pb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm text-text-secondary">소속된 조직명</span>
+                  <Lock size={14} className="text-text-muted" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {user.organizations.map((org, i) => (
+                    <span
+                      key={i}
+                      className="text-sm font-medium text-bg-page bg-primary-light px-3 py-1 rounded-full"
+                    >
+                      {org}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-      {/* 보기 모드 */}
-      {!isEditing ? (
-        <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-text-primary">계정 정보</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <InfoRow label="성별" value={user.gender} />
-            <InfoRow label="연령대" value={user.ageGroup} />
-            <InfoRow label="전화번호" value={user.phone} />
-            <div className="sm:col-span-2 border-b border-border-light pb-3">
+            {/* 회원 탈퇴 영역 */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <UserX size={20} className="text-gray-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                      회원 탈퇴
+                    </h4>
+                    <p className="text-xs text-gray-600 mb-3">
+                      탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
+                    </p>
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200"
+                    >
+                      회원 탈퇴하기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* 수정 모드 */
+          <div className="space-y-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">
+              정보 수정
+            </h3>
+
+            {/* 비밀번호 변경 */}
+            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-text-primary">
+                  비밀번호 변경
+                </h4>
+                <span className="text-xs text-text-muted">(선택사항)</span>
+              </div>
+
+              <PasswordField
+                label="새 비밀번호"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="변경하지 않으려면 비워두세요"
+                error={errors.password}
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+              />
+
+              {formData.password && (
+                <div className="text-xs space-y-1.5 pl-1">
+                  <PasswordCheckItem
+                    checked={getPasswordChecks(formData.password).length}
+                    label="8자 이상"
+                  />
+                  <PasswordCheckItem
+                    checked={
+                      [
+                        getPasswordChecks(formData.password).hasLetter,
+                        getPasswordChecks(formData.password).hasNumber,
+                        getPasswordChecks(formData.password).hasSpecial,
+                      ].filter(Boolean).length >= 2
+                    }
+                    label="영문, 숫자, 특수문자 중 2종류 이상 조합"
+                  />
+                </div>
+              )}
+
+              <PasswordField
+                label="비밀번호 확인"
+                name="passwordConfirm"
+                value={formData.passwordConfirm}
+                onChange={handleChange}
+                placeholder="새 비밀번호를 다시 입력하세요"
+                error={errors.passwordConfirm}
+                showPassword={showPasswordConfirm}
+                onTogglePassword={() =>
+                  setShowPasswordConfirm(!showPasswordConfirm)
+                }
+              />
+            </div>
+
+            {/* 성별 */}
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                성별 <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-3">
+                {["남성", "여성"].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    name="gender"
+                    onClick={() => {
+                      setFormData({ ...formData, gender: g });
+                      if (errors.gender) {
+                        setErrors({ ...errors, gender: "" });
+                      }
+                    }}
+                    className={`flex-1 py-2 border rounded-lg transition ${
+                      formData.gender === g
+                        ? "bg-primary text-white border-primary"
+                        : "bg-white text-text-primary border-border-light hover:bg-gray-50"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+              {errors.gender && (
+                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                  <AlertCircle size={12} />
+                  <span>{errors.gender}</span>
+                </div>
+              )}
+            </div>
+
+            {/* 연령대 */}
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                연령대 <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="ageGroup"
+                value={formData.ageGroup}
+                onChange={handleChange}
+                className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
+                  errors.ageGroup ? "border-red-500" : "border-border-light"
+                }`}
+              >
+                <option value="10대">10대</option>
+                <option value="20대">20대</option>
+                <option value="30대">30대</option>
+                <option value="40대">40대</option>
+                <option value="50대 이상">50대 이상</option>
+              </select>
+              {errors.ageGroup && (
+                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                  <AlertCircle size={12} />
+                  <span>{errors.ageGroup}</span>
+                </div>
+              )}
+            </div>
+
+            {/* 전화번호 */}
+            <InputField
+              label="전화번호"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="01012345678"
+              required
+              error={errors.phone}
+            />
+
+            {/* 조직명 */}
+            <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-text-secondary">소속된 조직명</span>
+                <label className="block text-sm font-medium text-text-secondary">
+                  소속된 조직명
+                </label>
                 <Lock size={14} className="text-text-muted" />
               </div>
               <div className="flex flex-wrap gap-2">
                 {user.organizations.map((org, i) => (
                   <span
                     key={i}
-                    className="text-sm font-medium text-bg-page bg-primary-light px-3 py-1 rounded-full"
+                    className="text-sm font-medium text-bg-page bg-primary-light px-3 py-1 rounded-full border border-border-light"
                   >
                     {org}
                   </span>
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      ) : (
-        /* 수정 모드 */
-        <div className="space-y-5">
-          <h3 className="text-lg font-semibold text-text-primary mb-2">
-            정보 수정
-          </h3>
 
-          {/* 비밀번호 변경 */}
-          <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-text-primary">
-                비밀번호 변경
-              </h4>
-              <span className="text-xs text-text-muted">(선택사항)</span>
-            </div>
-
-            <PasswordField
-              label="새 비밀번호"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="변경하지 않으려면 비워두세요"
-              error={errors.password}
-              showPassword={showPassword}
-              onTogglePassword={() => setShowPassword(!showPassword)}
-            />
-
-            {formData.password && (
-              <div className="text-xs space-y-1.5 pl-1">
-                <PasswordCheckItem
-                  checked={getPasswordChecks(formData.password).length}
-                  label="8자 이상"
-                />
-                <PasswordCheckItem
-                  checked={
-                    [
-                      getPasswordChecks(formData.password).hasLetter,
-                      getPasswordChecks(formData.password).hasNumber,
-                      getPasswordChecks(formData.password).hasSpecial,
-                    ].filter(Boolean).length >= 2
-                  }
-                  label="영문, 숫자, 특수문자 중 2종류 이상 조합"
-                />
-              </div>
-            )}
-
-            <PasswordField
-              label="비밀번호 확인"
-              name="passwordConfirm"
-              value={formData.passwordConfirm}
-              onChange={handleChange}
-              placeholder="새 비밀번호를 다시 입력하세요"
-              error={errors.passwordConfirm}
-              showPassword={showPasswordConfirm}
-              onTogglePassword={() =>
-                setShowPasswordConfirm(!showPasswordConfirm)
-              }
-            />
-          </div>
-
-          {/* 성별 */}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              성별 <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-3">
-              {["남성", "여성"].map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  name="gender"
-                  onClick={() => {
-                    setFormData({ ...formData, gender: g });
-                    if (errors.gender) {
-                      setErrors({ ...errors, gender: "" });
-                    }
-                  }}
-                  className={`flex-1 py-2 border rounded-lg transition ${formData.gender === g
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white text-text-primary border-border-light hover:bg-gray-50"
-                    }`}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
-            {errors.gender && (
-              <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
-                <AlertCircle size={12} />
-                <span>{errors.gender}</span>
-              </div>
-            )}
-          </div>
-
-          {/* 연령대 */}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              연령대 <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="ageGroup"
-              value={formData.ageGroup}
-              onChange={handleChange}
-              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${errors.ageGroup ? "border-red-500" : "border-border-light"
-                }`}
-            >
-              <option value="10대">10대</option>
-              <option value="20대">20대</option>
-              <option value="30대">30대</option>
-              <option value="40대">40대</option>
-              <option value="50대 이상">50대 이상</option>
-            </select>
-            {errors.ageGroup && (
-              <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
-                <AlertCircle size={12} />
-                <span>{errors.ageGroup}</span>
-              </div>
-            )}
-          </div>
-
-          {/* 전화번호 */}
-          <InputField
-            label="전화번호"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="01012345678"
-            required
-            error={errors.phone}
-          />
-
-          {/* 조직명 */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <label className="block text-sm font-medium text-text-secondary">
-                소속된 조직명
-              </label>
-              <Lock size={14} className="text-text-muted" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {user.organizations.map((org, i) => (
-                <span
-                  key={i}
-                  className="text-sm font-medium text-bg-page bg-primary-light px-3 py-1 rounded-full border border-border-light"
-                >
-                  {org}
-                </span>
-              ))}
+            {/* 저장/취소 */}
+            <div className="pt-6 flex justify-end gap-3">
+              <button
+                onClick={handleCancel}
+                className="px-5 py-2 rounded-lg border border-border-light text-text-primary font-semibold hover:bg-gray-50 transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-5 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-light transition"
+              >
+                저장하기
+              </button>
             </div>
           </div>
+        )}
+      </div>
 
-          {/* 저장/취소 */}
-          <div className="pt-6 flex justify-end gap-3">
-            <button
-              onClick={handleCancel}
-              className="px-5 py-2 rounded-lg border border-border-light text-text-primary font-semibold hover:bg-gray-50 transition"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-5 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-light transition"
-            >
-              저장하기
-            </button>
-          </div>
-        </div>
+      {/* 회원 탈퇴 확인 모달 */}
+      {showDeleteModal && (
+        <ConfirmDeleteModal
+          onConfirm={handleDeleteAccount}
+          onClose={() => setShowDeleteModal(false)}
+        />
       )}
-    </div>
+
+      {/* 탈퇴 성공 모달 */}
+      {showSuccessModal && (
+        <ConfirmActionModal
+          title="회원 탈퇴 완료"
+          message="탈퇴가 성공적으로 처리되었습니다.&#10;로그인 페이지로 이동합니다."
+          confirmText="확인"
+          color="green"
+          onConfirm={handleSuccessConfirm}
+          onClose={handleSuccessConfirm}
+        />
+      )}
+
+      {/* 공통 알림 모달 */}
+      {alertModal.show && (
+        <ConfirmActionModal
+          title={alertModal.title}
+          message={alertModal.message}
+          confirmText="확인"
+          color={alertModal.color}
+          onConfirm={closeAlert}
+          onClose={closeAlert}
+        />
+      )}
+    </>
   );
 };
 
@@ -469,8 +606,9 @@ const InputField = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder || ""}
-      className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${error ? "border-red-500" : "border-border-light"
-        }`}
+      className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
+        error ? "border-red-500" : "border-border-light"
+      }`}
     />
     {error && (
       <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
@@ -511,8 +649,9 @@ const PasswordField = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder || ""}
-        className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-primary focus:outline-none ${error ? "border-red-500" : "border-border-light"
-          }`}
+        className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-primary focus:outline-none ${
+          error ? "border-red-500" : "border-border-light"
+        }`}
       />
       <button
         type="button"
@@ -539,8 +678,12 @@ const PasswordCheckItem = ({
   checked: boolean;
   label: string;
 }) => (
-  <div className={`flex items-center gap-1.5 ${checked ? 'text-green-600' : 'text-text-secondary'}`}>
-    <span className="font-medium">{checked ? '✓' : '○'}</span>
+  <div
+    className={`flex items-center gap-1.5 ${
+      checked ? "text-green-600" : "text-text-secondary"
+    }`}
+  >
+    <span className="font-medium">{checked ? "✓" : "○"}</span>
     <span>{label}</span>
   </div>
 );

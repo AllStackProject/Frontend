@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { joinOrganization } from "@/api/orgs/joinOrg";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import { getUserInfo } from "@/api/mypage/getUserInfo";
+import { getUserInfo } from "@/api/mypage/user";
 import { checkNicknameAvailability } from "@/api/orgs/joinOrg";
 
 interface JoinOrgModalProps {

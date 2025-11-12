@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Plus, Building2 } from "lucide-react";
+import { X, Plus, Building2, CheckCircle, Clock, XCircle } from "lucide-react";
 import { getOrganizations } from "@/api/orgs/getOrg";
 import { useSelectOrganization } from "@/api/orgs/selectOrg";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
@@ -89,6 +89,35 @@ const OrganizationSelectModal = ({
     }
   };
 
+  // 상태 뱃지 렌더 함수
+  const renderStatusBadge = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return (
+          <div className="flex items-center gap-1 text-green-600 text-xs font-medium mt-1">
+            <CheckCircle size={12} />
+            <span>활성</span>
+          </div>
+        );
+      case "PENDING":
+        return (
+          <div className="flex items-center gap-1 text-yellow-600 text-xs font-medium mt-1">
+            <Clock size={12} />
+            <span>승인 대기중</span>
+          </div>
+        );
+      case "REJECTED":
+        return (
+          <div className="flex items-center gap-1 text-red-600 text-xs font-medium mt-1">
+            <XCircle size={12} />
+            <span>거절됨</span>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -128,27 +157,25 @@ const OrganizationSelectModal = ({
               {organizations.map((org) => (
                 <div
                   key={org.id}
-                  onClick={() =>
-                    handleSelectOrg(org.id, org.name, org.join_status)
-                  }
-                  className={`flex flex-col items-center gap-3 cursor-pointer rounded-xl py-4 px-3 transition-all duration-200 hover:shadow-md hover:scale-105 w-full ${org.join_status === "PENDING"
+                  onClick={() => handleSelectOrg(org.id, org.name, org.join_status)}
+                  className={`flex flex-col items-center gap-2 cursor-pointer rounded-xl py-4 px-3 transition-all duration-200 hover:shadow-md hover:scale-105 w-full ${
+                    org.join_status === "PENDING"
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-gray-50 hover:bg-blue-50"
-                    }`}
+                  }`}
                 >
                   <img
                     src={org.img_url || "/dummy/woori-logo.png"}
                     alt={org.name}
                     className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover shadow-sm"
                   />
-                  <span className="text-gray-800 font-medium text-xs sm:text-sm text-center">
-                    {org.name}
-                  </span>
-                  {org.join_status === "PENDING" && (
-                    <span className="text-xs text-yellow-600 font-medium">
-                      승인 대기중
-                    </span>
-                  )}
+                  <div className="text-center">
+                    <p className="text-gray-800 font-medium text-xs sm:text-sm">
+                      {org.name}
+                    </p>
+                    {/* ✅ 상태 표시 추가 */}
+                    {renderStatusBadge(org.join_status)}
+                  </div>
                 </div>
               ))}
             </div>

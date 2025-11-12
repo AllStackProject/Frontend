@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, ChevronDown, ShieldUser, BookOpen, Megaphone,
   Bookmark, Home, Menu, X, Settings, Building2, User,
-  MessageSquare, MessageCircle, UserCircle
+  MessageSquare, MessageCircle, ListVideo
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
@@ -97,13 +97,12 @@ const Navbar = () => {
     { type: "divider", label: "" },
     { icon: Building2, label: `${organization}에서 내 활동`, path: "/orgmypage", isParent: true },
     { icon: BookOpen, label: "시청 기록", path: "/orgmypage/learning", isChild: true },
-    { icon: MessageSquare, label: "AI 퀴즈", path: "/orgmypage/quiz", isChild: true },
     { icon: Bookmark, label: "스크랩", path: "/orgmypage/scrap", isChild: true },
-    { icon: MessageCircle, label: "작성한 댓글", path: "/orgmypage/comment", isChild: true },
+    { icon: MessageCircle, label: "내 댓글", path: "/orgmypage/comment", isChild: true },
+    { icon: ListVideo, label: "내 영상", path: "/orgmypage/myvideo", isChild: true },
+    { icon: ShieldUser, label: "설정", path: "/orgmypage/orgsetting", isChild: true },
     { type: "divider", label: "" },
-    { icon: User, label: "마이페이지", path: "/usermypage", isParent: true },
-    { icon: ShieldUser, label: "내 조직", path: "/usermypage/groups", isChild: true },
-    { icon: UserCircle, label: "내 정보", path: "/usermypage/profile", isChild: true }
+    { icon: User, label: "마이페이지", path: "/usermypage/profile" }
   ];
 
   return (

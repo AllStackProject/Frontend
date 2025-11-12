@@ -313,19 +313,18 @@ const ProfileSection: React.FC = () => {
             className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
           >
             <Edit2 size={16} />
-            {isEditing ? "수정 취소" : "정보 수정"}
+            {isEditing ? "수정 취소" : "수정"}
           </button>
         </div>
 
         {/* 보기 모드 */}
         {!isEditing ? (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-text-primary">계정 정보</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <InfoRow label="성별" value={user.gender} />
               <InfoRow label="연령대" value={user.ageGroup} />
               <InfoRow label="전화번호" value={user.phone} />
-              <div className="sm:col-span-2 border-b border-border-light pb-3">
+              <div className="sm:col-span-2  pb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm text-text-secondary">소속된 조직명</span>
                   <Lock size={14} className="text-text-muted" />

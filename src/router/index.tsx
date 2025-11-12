@@ -15,11 +15,11 @@ import NoticePage from "@/pages/notice/NoticePage";
 import OrgMyPage from "@/pages/mypage/OrgMyPage";
 import UserMyPage from "@/pages/mypage/UserMyPage"
 import LearningSection from "@/components/mypage/org/LearningSection";
-import QuizSection from "@/components/mypage/org/QuizSection";
 import ScrapSection from "@/components/mypage/org/ScrapSection";
 import CommentSection from "@/components/mypage/org/CommentSection";
+import MyVideoSection from "@/components/mypage/org/MyVideoSection";
+import OrgSettingsSection from "@/components/mypage/org/OrgSettingsSection";
 import ProfileSection from "@/components/mypage/user/ProfileSection";
-import GroupSection from "@/components/mypage/user/OrganizationSection";
 
 // 관리자 페이지 관련 import
 import DashboardPage from "@/pages/admin/DashboardPage";
@@ -146,9 +146,10 @@ export const router = createBrowserRouter([
         element: <OrgMyPage />,
         children: [
           { path: "learning", element: <LearningSection /> },
-          { path: "quiz", element: <QuizSection /> },
           { path: "scrap", element: <ScrapSection /> },
           { path: "comment", element: <CommentSection /> },
+          { path: "myvideo", element: <MyVideoSection /> },
+          { path: "orgsetting", element: <OrgSettingsSection /> },
           { index: true, element: <LearningSection /> }, // 기본 탭
         ],
       },
@@ -157,8 +158,6 @@ export const router = createBrowserRouter([
         element: <UserMyPage />,
         children: [
           { path: "profile", element: <ProfileSection /> },
-          { path: "groups", element: <GroupSection /> },
-          { index: true, element: <GroupSection /> }, // 기본 탭
         ],
       },
     ],

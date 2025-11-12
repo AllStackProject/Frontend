@@ -8,7 +8,6 @@ interface MyPageTabsProps {
 
 const MyPageTabs: React.FC<MyPageTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: "groups", label: "내 조직", icon: "/icon/org-icon.png" },
     { id: "profile", label: "내 정보", icon: "/icon/profile-icon.png" }
   ];
 

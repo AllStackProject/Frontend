@@ -8,10 +8,11 @@ interface MyPageTabsProps {
 
 const MyPageTabs: React.FC<MyPageTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: "learning", label: "시청 기록", icon: "/icon/learn-icon.png" },
-    { id: "quiz", label: "AI 퀴즈", icon: "/icon/ox-icon.png" },
+    { id: "learning", label: "내 기록", icon: "/icon/learn-icon.png" },
     { id: "scrap", label: "스크랩", icon: "/icon/scrap-icon.png" },
-    { id: "comment", label: "작성한 댓글", icon: "/icon/my-comment-icon.png" },
+    { id: "comment", label: "내 댓글", icon: "/icon/my-comment-icon.png" },
+    { id: "myvideo", label: "내 영상", icon: "/icon/video-icon.png" },
+    { id: "orgsetting", label: "조직 설정", icon: "/icon/settings-icon.png" },
   ];
 
   return (

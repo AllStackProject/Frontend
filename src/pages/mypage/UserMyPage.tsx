@@ -22,7 +22,7 @@ const UserMyPage: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-text-primary">마이페이지</h1>
               <p className="text-sm text-text-secondary mt-1">
-                참여 중인 조직과 계정 설정을 관리할 수 있어요
+                계정 설정을 관리할 수 있어요
               </p>
             </div>
           </div>

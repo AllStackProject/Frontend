@@ -1,5 +1,5 @@
 import api from "@/api/axiosInstance";
-import type { UserInfoResponse } from "@/types/user";
+import type { UserInfoResponse, UpdateUserInfoRequest, UpdateUserInfoResponse } from "@/types/user";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 
 /**
@@ -7,8 +7,16 @@ import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
  */
 export const getUserInfo = async (): Promise<UserInfoResponse> => {
   try {
-    const response = await api.get("/user/info");
-    
+    const accessToken = localStorage.getItem("access_token");
+
+    if (!accessToken) {
+      throw new Error("로그인이 만료되었습니다. 다시 로그인해주세요.");
+    }
+
+    const response = await api.get(`/user/info`, {
+      tokenType: "user",
+    } as CustomAxiosRequestConfig);
+
     return response.data.result;
   } catch (error: any) {
     console.error("❌ [getUserInfo] 오류:", error);
@@ -17,6 +25,23 @@ export const getUserInfo = async (): Promise<UserInfoResponse> => {
     );
   }
 };
+
+/* 사용자 정보 수정 API (PATCH /user/info) */
+export const updateUserInfo = async (
+  data: UpdateUserInfoRequest
+): Promise<UpdateUserInfoResponse> => {
+  try {
+    const response = await api.patch<UpdateUserInfoResponse>(
+      "/user/info",
+      data,
+      { tokenType: "user" } as CustomAxiosRequestConfig);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ 유저 정보 수정 실패:", error);
+    throw error.response?.data || error;
+  }
+};
+
 
 /**
  * 사용자 탈퇴 API (DELETE /user)
@@ -30,7 +55,7 @@ export const deleteUser = async (): Promise<{ success: boolean; message: string 
     }
 
     const response = await api.delete(`/user`, {
-      tokenType: "user", 
+      tokenType: "user",
     } as CustomAxiosRequestConfig);
 
     if (response.data?.result?.is_success) {

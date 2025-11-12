@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Edit2, Lock, AlertCircle, Eye, EyeOff, UserX } from "lucide-react";
-import { getUserInfo } from "@/api/mypage/user";
+import { getUserInfo, updateUserInfo, deleteUser } from "@/api/mypage/user";
 import type { UserInfoResponse } from "@/types/user";
-import { updateUserInfo } from "@/api/mypage/updateUserInfo";
-import { deleteUser } from "@/api/mypage/user";
 import ConfirmDeleteModal from "@/components/common/modals/ConfirmDeleteModal";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
@@ -184,63 +182,56 @@ const ProfileSection: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // 수정후 저장
+  // 수정 API
   const handleSave = async () => {
-    if (!validateForm()) {
-      const firstErrorField = Object.keys(errors)[0];
-      const element = document.querySelector(`[name="${firstErrorField}"]`);
-      if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
+  if (!validateForm()) {
+    const firstErrorField = Object.keys(errors)[0];
+    const element = document.querySelector(`[name="${firstErrorField}"]`);
+    if (element)
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  try {
+    const body: Record<string, any> = {
+      changed_age: parseInt(formData.ageGroup.replace("대", "").trim(), 10),
+      changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
+      changed_phone_num: formData.phone,
+    };
+
+    if (formData.password && formData.passwordConfirm) {
+      body.new_password = formData.password;
+      body.confirm_password = formData.passwordConfirm;
     }
 
-    try {
-      const body: Record<string, string> = {
-        changed_age: formData.ageGroup.replace("대", "").trim(),
-        changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
-        changed_phone_num: formData.phone,
-      };
+    const isSuccess = await updateUserInfo(body);
 
-      if (formData.password && formData.passwordConfirm) {
-        body.newPassword = formData.password;
-        body.confirmPassword = formData.passwordConfirm;
-      }
-
-      const success = await updateUserInfo(body);
-
-      if (success) {
-        setUser({
-          ...user,
-          gender: formData.gender,
-          ageGroup: formData.ageGroup,
-          phone: formData.phone,
-        });
-        setIsEditing(false);
-        setFormData({
-          ...formData,
-          password: "",
-          passwordConfirm: "",
-        });
-        showAlert(
-          "수정 완료",
-          "사용자 정보가 성공적으로 수정되었습니다.",
-          "green"
-        );
-      } else {
-        showAlert(
-          "수정 실패",
-          "사용자 정보 수정에 실패했습니다.",
-          "red"
-        );
-      }
-    } catch (err: any) {
-      console.error(err);
-      showAlert(
-        "오류 발생",
-        err.message || "정보 수정 중 오류가 발생했습니다.",
-        "red"
-      );
+    if (isSuccess) {
+      setUser({
+        ...user,
+        gender: formData.gender,
+        ageGroup: formData.ageGroup,
+        phone: formData.phone,
+      });
+      setIsEditing(false);
+      setFormData({
+        ...formData,
+        password: "",
+        passwordConfirm: "",
+      });
+      showAlert("수정 완료", "사용자 정보가 성공적으로 수정되었습니다.", "green");
+    } else {
+      showAlert("수정 실패", "사용자 정보 수정에 실패했습니다.", "red");
     }
-  };
+  } catch (err: any) {
+    console.error(err);
+    showAlert(
+      "오류 발생",
+      err.message || "정보 수정 중 오류가 발생했습니다.",
+      "red"
+    );
+  }
+};
 
   const handleCancel = () => {
     setIsEditing(false);

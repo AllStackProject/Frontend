@@ -9,9 +9,18 @@ export interface UserInfoResponse {
 }
 
 export interface UpdateUserInfoRequest {
-  newPassword?: string;
-  confirmPassword?: string;
-  changed_age?: string;
+  new_password?: string;
+  confirm_password?: string;
+  changed_age?: number;
   changed_gender?: string;
   changed_phone_num?: string;
+}
+
+export interface UpdateUserInfoResponse {
+  code: number;
+  status: string;
+  message: string;
+  result: {
+    is_success: boolean;
+  };
 }

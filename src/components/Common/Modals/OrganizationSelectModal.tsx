@@ -158,11 +158,10 @@ const OrganizationSelectModal = ({
                 <div
                   key={org.id}
                   onClick={() => handleSelectOrg(org.id, org.name, org.join_status)}
-                  className={`flex flex-col items-center gap-2 cursor-pointer rounded-xl py-4 px-3 transition-all duration-200 hover:shadow-md hover:scale-105 w-full ${
-                    org.join_status === "PENDING"
+                  className={`flex flex-col items-center gap-2 cursor-pointer rounded-xl py-4 px-3 transition-all duration-200 hover:shadow-md hover:scale-105 w-full ${org.join_status === "PENDING"
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-gray-50 hover:bg-blue-50"
-                  }`}
+                    }`}
                 >
                   <img
                     src={org.img_url || "/dummy/woori-logo.png"}
@@ -206,8 +205,21 @@ const OrganizationSelectModal = ({
       {showJoinModal && (
         <JoinOrgModal
           onClose={() => setShowJoinModal(false)}
-          refresh={() => {
-            getOrganizations().then((data) =>
+          refresh={async () => {
+            const data = await getOrganizations();
+            setOrganizations(
+              data.map((org: any) => ({
+                id: org.id,
+                name: org.name,
+                img_url: org.img_url,
+                join_status: org.join_status,
+              }))
+            );
+          }}
+          // onSuccess 콜백 수정
+          onSuccess={async (createdOrg?: { id: number; name: string }) => {
+            try {
+              const data = await getOrganizations();
               setOrganizations(
                 data.map((org: any) => ({
                   id: org.id,
@@ -215,8 +227,19 @@ const OrganizationSelectModal = ({
                   img_url: org.img_url,
                   join_status: org.join_status,
                 }))
-              )
-            );
+              );
+
+              // createdOrg가 undefined일 수 있으니 안전하게 처리
+              setAlertModal({
+                title: "가입 요청 완료",
+                message: createdOrg?.name
+                  ? `"${createdOrg.name}" 조직에 가입 요청이 접수되었습니다. 승인 후 접속할 수 있어요.`
+                  : "조직 가입 요청이 접수되었습니다. 승인 후 접속할 수 있어요.",
+                color: "green",
+              });
+            } finally {
+              setShowJoinModal(false);
+            }
           }}
         />
       )}

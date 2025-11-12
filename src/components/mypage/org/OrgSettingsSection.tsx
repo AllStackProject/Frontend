@@ -1,17 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  Building2,
-  CheckCircle,
-  Clock,
-  LogOut,
-  Network,
-  X,
-  Edit3,
-  Users,
-  Shield,
-} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Building2, CheckCircle, Clock, LogOut, Network, X, Edit3, Users, Shield, } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@/context/AuthContext";
 import { getOrganizations } from "@/api/orgs/getOrg";
 import { exitOrganization } from "@/api/orgs/exitOrg";
 
@@ -31,6 +21,7 @@ interface OrganizationItemFromAPI {
 
 const CurrentOrganizationSettings: React.FC = () => {
   const navigate = useNavigate();
+  const { nickname, orgName, orgId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [org, setOrg] = useState<OrganizationItemFromAPI | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,9 +29,6 @@ const CurrentOrganizationSettings: React.FC = () => {
   // 모달 상태
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
-
-  const orgId = useMemo(() => Number(localStorage.getItem("org_id") || 0), []);
-  const orgNameFromStorage = localStorage.getItem("org_name") || "";
 
   useEffect(() => {
     const fetch = async () => {
@@ -65,7 +53,7 @@ const CurrentOrganizationSettings: React.FC = () => {
   const joinedDate = org?.join_at
     ? org.join_at.split("T")[0].replace(/-/g, ".")
     : "-";
-  const myNickname = org?.my_nickname || "(미설정)";
+  const myNickname = nickname || "(미설정)";
   const myGroups = org?.groups ?? [];
 
   const handleLeave = async () => {
@@ -121,7 +109,7 @@ const CurrentOrganizationSettings: React.FC = () => {
       <div className="text-center py-16 bg-white rounded-lg border border-border-light">
         <Building2 className="mx-auto mb-4 text-gray-300" size={48} />
         <p className="text-text-muted text-sm">
-          {error || `현재 선택된 조직(${orgNameFromStorage || "-"}) 정보를 찾을 수 없습니다.`}
+          {error || `현재 선택된 조직(${orgName || "-"}) 정보를 찾을 수 없습니다.`}
         </p>
       </div>
     );
@@ -154,9 +142,9 @@ const CurrentOrganizationSettings: React.FC = () => {
                 )}
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-text-primary mb-1">{org.name}</h3>
+                <h3 className="text-xl font-bold text-text-primary mb-1">{org.name}</h3>
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <Network size={16}/>
+                  <Network size={16} />
                   <span className="font-mono">조직 코드: {org.code}</span>
                 </div>
               </div>
@@ -168,17 +156,13 @@ const CurrentOrganizationSettings: React.FC = () => {
         <div className="p-6 space-y-6">
           {/* 내 정보 */}
           <div>
-            <h4 className="text-sm font-semibold text-text-secondary mb-4 flex items-center gap-2">
-              <Users size={16} />
-              내 정보
-            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 닉네임 */}
               <div className="bg-white rounded-lg border border-border-light p-4 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <p className="text-xs text-text-muted mb-1">닉네임</p>
-                    <p className="text-base font-semibold text-text-primary">{myNickname}</p>
+                    <p className="text-base font-semibold text-text-primary">{nickname}</p>
                   </div>
                   <button
                     onClick={() => setShowNicknameModal(true)}
@@ -240,13 +224,13 @@ const CurrentOrganizationSettings: React.FC = () => {
 
           {/* 조직 나가기 */}
           {org.join_status === "APPROVED" && (
-            <div className="pt-4 border-t border-border-light">
+            <div className="pt-4 border-t border-border-light flex justify-end">
               <button
                 onClick={() => setShowLeaveModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-error/10 text-error rounded-lg hover:bg-error hover:text-white transition-all font-semibold"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-200 text-gray-900 rounded-md hover:bg-error hover:text-white transition-all"
               >
-                <LogOut size={18} />
-                조직 나가기
+                <LogOut size={14} />
+                <span>조직 나가기</span>
               </button>
             </div>
           )}
@@ -344,7 +328,7 @@ const LeaveModal = ({
             <div className="mt-3 pt-3 border-t border-error/20">
               <p className="text-xs text-error font-medium flex items-center gap-2">
                 <Shield size={14} />
-                관리자 권한이 있습니다. 
+                관리자 권한이 있습니다.
               </p>
             </div>
           )}

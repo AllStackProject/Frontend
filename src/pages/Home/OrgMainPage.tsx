@@ -9,7 +9,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const orgToken = localStorage.getItem("org_token");
+      const orgToken = localStorage.getItem("access_token");
       if (!orgToken) navigate("/login/select", { replace: true });
     }, 100);
     return () => clearTimeout(timer);

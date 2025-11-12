@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Search, ChevronDown, ShieldUser, BookOpen, Megaphone,
-  Bookmark, Home, Menu, X, Settings, Building2, User,
-  MessageSquare, MessageCircle, ListVideo
+  Bookmark, Home, Menu, X, Settings, Building2, User, MessageCircle, ListVideo
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
@@ -10,9 +9,13 @@ import { getUserInfo } from "@/api/mypage/user";
 import { getOrganizations } from "@/api/orgs/getOrg";
 import type { OrganizationResponse } from "@/types/org";
 import { useLogout } from "@/api/auth/useLogout";
+import { useAuth } from "@/context/AuthContext";
+
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { nickname, orgName, orgId } = useAuth();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -20,13 +23,6 @@ const Navbar = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const { openLogoutModal, LogoutModal } = useLogout(navigate);
-
-  const [organization, setOrganization] = useState(
-    localStorage.getItem("org_name") || "조직 선택 안됨"
-  );
-  const [orgId] = useState<number | null>(
-    localStorage.getItem("org_id") ? Number(localStorage.getItem("org_id")) : null
-  );
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -45,31 +41,31 @@ const Navbar = () => {
 
   // 조직 관리자 여부 확인
   useEffect(() => {
-  const checkAdminStatus = async () => {
-    try {
-      const orgs: OrganizationResponse[] = await getOrganizations();
+    const checkAdminStatus = async () => {
+      try {
+        const orgs: OrganizationResponse[] = await getOrganizations();
 
-      if (!orgId) {
+        if (!orgId) {
+          setIsAdmin(false);
+          return;
+        }
+
+        const selectedOrg = orgs.find((org) => org.id === orgId);
+
+        // 관리자이면서 승인된 조직일 때만 true
+        if (selectedOrg?.is_admin && selectedOrg.join_status === "APPROVED") {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        console.error("🚨 조직 정보 확인 실패:", err);
         setIsAdmin(false);
-        return;
       }
+    };
 
-      const selectedOrg = orgs.find((org) => org.id === orgId);
-
-      // 관리자이면서 승인된 조직일 때만 true
-      if (selectedOrg?.is_admin && selectedOrg.join_status === "APPROVED") {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    } catch (err) {
-      console.error("🚨 조직 정보 확인 실패:", err);
-      setIsAdmin(false);
-    }
-  };
-
-  checkAdminStatus();
-}, [orgId]);
+    checkAdminStatus();
+  }, [orgId]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -95,7 +91,7 @@ const Navbar = () => {
   const menuItems: MenuItem[] = [
     { icon: Home, label: "홈", path: "/home" },
     { type: "divider", label: "" },
-    { icon: Building2, label: `${organization}에서 내 활동`, path: "/orgmypage", isParent: true },
+    { icon: Building2, label: `${orgName}에서 내 활동`, path: "/orgmypage", isParent: true },
     { icon: BookOpen, label: "시청 기록", path: "/orgmypage/learning", isChild: true },
     { icon: Bookmark, label: "스크랩", path: "/orgmypage/scrap", isChild: true },
     { icon: MessageCircle, label: "내 댓글", path: "/orgmypage/comment", isChild: true },
@@ -127,7 +123,7 @@ const Navbar = () => {
               onClick={() => setIsModalOpen(true)}
             >
               <img src="/dummy/woori-logo.png" alt="org" className="w-6 h-6 rounded-full" />
-              <span className="font-medium text-gray-700 text-sm whitespace-nowrap">{organization}</span>
+              <span className="font-medium text-gray-700 text-sm whitespace-nowrap">{orgName}</span>
               <span className="text-gray-400 text-xs">▼</span>
             </div>
 
@@ -182,7 +178,7 @@ const Navbar = () => {
             >
               <img src="/user-icon/user9.png" alt="user" className="rounded-full w-8 h-8 lg:w-10 lg:h-10" />
               <span className="font-semibold text-gray-700 text-sm hidden lg:block">
-                {userName}
+                {nickname || userName}
               </span>
               <ChevronDown className="text-gray-500 w-4 h-4" />
             </button>
@@ -225,8 +221,8 @@ const Navbar = () => {
                   );
                 })}
                 <hr className="my-2 border-gray-200" />
-                <div className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 cursor-pointer transition-colors" 
-                onClick={openLogoutModal}>
+                <div className="px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={openLogoutModal}>
                   로그아웃
                 </div>
               </div>
@@ -262,8 +258,8 @@ const Navbar = () => {
             <div className="flex items-center gap-3 pb-4 border-b border-gray-200 mb-4">
               <img src="/user9.png" alt="user" className="w-12 h-12 rounded-full" />
               <div>
-                <p className="font-semibold text-gray-800">홍길동</p>
-                <p className="text-xs text-gray-500">{organization}</p>
+                <p className="font-semibold text-gray-800">{nickname}</p>
+                <p className="text-xs text-gray-500">{orgName}</p>
               </div>
             </div>
 
@@ -281,7 +277,7 @@ const Navbar = () => {
                     <Settings size={18} className="text-purple-600" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"></span>
                   </div>
-                  <span className="text-sm font-semibold text-purple-700">관리자 페이지</span>
+                  <span className="text-sm font-semibold text-purple-700">관리자</span>
                 </button>
               </div>
             )}
@@ -331,7 +327,7 @@ const Navbar = () => {
           </div>
         </div>
       )}
-      
+
       {/* 로그아웃 모달 추가 */}
       <LogoutModal />
 
@@ -339,10 +335,7 @@ const Navbar = () => {
       <OrganizationSelectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSelect={(org) => {
-          setOrganization(org);
-          localStorage.setItem("selectedOrgName", org);
-        }}
+        onSelect={() => setIsModalOpen(false)}
       />
     </>
   );

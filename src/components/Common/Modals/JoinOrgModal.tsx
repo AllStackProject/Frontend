@@ -7,8 +7,8 @@ import { joinOrganization, checkNicknameAvailability } from "@/api/orgs/joinOrg"
 
 interface JoinOrgModalProps {
   onClose: () => void;
-  refresh: () => void;
-  onSuccess: (nickname: string) => void; 
+  onSuccess: (createdOrg?: { id: number; name: string }) => void;
+  refresh: () => Promise<void>;
 }
 
 const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess }) => {
@@ -121,8 +121,11 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
       const res = await joinOrganization(joinCode, nickname);
       if (res.success) {
         onClose();
-        onSuccess(nickname);
-        refresh();
+        onSuccess({
+          id: res.data?.org_id || 0,
+          name: res.data?.org_name || "새 조직",
+        });
+        await refresh();
       }
     } catch (err: any) {
       setConfirmModal({
@@ -193,11 +196,10 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
                 <button
                   onClick={handleCheckNickname}
                   disabled={isLoadingUser || joinCode.length !== 6}
-                  className={`px-3 py-2 text-sm rounded-lg text-white transition whitespace-nowrap ${
-                    joinCode.length === 6
+                  className={`px-3 py-2 text-sm rounded-lg text-white transition whitespace-nowrap ${joinCode.length === 6
                       ? "bg-primary hover:bg-primary-light"
                       : "bg-gray-300 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   중복 확인
                 </button>
@@ -210,13 +212,12 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
               {/* 하단 메시지 출력 */}
               {nicknameMessage && (
                 <p
-                  className={`text-xs mt-1 ${
-                    nicknameMessageColor === "red"
+                  className={`text-xs mt-1 ${nicknameMessageColor === "red"
                       ? "text-red-600"
                       : nicknameMessageColor === "green"
-                      ? "text-green-600"
-                      : "text-gray-500"
-                  }`}
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }`}
                 >
                   {nicknameMessage}
                 </p>

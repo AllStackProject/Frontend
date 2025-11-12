@@ -1,13 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  Eye,
-  Edit,
-  Trash2,
-  Filter,
-  RotateCcw,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Eye, Trash2, Filter, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import SuccessModal from "@/components/common/modals/SuccessModal";
@@ -25,13 +17,11 @@ interface Video {
 
 interface VideoManagementSectionProps {
   videos: Video[];
-  onEdit: (video: Video) => void;
   onDelete: (id: number) => void;
 }
 
 const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
   videos,
-  onEdit,
   onDelete,
 }) => {
   // 필터 및 정렬 상태
@@ -47,7 +37,6 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
 
   // 모달 상태
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState({ title: "", message: "" });
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
@@ -76,21 +65,6 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
         message: `"${selectedVideo.title}"가 삭제되었습니다.`,
       });
       setShowSuccessModal(true);
-      setSelectedVideo(null);
-    }
-  };
-
-  // 수정 확인 열기
-  const handleEditClick = (video: Video) => {
-    setSelectedVideo(video);
-    setShowEditConfirm(true);
-  };
-
-  // 수정 실행
-  const handleEditConfirm = () => {
-    if (selectedVideo) {
-      onEdit(selectedVideo);
-      setShowEditConfirm(false);
       setSelectedVideo(null);
     }
   };
@@ -224,6 +198,7 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
               <tr className="text-left text-gray-600">
                 <th className="p-3 font-semibold">썸네일</th>
                 <th className="p-3 font-semibold">제목</th>
+                <th className="p-3 font-semibold">업로더</th>
                 <th className="p-3 font-semibold">등록일</th>
                 <th className="p-3 font-semibold">만료일</th>
                 <th className="p-3 font-semibold">공개 범위</th>
@@ -246,6 +221,7 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
                       {video.title}
                     </p>
                   </td>
+                  <td className="p-3"> 홍길동 </td>
                   <td className="p-3 text-gray-600">{video.createdAt}</td>
                   <td className="p-3 text-gray-600">
                     {video.expireAt ? (
@@ -284,13 +260,6 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
                         <Eye size={16} />
                       </Link>
                       <button
-                        onClick={() => handleEditClick(video)}
-                        className="p-2 text-yellow-500 hover:bg-yellow-50 rounded-lg transition"
-                        title="수정"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
                         onClick={() => handleDeleteClick(video)}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
                         title="삭제"
@@ -308,7 +277,6 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
         {currentVideos.length === 0 && (
           <div className="text-center text-gray-400 py-16">
             <p className="text-lg mb-2">등록된 동영상이 없습니다.</p>
-            <p className="text-sm">새 동영상을 업로드해보세요.</p>
           </div>
         )}
       </div>
@@ -375,11 +343,6 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
               <ChevronRight size={18} />
             </button>
           </div>
-
-          {/* 페이지 정보 */}
-          <div className="text-sm text-gray-600">
-            {currentPage} / {totalPages} 페이지
-          </div>
         </div>
       )}
 
@@ -394,21 +357,6 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
           onConfirm={handleDeleteConfirm}
           onClose={() => {
             setShowDeleteConfirm(false);
-            setSelectedVideo(null);
-          }}
-        />
-      )}
-
-      {/* 수정 확인 모달 */}
-      {showEditConfirm && selectedVideo && (
-        <ConfirmActionModal
-          title="동영상 수정"
-          message={`"${selectedVideo.title}"를 수정하시겠습니까?`}
-          confirmText="수정"
-          color="yellow"
-          onConfirm={handleEditConfirm}
-          onClose={() => {
-            setShowEditConfirm(false);
             setSelectedVideo(null);
           }}
         />

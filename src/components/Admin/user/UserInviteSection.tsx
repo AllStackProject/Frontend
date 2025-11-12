@@ -47,21 +47,6 @@ const UserInviteSection: React.FC = () => {
 
   return (
     <div>
-      {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-100">
-            <UserCheck size={20} className="text-amber-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">승인 대기 사용자</h2>
-            <p className="text-sm text-gray-600">
-              대기 중: <span className="font-semibold text-amber-600">{pending.length}명</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* 테이블 */}
       <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
         {pending.length > 0 ? (

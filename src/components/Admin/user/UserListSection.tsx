@@ -185,19 +185,6 @@ const UserListSection: React.FC = () => {
 
   return (
     <div>
-      {/* 헤더 */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
-            <Users size={20} className="text-blue-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">조직 사용자 목록</h2>
-            <p className="text-sm text-gray-600">총 {users.length}명</p>
-          </div>
-        </div>
-      </div>
-
       {/* 검색 및 필터 */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -447,16 +434,6 @@ const UserListSection: React.FC = () => {
             </div>
           )}
 
-          {/* 페이지 정보 */}
-          {totalPages > 1 ? (
-            <div className="text-sm text-gray-600">
-              {currentPage} / {totalPages} 페이지
-            </div>
-          ) : (
-            <div className="text-sm text-gray-600">
-              전체 {filteredUsers.length}개
-            </div>
-          )}
         </div>
       )}
 

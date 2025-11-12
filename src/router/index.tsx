@@ -24,7 +24,6 @@ import ProfileSection from "@/components/mypage/user/ProfileSection";
 // 관리자 페이지 관련 import
 import DashboardPage from "@/pages/admin/DashboardPage";
 import VideosPage from "@/pages/admin/VideosPage";
-import QuizPage from "@/pages/admin/QuizPage";
 import UsersPage from "@/pages/admin/UsersPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import NoticesPage from "@/pages/admin/NoticesPage";
@@ -176,7 +175,6 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "videos", element: <VideosPage /> },
-      { path: "quiz", element: <QuizPage /> },
       { path: "users", element: <UsersPage /> },
       { path: "learning", element: <LearningPage /> },
       { path: "learning/report/:userId", element: <LearningReportSection /> },

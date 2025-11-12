@@ -182,8 +182,8 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                       {[
                         { 
                           key: "manageVideosAndQuiz", 
-                          label: "동영상 & AI 퀴즈 관리", 
-                          description: "동영상과 AI퀴즈 생성, 수정, 삭제 및 관리",
+                          label: "동영상 관리", 
+                          description: "동영상 삭제 및 관리",
                           adminOnly: false
                         },
                         { 

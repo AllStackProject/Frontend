@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, Video, Eye, Award, TrendingUp, FileText, Settings, BarChart3, CheckCircle, ArrowRight, BookOpen, Layers, DollarSign} from "lucide-react";
+import { Users, Video, Award, TrendingUp, FileText, Settings, BarChart3, ArrowRight, BookOpen, Layers, DollarSign} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type UserRole = "admin" | "manager";
@@ -10,87 +10,6 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ userRole = "admin" }) => {
   const navigate = useNavigate();
-
-  // 권한별 주요 지표
-  const getStatsByRole = () => {
-    if (userRole === "admin") {
-      return [
-        { 
-          label: "총 사용자", 
-          value: "128", 
-          unit: "명",
-          icon: Users, 
-          color: "blue",
-          trend: "+12"
-        },
-        { 
-          label: "총 동영상", 
-          value: "45", 
-          unit: "개",
-          icon: Video, 
-          color: "purple",
-          trend: "+3"
-        },
-        { 
-          label: "총 시청 수", 
-          value: "2,847", 
-          unit: "회",
-          icon: Eye, 
-          color: "green",
-          trend: "+156"
-        },
-        { 
-          label: "평균 퀴즈 정답률", 
-          value: "82", 
-          unit: "%",
-          icon: Award, 
-          color: "amber",
-          trend: "+5%"
-        },
-      ];
-    } else {
-      return [
-        { 
-          label: "관리 중인 동영상", 
-          value: "45", 
-          unit: "개",
-          icon: Video, 
-          color: "blue",
-          trend: "+3",
-          trendLabel: "이번 주"
-        },
-        { 
-          label: "내 콘텐츠 조회수", 
-          value: "2,847", 
-          unit: "회",
-          icon: Eye, 
-          color: "green",
-          trend: "+156",
-          trendLabel: "오늘"
-        },
-        { 
-          label: "생성한 퀴즈", 
-          value: "38", 
-          unit: "개",
-          icon: Award, 
-          color: "purple",
-          trend: "+5",
-          trendLabel: "이번 달"
-        },
-        { 
-          label: "평균 완료율", 
-          value: "78", 
-          unit: "%",
-          icon: CheckCircle, 
-          color: "amber",
-          trend: "+3%",
-          trendLabel: "이번 주"
-        },
-      ];
-    }
-  };
-
-  const stats = getStatsByRole();
 
   // 권한별 빠른 탐색 메뉴
   const getQuickAccessByRole = () => {
@@ -214,42 +133,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ userRole = "admin" }) => 
 
   return (
     <div className="p-6 space-y-6">
-      {/* 헤더 */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">관리자 대시보드</h2>
-        <p className="text-sm text-gray-600">
-          조직의 학습 현황과 주요 지표를 한눈에 확인하세요.
-        </p>
-      </div>
-
-      {/* 주요 지표 카드 */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          const colors = getColorClasses(stat.color);
-          return (
-            <div
-              key={stat.label}
-              className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`${colors.icon} p-2 rounded-lg`}>
-                  <Icon size={20} className={colors.text} />
-                </div>
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">
-                  {stat.trend}
-                </span>
-              </div>
-              <p className="text-xs text-gray-600 mb-1">{stat.label}</p>
-              <div className="flex items-baseline gap-1">
-                <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-                <span className="text-sm text-gray-500">{stat.unit}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* 빠른 탐색 */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
         <div className="flex items-center gap-2 mb-4">

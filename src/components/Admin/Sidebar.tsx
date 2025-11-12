@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Home, Video, Users, BookOpen, FileText, BarChart3, Settings, ChevronLeft, ChevronRight, Layers, DollarSign, LogOut, BrainCircuit } from "lucide-react";
-
+import { Home, Video, Users, BookOpen, FileText, BarChart3, Settings, ChevronLeft, ChevronRight, Layers, DollarSign, BrainCircuit } from "lucide-react";
 type UserRole = "admin" | "manager";
 
 interface SidebarProps {
@@ -19,11 +18,10 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = "admin" }) => {
       return [
         commonHome,
         { label: "동영상 관리", icon: Video, path: "/admin/videos" },
-        { label: "AI 퀴즈 관리", icon: BrainCircuit, path: "/admin/quiz" },
         { label: "사용자 관리", icon: Users, path: "/admin/users" },
         { label: "사용자별 시청 관리", icon: BookOpen, path: "/admin/learning" },
         { label: "동영상별 시청 관리", icon: Layers, path: "/admin/history" },
-        { label: "요금제 & 광고 관리", icon: DollarSign, path: "/admin/plans" },
+        { label: "요금제 & 배너 관리", icon: DollarSign, path: "/admin/plans" },
         { label: "공지 등록", icon: FileText, path: "/admin/notices" },
         { label: "통계/리포트", icon: BarChart3, path: "/admin/reports" },
         { label: "조직 설정", icon: Settings, path: "/admin/settings" }
@@ -107,17 +105,6 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = "admin" }) => {
               <span className="ml-2 text-sm">접기</span>
             </>
           )}
-        </button>
-      </div>
-
-      {/* 로그아웃 */}
-      <div className="border-t border-gray-600 p-3 flex-shrink-0">
-        <button
-          className="flex items-center justify-center gap-3 text-gray-400 hover:text-white hover:bg-red-600/20 w-full py-2.5 rounded-lg transition-colors"
-          title={isCollapsed ? "로그아웃" : undefined}
-        >
-          <LogOut size={18} />
-          {!isCollapsed && <span className="text-sm font-medium">로그아웃</span>}
         </button>
       </div>
     </aside>

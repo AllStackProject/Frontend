@@ -8,15 +8,15 @@ const PlansPage: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">요금제 & 광고 관리</h1>
-        <p className="text-sm text-gray-600">조직의 요금제 상태를 확인하고 배너 광고를 등록 및 변경할 수 있습니다.</p>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">요금제 & 배너 관리</h1>
+        <p className="text-sm text-gray-600">조직의 요금제 상태를 확인하고 배너를 등록 및 변경할 수 있습니다.</p>
       </div>
 
       {/* 탭 메뉴 */}
       <div className="flex gap-3 border-b border-gray-200 mb-6">
         {[
           { key: "plan", label: "요금제 관리" },
-          { key: "ad", label: "광고 관리" },
+          { key: "ad", label: "배너 관리" },
         ].map((tab) => (
           <button
             key={tab.key}

@@ -136,7 +136,6 @@ const AttendanceSection: React.FC<AttendanceSectionProps> = ({ onOpenReport }) =
                             <th className="px-4 py-3 font-semibold">이름</th>
                             <th className="px-4 py-3 font-semibold">그룹</th>
                             <th className="px-4 py-3 font-semibold">평균 시청률</th>
-                            <th className="px-4 py-3 font-semibold">평균 퀴즈 성적</th>
                             <th className="px-4 py-3 font-semibold text-center">상세보기</th>
                         </tr>
                     </thead>
@@ -151,7 +150,6 @@ const AttendanceSection: React.FC<AttendanceSectionProps> = ({ onOpenReport }) =
                                 <td className="px-4 py-3 font-medium text-gray-800">{user.name}</td>
                                 <td className="px-4 py-3 text-gray-600">{user.group}</td>
                                 <td className="px-4 py-3 text-gray-600">{user.attendance}%</td>
-                                <td className="px-4 py-3 text-gray-600">{user.quizScore}점</td>
                                 <td className="px-4 py-3">
                                     <div className="flex justify-center items-center gap-3">
                                         {/* 동영상 상세 모달 */}
@@ -160,22 +158,10 @@ const AttendanceSection: React.FC<AttendanceSectionProps> = ({ onOpenReport }) =
                                                 setSelectedUser(user);
                                                 setShowVideoModal(true);
                                             }}
-                                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium transition-colors"
                                         >
                                             <Eye size={14} /> 동영상
                                         </button>
-
-                                        {/* AI 퀴즈 상세 모달 */}
-                                        <button
-                                            onClick={() => {
-                                                setSelectedUser(user);
-                                                setShowQuizModal(true);
-                                            }}
-                                            className="inline-flex items-center gap-1 text-green-600 hover:text-green-800 text-sm font-medium transition-colors"
-                                        >
-                                            <Eye size={14} /> AI 퀴즈
-                                        </button>
-
                                         {/* 학습 리포트로 이동 */}
                                         <button
                                             onClick={() => onOpenReport?.(user.id)}

@@ -8,12 +8,11 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Search, Info, UserCircle } from "lucide-react";
+import { Search, UserCircle } from "lucide-react";
 
 interface LearningData {
   date: string;
   views: number;
-  quizzes: number;
 }
 
 interface UserReport {
@@ -21,7 +20,6 @@ interface UserReport {
   userName: string;
   group: string;
   totalViews: number;
-  totalQuizzes: number;
   topTags: string[];
   data: LearningData[];
 }
@@ -32,13 +30,11 @@ const userReports: UserReport[] = [
     userName: "김철수",
     group: "HR팀",
     totalViews: 56,
-    totalQuizzes: 42,
     topTags: ["AI", "보안", "교육"],
     data: [
-      { date: "1월", views: 10, quizzes: 5 },
-      { date: "2월", views: 14, quizzes: 9 },
-      { date: "3월", views: 22, quizzes: 15 },
-      { date: "4월", views: 28, quizzes: 20 },
+      { date: "1월", views: 10, },
+      { date: "2월", views: 14, },
+      { date: "3월", views: 22, },
     ],
   },
   {
@@ -46,13 +42,11 @@ const userReports: UserReport[] = [
     userName: "박민지",
     group: "IT팀",
     totalViews: 34,
-    totalQuizzes: 20,
     topTags: ["AI", "윤리", "프라이버시"],
     data: [
-      { date: "1월", views: 8, quizzes: 4 },
-      { date: "2월", views: 10, quizzes: 5 },
-      { date: "3월", views: 12, quizzes: 6 },
-      { date: "4월", views: 14, quizzes: 8 },
+      { date: "1월", views: 8, },
+      { date: "2월", views: 10, },
+      { date: "3월", views: 12, },
     ],
   },
   {
@@ -60,13 +54,11 @@ const userReports: UserReport[] = [
     userName: "이수현",
     group: "R&D팀",
     totalViews: 40,
-    totalQuizzes: 35,
     topTags: ["AI", "신입교육", "보안"],
     data: [
-      { date: "1월", views: 9, quizzes: 8 },
-      { date: "2월", views: 12, quizzes: 9 },
-      { date: "3월", views: 10, quizzes: 11 },
-      { date: "4월", views: 9, quizzes: 7 },
+      { date: "1월", views: 9, },
+      { date: "2월", views: 12, },
+      { date: "3월", views: 10, },
     ],
   },
 ];
@@ -78,7 +70,6 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
   const [selectedUserId, setSelectedUserId] = useState<string>(initialUserId || "001");
 
   const [query, setQuery] = useState("");
-  const [showTooltip, setShowTooltip] = useState(false);
 
   const selectedUser = userReports.find((u) => u.userId === selectedUserId);
 
@@ -136,43 +127,53 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
       {/* 선택된 사용자 정보 */}
       {selectedUser ? (
         <>
-          {/* ✅ 사용자 정보 헤더 */}
-          <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
-            <div className="bg-gray-100 w-14 h-14 rounded-full flex items-center justify-center">
-              <UserCircle size={36} className="text-gray-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                {selectedUser.userName}{" "}
-                <span className="text-sm text-gray-500">
-                  ({selectedUser.userId})
-                </span>
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                그룹: {selectedUser.group}
-              </p>
-            </div>
-          </div>
+          {/* 헤더 카드 섹션 */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {/* 사용자 프로필 카드 */}
+            <div className="flex justify-center items-center bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-4">
+              <div className="flex items-center">
+                {/* 아이콘 */}
+                <div className="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center mr-6">
+                  <UserCircle size={35} className="text-blue-500" />
+                </div>
 
-          {/* 리포트 요약 */}
-          <div className="grid grid-cols-3 gap-4 text-center mb-6">
-            <div className="bg-white border rounded-lg p-4">
-              <p className="text-sm text-gray-500">총 시청한 영상 수</p>
-              <p className="text-2xl font-bold text-blue-500 mt-1">
-                {selectedUser.totalViews}개
-              </p>
+                {/* 사용자 정보 */}
+                <div className="flex flex-col text-center sm:text-left">
+                  <h3 className="text-sm font-semibold text-gray-800 leading-tight">
+                    {selectedUser.userName}
+                    <span className="text-xs text-gray-500 ml-1">
+                      ({selectedUser.userId})
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    그룹: {selectedUser.group}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="bg-white border rounded-lg p-4">
-              <p className="text-sm text-gray-500">총 완료한 퀴즈 수</p>
-              <p className="text-2xl font-bold text-green-500 mt-1">
-                {selectedUser.totalQuizzes}개
+
+            {/* 총 시청 수 */}
+            <div className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-4">
+              <p className="text-xs text-gray-500 mb-1">총 시청한 영상 수</p>
+              <p className="text-xl font-bold text-blue-600">
+                {selectedUser.totalViews} <span className="text-xs text-gray-400 mt-0.5">개</span>
               </p>
+
             </div>
-            <div className="bg-white border rounded-lg p-4">
-              <p className="text-sm text-gray-500">가장 많이 본 해시태그</p>
-              <p className="text-lg font-semibold mt-1 text-gray-800">
-                {selectedUser.topTags.map((tag) => `#${tag} `)}
-              </p>
+
+            {/* 가장 많이 본 카테고리 */}
+            <div className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-4">
+              <p className="text-xs text-gray-500 mb-1">가장 많이 본 카테고리</p>
+              <div className="flex flex-wrap justify-center gap-1">
+                {selectedUser.topTags.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 text-sm font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-100"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -203,61 +204,6 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
                 />
               </LineChart>
             </ResponsiveContainer>
-          </div>
-
-          {/* 상세 기록 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 relative">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-gray-700 flex items-center gap-2">
-                월별 시청 상세 기록
-              </h3>
-
-              {/* 활동지수 설명 */}
-              <div
-                className="relative flex items-center"
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-              >
-                <Info size={16} className="text-gray-500 cursor-pointer" />
-                {showTooltip && (
-                  <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-md w-64">
-                    <p>
-                      <strong>활동지수</strong>는 사용자의 시청 참여도를 나타내는
-                      지표입니다.
-                    </p>
-                    <p className="mt-1 text-gray-300">
-                      계산식: (시청한 영상 수 + 완료한 퀴즈 수) ÷ 2
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <table className="w-full text-sm border border-gray-100">
-              <thead className="bg-gray-50 border-b">
-                <tr className="text-gray-600 text-left">
-                  <th className="p-3">월</th>
-                  <th className="p-3">시청한 영상 수</th>
-                  <th className="p-3">완료한 퀴즈 수</th>
-                  <th className="p-3">활동지수</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedUser.data.map((item, i) => (
-                  <tr
-                    key={i}
-                    className="border-b hover:bg-gray-50 transition text-gray-700"
-                  >
-                    <td className="p-3 font-medium">{item.date}</td>
-                    <td className="p-3">{item.views}</td>
-                    <td className="p-3">{item.quizzes}</td>
-                    <td className="p-3 font-semibold text-blue-600">
-                      {Math.round((item.views + item.quizzes) / 2)}점
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </>
       ) : (

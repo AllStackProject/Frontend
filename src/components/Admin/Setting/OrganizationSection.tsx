@@ -1,8 +1,23 @@
 import React, { useState } from "react";
-import { Edit, Users, Hash, KeyRound, Building2, ImagePlus, Copy, Check } from "lucide-react";
-import EditOrganizationModal from "@/components/admin/setting/EditOrganizationModal";
-import GroupManagementModal from "@/components/admin/setting/GroupManagementModal";
-import HashtagModal from "@/components/admin/setting/HashtagModal";
+import {
+  Edit,
+  Users,
+  Hash,
+  KeyRound,
+  Building2,
+  ImagePlus,
+  Copy,
+  Check,
+  RefreshCcw,
+  Settings,
+} from "lucide-react";
+import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import GroupCategoryModal from "@/components/admin/setting/GroupCategoryModal";
+
+interface GroupCategory {
+  name: string;
+  categories: string[];
+}
 
 interface OrganizationInfo {
   id: string;
@@ -10,8 +25,7 @@ interface OrganizationInfo {
   image?: string;
   members: number;
   inviteCode: string;
-  hashtags: string[];
-  groups: string[];
+  groups: GroupCategory[];
 }
 
 const OrganizationSection: React.FC = () => {
@@ -21,33 +35,58 @@ const OrganizationSection: React.FC = () => {
     image: "/dummy/woori-logo.png",
     members: 86,
     inviteCode: "123456",
-    hashtags: ["AI", "교육", "윤리"],
-    groups: ["HR팀", "IT팀", "R&D팀"],
+    groups: [
+      { name: "HR팀", categories: ["AI", "윤리"] },
+      { name: "IT팀", categories: ["보안", "클라우드"] },
+    ],
   });
 
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showGroupModal, setShowGroupModal] = useState(false);
-  const [showHashtagModal, setShowHashtagModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // 초대 메시지 복사 함수
+  // ✅ 이미지 업로드
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("이미지 파일 크기는 5MB 이하여야 합니다.");
+        setShowErrorModal(true);
+        return;
+      }
+      const preview = URL.createObjectURL(file);
+      setOrganization((prev) => ({ ...prev, image: preview }));
+    }
+  };
+
+  // ✅ 초대 메시지 복사
   const copyInviteMessage = () => {
     const inviteMessage = `${organization.name}에 참가해보세요!\n\n조직 초대 코드: ${organization.inviteCode}\n\n위 코드를 입력하여 조직에 참여하실 수 있습니다.`;
-    
-    navigator.clipboard.writeText(inviteMessage).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {
-      alert("복사에 실패했습니다.");
-    });
+    navigator.clipboard
+      .writeText(inviteMessage)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => alert("복사에 실패했습니다."));
+  };
+
+  // ✅ 초대 코드 재생성
+  const handleRegenerateClick = () => setShowRegenerateConfirm(true);
+  const generateNewCode = () => {
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setOrganization((prev) => ({ ...prev, inviteCode: randomCode }));
+    setShowRegenerateConfirm(false);
   };
 
   return (
     <div>
-      {/* 조직 기본 정보 카드 */}
+      {/* ✅ 조직 기본 정보 */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          {/* 조직 이미지 */}
+          {/* 이미지 업로드 */}
           <div className="relative flex-shrink-0">
             <div className="relative w-32 h-32">
               <img
@@ -55,25 +94,25 @@ const OrganizationSection: React.FC = () => {
                 alt="Organization Logo"
                 className="w-full h-full object-cover rounded-2xl border-2 border-gray-200"
               />
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 border-2 border-white rounded-full p-2 shadow-lg transition-colors"
-                title="이미지 변경"
-              >
+              <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 border-2 border-white rounded-full p-2 shadow-lg cursor-pointer transition">
                 <ImagePlus size={16} className="text-white" />
-              </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </label>
             </div>
           </div>
 
           {/* 조직 정보 */}
           <div className="flex-1 space-y-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-1">
-                <Building2 size={22} className="text-blue-600" />
-                {organization.name}
-              </h2>
-              <p className="text-sm text-gray-500">조직 ID: {organization.id}</p>
-            </div>
+            {/* 이름 */}
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-1">
+              <Building2 size={22} className="text-blue-600" />
+              {organization.name}
+            </h2>
 
             {/* 멤버 수 */}
             <div className="flex items-center gap-2 text-gray-700">
@@ -84,7 +123,9 @@ const OrganizationSection: React.FC = () => {
                 <p className="text-xs text-gray-600">소속 멤버</p>
                 <p className="text-lg font-bold text-gray-800">
                   {organization.members.toLocaleString()}
-                  <span className="text-sm font-normal text-gray-600 ml-1">명</span>
+                  <span className="text-sm font-normal text-gray-600 ml-1">
+                    명
+                  </span>
                 </p>
               </div>
             </div>
@@ -96,17 +137,16 @@ const OrganizationSection: React.FC = () => {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-gray-600 mb-1">조직 초대 코드</p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <span className="font-mono bg-gray-100 px-4 py-2 rounded-lg text-lg font-bold text-gray-800 tracking-wider border border-gray-300">
                     {organization.inviteCode}
                   </span>
                   <button
                     onClick={copyInviteMessage}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      copied
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${copied
                         ? "bg-green-600 text-white"
                         : "bg-blue-600 text-white hover:bg-blue-700"
-                    }`}
+                      }`}
                   >
                     {copied ? (
                       <>
@@ -116,141 +156,108 @@ const OrganizationSection: React.FC = () => {
                     ) : (
                       <>
                         <Copy size={16} />
-                        초대 메시지 복사
+                        초대 복사
                       </>
                     )}
+                  </button>
+                  <button
+                    onClick={handleRegenerateClick}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <RefreshCcw size={16} />
+                    재생성
                   </button>
                 </div>
               </div>
             </div>
-
-            {/* 조직 정보 수정 버튼 */}
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-            >
-              <Edit size={16} />
-              조직 정보 수정
-            </button>
           </div>
         </div>
       </div>
 
-      {/* 그룹 및 해시태그 관리 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 그룹 관리 */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100">
-                <Users size={18} className="text-blue-600" />
-              </div>
-              그룹 관리
-            </h3>
-            <button
-              onClick={() => setShowGroupModal(true)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              <Edit size={14} />
-              수정
-            </button>
-          </div>
-
-          <div className="mb-3">
-            <p className="text-sm text-gray-600">
-              등록된 그룹: <span className="font-semibold text-gray-800">{organization.groups.length}개</span>
-            </p>
-          </div>
-
-          {organization.groups.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {organization.groups.map((group, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors"
-                >
-                  <Users size={14} />
-                  {group}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-              등록된 그룹이 없습니다.
-            </div>
-          )}
+      {/* 그룹 및 카테고리 관리 */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <Settings size={18} className="text-blue-600" />
+            그룹 및 카테고리 관리
+          </h3>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+          >
+            <Edit size={14} />
+            수정
+          </button>
         </div>
 
-        {/* 해시태그 관리 */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100">
-                <Hash size={18} className="text-green-600" />
+        {organization.groups.length > 0 ? (
+          <div className="space-y-4">
+            {organization.groups.map((group, i) => (
+              <div
+                key={i}
+                className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+              >
+                <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                  <Users size={16} className="text-blue-600" />
+                  {group.name}
+                </h4>
+                {group.categories.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {group.categories.map((tag, j) => (
+                      <span
+                        key={j}
+                        className="inline-flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 text-sm px-3 py-1 rounded-lg"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">등록된 카테고리 없음</p>
+                )}
               </div>
-              해시태그 관리
-            </h3>
-            <button
-              onClick={() => setShowHashtagModal(true)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
-            >
-              <Edit size={14} />
-              수정
-            </button>
+            ))}
           </div>
-
-          <div className="mb-3">
-            <p className="text-sm text-gray-600">
-              등록된 해시태그: <span className="font-semibold text-gray-800">{organization.hashtags.length}개</span>
-            </p>
+        ) : (
+          <div className="text-center py-8 text-sm text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
+            등록된 그룹이 없습니다.
           </div>
-
-          {organization.hashtags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {organization.hashtags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 text-sm font-medium px-3 py-2 rounded-lg hover:bg-green-100 transition-colors"
-                >
-                  <Hash size={14} />
-                  {tag}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-              등록된 해시태그가 없습니다.
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* 모달들 */}
-      {showEditModal && (
-        <EditOrganizationModal
-          organization={organization}
-          onClose={() => setShowEditModal(false)}
-          onSubmit={(updated) => setOrganization(updated)}
-        />
-      )}
-
-      {showGroupModal && (
-        <GroupManagementModal
+      {/* 그룹/카테고리 관리 모달 */}
+      {showModal && (
+        <GroupCategoryModal
           groups={organization.groups}
-          onClose={() => setShowGroupModal(false)}
-          onSubmit={(updatedGroups) =>
-            setOrganization((prev) => ({ ...prev, groups: updatedGroups }))
+          onClose={() => setShowModal(false)}
+          onSubmit={(updated) =>
+            setOrganization((prev) => ({ ...prev, groups: updated }))
           }
         />
       )}
 
-      {showHashtagModal && (
-        <HashtagModal
-          hashtags={organization.hashtags}
-          onClose={() => setShowHashtagModal(false)}
-          onSubmit={(updatedTags) =>
-            setOrganization((prev) => ({ ...prev, hashtags: updatedTags }))
-          }
+      {/* 초대 코드 재생성 확인 */}
+      {showRegenerateConfirm && (
+        <ConfirmActionModal
+          title="초대 코드 재생성"
+          message="조직 코드를 재생성하시겠습니까?\n기존 초대 코드는 즉시 무효화됩니다."
+          keyword="재생성"
+          confirmText="재생성"
+          color="blue"
+          onConfirm={generateNewCode}
+          onClose={() => setShowRegenerateConfirm(false)}
+        />
+      )}
+
+      {/* 이미지 오류 */}
+      {showErrorModal && (
+        <ConfirmActionModal
+          title="입력 오류"
+          message={errorMessage}
+          confirmText="확인"
+          color="red"
+          onConfirm={() => setShowErrorModal(false)}
+          onClose={() => setShowErrorModal(false)}
         />
       )}
     </div>

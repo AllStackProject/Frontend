@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Edit3, FileText } from "lucide-react";
+import { X, Edit3 } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 
 interface Notice {
@@ -46,8 +46,6 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({
   });
 
   const [videoSearchQuery, setVideoSearchQuery] = useState("");
-  const [showVideoResults, setShowVideoResults] = useState(false);
-  const [filteredVideos, setFilteredVideos] = useState(ORGANIZATION_VIDEOS);
 
   // 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -61,20 +59,6 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({
         ? prev.selectedGroups.filter((g) => g !== group)
         : [...prev.selectedGroups, group],
     }));
-  };
-
-  const handleVideoSearch = () => {
-    const results = ORGANIZATION_VIDEOS.filter((video) =>
-      video.title.toLowerCase().includes(videoSearchQuery.toLowerCase())
-    );
-    setFilteredVideos(results);
-    setShowVideoResults(true);
-  };
-
-  const handleVideoSelect = (video: typeof ORGANIZATION_VIDEOS[0]) => {
-    setForm((prev) => ({ ...prev, linkedVideo: video.title }));
-    setShowVideoResults(false);
-    setVideoSearchQuery("");
   };
 
   const handleSave = () => {
@@ -211,110 +195,6 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
                   placeholder="공지 내용을 입력하세요"
                 />
-              </div>
-
-              {/* 첨부파일 (읽기 전용) */}
-              {form.attachments && form.attachments.length > 0 && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    첨부파일
-                  </label>
-                  <div className="space-y-2">
-                    {form.attachments.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
-                      >
-                        <span className="text-sm text-gray-700 truncate flex-1">
-                          {file}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 연결 동영상 */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  연결할 동영상 (선택)
-                </label>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="동영상 제목으로 검색"
-                      value={videoSearchQuery}
-                      onChange={(e) => setVideoSearchQuery(e.target.value)}
-                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                    />
-                    <button
-                      onClick={handleVideoSearch}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors border border-gray-300"
-                    >
-                      검색
-                    </button>
-                  </div>
-
-                  {/* 검색 결과 */}
-                  {showVideoResults && (
-                    <div className="border border-gray-200 rounded-lg bg-white max-h-48 overflow-y-auto">
-                      {filteredVideos.length > 0 ? (
-                        <div className="divide-y divide-gray-100">
-                          {filteredVideos.map((video) => (
-                            <button
-                              key={video.id}
-                              onClick={() => handleVideoSelect(video)}
-                              className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
-                                form.linkedVideo === video.title
-                                  ? "bg-blue-50 border-l-2 border-blue-600"
-                                  : ""
-                              }`}
-                            >
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <p className="text-sm font-medium text-gray-800">
-                                    {video.title}
-                                  </p>
-                                  <p className="text-xs text-gray-500 mt-0.5">
-                                    업로더: {video.uploader} | {video.uploadDate}
-                                  </p>
-                                </div>
-                                {form.linkedVideo === video.title && (
-                                  <span className="text-blue-600 text-xs font-semibold">
-                                    선택됨
-                                  </span>
-                                )}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-6 text-sm text-gray-500">
-                          검색 결과가 없습니다.
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 선택된 동영상 */}
-                  {form.linkedVideo && (
-                    <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <FileText size={16} className="text-blue-600" />
-                        <span className="text-sm font-medium text-gray-800">
-                          {form.linkedVideo}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setForm({ ...form, linkedVideo: "" })}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>

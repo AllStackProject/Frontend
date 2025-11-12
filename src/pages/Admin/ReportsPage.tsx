@@ -1,35 +1,19 @@
 import React, { useState } from "react";
-import { BarChart3, TrendingUp, Users, Video } from "lucide-react";
-import OverviewSection from "@/components/admin/report/OverviewSection";
-import ActivityChartSection from "@/components/admin/report/ActivityChartSection";
+import { TrendingUp, Users, Video } from "lucide-react";
 import GroupComparisonSection from "@/components/admin/report/GroupComparisonSection";
 import VideoRankingSection from "@/components/admin/report/VideoRankingSection";
 import TimePatternSection from "@/components/admin/report/TimePatternSection";
 import DropOffAnalysisSection from "@/components/admin/report/DropOffAnalysisSection";
 import DemographicSection from "@/components/admin/report/DemographicSection";
-import ReportFilterBar from "@/components/admin/report/ReportFilterBar";
 import VideoAnalyticsSection from "@/components/admin/report/VideoAnalyticsSection";
 
-type TabType = "overview" | "activity" | "users" | "content";
+type TabType =  "activity" | "users" | "content";
 
 const ReportsPage: React.FC = () => {
-  const [period, setPeriod] = useState("30days");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [activeTab, setActiveTab] = useState<TabType>("activity");
 
-  const handleDateRangeChange = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
 
   const tabs = [
-    { 
-      id: "overview", 
-      label: "전체 개요", 
-      icon: BarChart3,
-      description: "주요 지표 및 활동 차트"
-    },
     { 
       id: "activity", 
       label: "활동 분석", 
@@ -60,15 +44,6 @@ const ReportsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* 필터바 */}
-      <ReportFilterBar
-        period={period}
-        onChangePeriod={setPeriod}
-        startDate={startDate}
-        endDate={endDate}
-        onChangeDateRange={handleDateRangeChange}
-      />
-
       {/* 탭 네비게이션 */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
         <div className="flex border-b border-gray-200">
@@ -94,13 +69,6 @@ const ReportsPage: React.FC = () => {
 
       {/* 탭 콘텐츠 */}
       <div className="space-y-6">
-        {activeTab === "overview" && (
-          <>
-            <OverviewSection />
-            <ActivityChartSection />
-          </>
-        )}
-
         {activeTab === "activity" && (
           <>
             <TimePatternSection />

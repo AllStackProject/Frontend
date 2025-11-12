@@ -1,12 +1,8 @@
 import React, { useState } from "react";
 import { Home, X, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-interface Organization {
-  id: number;
-  name: string;
-  logo: string;
-}
+import { useAuth } from "@/context/AuthContext";
+import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
 
 type UserRole = "admin" | "manager";
 
@@ -16,23 +12,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
   const navigate = useNavigate();
+  const { nickname, orgName, orgId } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedOrg, setSelectedOrg] = useState<Organization>({
-    id: 1,
-    name: "우리 FISA",
-    logo: "/dummy/woori-logo.png",
-  });
 
-  const organizations: Organization[] = [
-    { id: 1, name: "우리 FISA", logo: "/dummy/woori-logo.png" },
-    { id: 2, name: "PASTA EDU", logo: "/dummy/woori-logo.png" },
-    { id: 3, name: "Tech Academy", logo: "/dummy/woori-logo.png" },
-  ];
-
-  const handleSelectOrg = (org: Organization) => {
-    setSelectedOrg(org);
-    setIsModalOpen(false);
-  };
 
   // 권한별 역할 표시 텍스트
   const getRoleText = () => {
@@ -56,13 +38,12 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
           onClick={() => setIsModalOpen(true)}
         >
           <img
-            src={selectedOrg.logo}
-            alt={selectedOrg.name}
+            src='/dummy/woori-logo.png'
             className="w-10 h-10 rounded-md object-cover border border-gray-300"
           />
           <div>
             <h2 className="font-semibold text-gray-800 group-hover:text-blue-600 transition">
-              {selectedOrg.name}
+              {orgName}
             </h2>
             <p className="text-xs text-gray-500">{getRoleText()}</p>
           </div>
@@ -74,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
           <div className="flex items-center gap-2 text-gray-700 text-sm font-medium">
             <UserCircle size={18} className="text-blue-500" />
             <span>
-              <span className="text-blue-600">홍길동</span>님
+              <span className="text-blue-600">{nickname}</span>님
             </span>
           </div>
 
@@ -104,42 +85,12 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
               </button>
             </div>
 
-            {/* 조직 리스트 */}
-            <div className="space-y-3 max-h-72 overflow-y-auto">
-              {organizations.map((org) => (
-                <div
-                  key={org.id}
-                  onClick={() => handleSelectOrg(org)}
-                  className={`flex items-center gap-3 p-3 rounded-lg border transition cursor-pointer ${
-                    selectedOrg.id === org.id
-                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                      : "border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-                  }`}
-                >
-                  <img
-                    src={org.logo}
-                    alt={org.name}
-                    className="w-12 h-12 rounded-lg object-cover border border-gray-200"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-800">{org.name}</h4>
-                    <p className="text-xs text-gray-500">
-                      {selectedOrg.id === org.id ? "✓ 현재 선택됨" : "클릭하여 선택"}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* 닫기 버튼 */}
-            <div className="flex justify-end mt-5 pt-4 border-t border-gray-200">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-              >
-                닫기
-              </button>
-            </div>
+            {/* 조직 선택 모달 */}
+            <OrganizationSelectModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onSelect={() => setIsModalOpen(false)}
+            />
           </div>
         </div>
       )}

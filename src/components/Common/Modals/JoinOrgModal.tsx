@@ -121,10 +121,7 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
       const res = await joinOrganization(joinCode, nickname);
       if (res.success) {
         onClose();
-        onSuccess({
-          id: res.data?.org_id || 0,
-          name: res.data?.org_name || "새 조직",
-        });
+        onSuccess();
         await refresh();
       }
     } catch (err: any) {
@@ -160,13 +157,9 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
               조직 가입
             </h2>
 
-            <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg text-sm text-primary">
-              <span className="font-semibold">💡 조직 코드와 사용할 닉네임을 입력하세요.</span>
-            </div>
-
             {/* 조직 코드 입력 */}
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              조직 코드
+              조직 코드 *
             </label>
             <input
               type="text"
@@ -245,7 +238,7 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
         document.body
       )}
 
-      {/* ConfirmActionModal - 더 높은 z-index */}
+      {/* ConfirmActionModal */}
       {confirmModal && createPortal(
         <div className="fixed inset-0 z-[100]">
           <ConfirmActionModal

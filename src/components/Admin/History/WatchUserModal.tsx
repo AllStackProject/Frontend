@@ -9,11 +9,11 @@ interface WatchUserModalProps {
 }
 
 const dummyWatchers = [
-  { id: "001", name: "김철수", group: "HR팀", rate: 100, date: "2025-02-05" },
-  { id: "002", name: "박민지", group: "IT팀", rate: 80, date: "2025-02-06" },
-  { id: "003", name: "이수현", group: "R&D팀", rate: 60, date: "2025-02-07" },
+  { id: "001", name: "김철수", group: "HR팀, IT팀", rate: 100, date: "2025-02-05" },
+  { id: "002", name: "박민지", group: "IT팀, HR팀", rate: 80, date: "2025-02-06" },
+  { id: "003", name: "이수현", group: "R&D팀", rate: 30, date: "2025-02-07" },
   { id: "004", name: "정우성", group: "기획팀", rate: 95, date: "2025-02-08" },
-  { id: "005", name: "최지훈", group: "HR팀", rate: 75, date: "2025-02-09" },
+  { id: "005", name: "최지훈", group: "HR팀", rate: 65, date: "2025-02-09" },
 ];
 
 const WatchUserModal: React.FC<WatchUserModalProps> = ({ video, onClose }) => {
@@ -41,11 +41,11 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({ video, onClose }) => {
             <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
               <thead className="bg-gray-50">
                 <tr className="text-gray-700">
-                  <th className="px-4 py-3 text-left font-semibold">유저 ID</th>
+                  <th className="px-4 py-3 text-left font-semibold">NO</th>
                   <th className="px-4 py-3 text-left font-semibold">이름</th>
                   <th className="px-4 py-3 text-left font-semibold">그룹</th>
                   <th className="px-4 py-3 text-left font-semibold">시청률</th>
-                  <th className="px-4 py-3 text-left font-semibold">시청일</th>
+                  <th className="px-4 py-3 text-left font-semibold">최근 시청일</th>
                 </tr>
               </thead>
               <tbody>
@@ -64,7 +64,7 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({ video, onClose }) => {
                         <div className="w-24 bg-gray-200 rounded-full h-2 overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              u.rate >= 80
+                              u.rate >= 90
                                 ? "bg-green-500"
                                 : u.rate >= 50
                                 ? "bg-blue-500"
@@ -75,7 +75,7 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({ video, onClose }) => {
                         </div>
                         <span
                           className={`text-sm font-semibold ${
-                            u.rate >= 80
+                            u.rate >= 90
                               ? "text-green-600"
                               : u.rate >= 50
                               ? "text-blue-600"

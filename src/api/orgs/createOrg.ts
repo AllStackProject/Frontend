@@ -3,7 +3,6 @@ import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 
 /**
  * 조직 생성 API
- * @param formData multipart/form-data (name, desc, nickname, img)
  */
 export const createOrganization = async (formData: FormData) => {
   try {
@@ -11,15 +10,21 @@ export const createOrganization = async (formData: FormData) => {
       tokenType: "user",
     } as CustomAxiosRequestConfig);
 
-    const result = response.data?.result;
-    if (result?.is_success) {
-      return { success: true };
+    const data = response.data;
+
+    if (data.result?.id != null) {
+      return {
+        success: true,
+        id: data.result.id, 
+      };
     } else {
-      throw new Error(response.data?.message || "조직 생성에 실패했습니다.");
+      throw new Error(data.message || "조직 생성에 실패했습니다.");
     }
   } catch (err: any) {
     console.error("🚨 조직 생성 실패:", err);
-    throw new Error(err.response?.data?.message || "조직 생성 중 오류가 발생했습니다.");
+    throw new Error(
+      err.response?.data?.message || "조직 생성 중 오류가 발생했습니다."
+    );
   }
 };
 
@@ -34,6 +39,9 @@ export const checkOrgNameAvailability = async (name: string) => {
     return response.data?.result?.is_success === true;
   } catch (err: any) {
     console.error("🚨 조직명 중복 확인 실패:", err);
-    throw new Error(err.response?.data?.message || "조직명 중복 확인 중 오류가 발생했습니다.");
+    throw new Error(
+      err.response?.data?.message ||
+        "조직명 중복 확인 중 오류가 발생했습니다."
+    );
   }
 };

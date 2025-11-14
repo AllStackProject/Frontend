@@ -28,7 +28,7 @@ const userReports: UserReport[] = [
   {
     userId: "001",
     userName: "김철수",
-    group: "HR팀",
+    group: "HR팀, IT팀",
     totalViews: 56,
     topTags: ["AI", "보안", "교육"],
     data: [

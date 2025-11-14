@@ -5,6 +5,7 @@ import { useSelectOrganization } from "@/api/orgs/selectOrg";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useNavigate } from "react-router-dom";
 
 interface OrganizationSelectModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const OrganizationSelectModal = ({
   } | null>(null);
 
   const { selectOrganization } = useSelectOrganization();
+  const navigate = useNavigate();
 
   // 조직 목록 불러오기
   useEffect(() => {
@@ -122,7 +124,7 @@ const OrganizationSelectModal = ({
 
   return (
     <>
-      {/* 메인 모달 */}
+      {/* 모달 시작 */}
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
         onClick={onClose}
@@ -159,8 +161,8 @@ const OrganizationSelectModal = ({
                   key={org.id}
                   onClick={() => handleSelectOrg(org.id, org.name, org.join_status)}
                   className={`flex flex-col items-center gap-2 cursor-pointer rounded-xl py-4 px-3 transition-all duration-200 hover:shadow-md hover:scale-105 w-full ${org.join_status === "PENDING"
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-50 hover:bg-blue-50"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-50 hover:bg-blue-50"
                     }`}
                 >
                   <img
@@ -172,7 +174,6 @@ const OrganizationSelectModal = ({
                     <p className="text-gray-800 font-medium text-xs sm:text-sm">
                       {org.name}
                     </p>
-                    {/* ✅ 상태 표시 추가 */}
                     {renderStatusBadge(org.join_status)}
                   </div>
                 </div>
@@ -184,7 +185,7 @@ const OrganizationSelectModal = ({
           <div className="flex flex-col sm:flex-row gap-3 mt-4">
             <button
               onClick={() => setShowJoinModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 transition-all duration-200"
+              className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 transition"
             >
               <Plus size={20} />
               <span className="font-medium">조직 가입하기</span>
@@ -192,7 +193,7 @@ const OrganizationSelectModal = ({
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-green-500 hover:text-green-500 hover:bg-green-50 transition-all duration-200"
+              className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-green-500 hover:text-green-500 hover:bg-green-50 transition"
             >
               <Building2 size={20} />
               <span className="font-medium">조직 생성하기</span>
@@ -216,8 +217,7 @@ const OrganizationSelectModal = ({
               }))
             );
           }}
-          // onSuccess 콜백 수정
-          onSuccess={async (createdOrg?: { id: number; name: string }) => {
+          onSuccess={async (createdOrg) => {
             try {
               const data = await getOrganizations();
               setOrganizations(
@@ -229,12 +229,11 @@ const OrganizationSelectModal = ({
                 }))
               );
 
-              // createdOrg가 undefined일 수 있으니 안전하게 처리
               setAlertModal({
                 title: "가입 요청 완료",
                 message: createdOrg?.name
-                  ? `"${createdOrg.name}" 조직에 가입 요청이 접수되었습니다. 승인 후 접속할 수 있어요.`
-                  : "조직 가입 요청이 접수되었습니다. 승인 후 접속할 수 있어요.",
+                  ? `"${createdOrg.name}" 조직에 가입 요청이 접수되었습니다.`
+                  : "조직 가입 요청이 접수되었습니다.",
                 color: "green",
               });
             } finally {
@@ -248,17 +247,44 @@ const OrganizationSelectModal = ({
       {showCreateModal && (
         <CreateOrgModal
           onClose={() => setShowCreateModal(false)}
-          refresh={() => {
-            getOrganizations().then((data) =>
-              setOrganizations(
-                data.map((org: any) => ({
-                  id: org.id,
-                  name: org.name,
-                  img_url: org.img_url,
-                  join_status: org.join_status,
-                }))
-              )
+          refresh={async () => {
+            const data = await getOrganizations();
+            setOrganizations(
+              data.map((org: any) => ({
+                id: org.id,
+                name: org.name,
+                img_url: org.img_url,
+                join_status: org.join_status,
+              }))
             );
+          }}
+          onSuccess={async (org) => {
+            try {
+              // 1) 새 조직 자동 선택 (org_token 발급)
+              const isSuccess = await selectOrganization(org.id, org.name);
+
+              if (!isSuccess) {
+                setAlertModal({
+                  title: "선택 실패",
+                  message: "조직 선택(Token 발급)에 실패했습니다.",
+                  color: "red",
+                });
+                return;
+              }
+
+              // 조직 선택 모달 닫기
+              onClose();
+              // 2) 홈 이동
+              navigate("/home");
+            } catch (error: any) {
+              setAlertModal({
+                title: "오류 발생",
+                message: error.message,
+                color: "red",
+              });
+            } finally {
+              setShowCreateModal(false);
+            }
           }}
         />
       )}

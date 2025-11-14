@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Filter, RotateCcw, Eye, BarChart3 } from "lucide-react";
 import VideoDetailModal from "@/components/admin/learning/VideoDetailModal";
-import QuizDetailModal from "@/components/admin/learning/QuizDetailModal";
 
 interface UserRecord {
     id: string;
@@ -15,13 +14,13 @@ interface AttendanceSectionProps {
 }
 
 const dummyData: UserRecord[] = [
-    { id: "001", name: "김철수", group: "HR팀", attendance: 80, quizScore: "90" },
+    { id: "001", name: "김철수", group: "HR팀, IT팀", attendance: 80, quizScore: "90" },
     { id: "002", name: "박민지", group: "IT팀", attendance: 67, quizScore: "72" },
-    { id: "003", name: "이수현", group: "R&D팀", attendance: 75, quizScore: "75" },
-    { id: "004", name: "정우성", group: "기획팀", attendance: 85, quizScore: "83" },
+    { id: "003", name: "이수현", group: "R&D팀, HR팀", attendance: 75, quizScore: "75" },
+    { id: "004", name: "정우성", group: "기획팀, HR팀", attendance: 85, quizScore: "83" },
     { id: "005", name: "최지훈", group: "HR팀", attendance: 92, quizScore: "95" },
     { id: "006", name: "홍길동", group: "기획팀", attendance: 78, quizScore: "82" },
-    { id: "007", name: "이하늘", group: "IT팀", attendance: 88, quizScore: "91" },
+    { id: "007", name: "이하늘", group: "IT팀, HR팀", attendance: 88, quizScore: "91" },
     { id: "008", name: "강지민", group: "R&D팀", attendance: 63, quizScore: "70" },
     { id: "009", name: "서윤아", group: "HR팀", attendance: 81, quizScore: "89" },
     { id: "010", name: "유재석", group: "기획팀", attendance: 74, quizScore: "77" },
@@ -84,20 +83,10 @@ const AttendanceSection: React.FC<AttendanceSectionProps> = ({ onOpenReport }) =
                         <Filter size={18} className="text-gray-500" />
                         <input
                             type="text"
-                            placeholder="이름 검색"
+                            placeholder="닉네임 검색"
                             value={filters.name}
                             onChange={(e) => {
                                 setFilters((prev) => ({ ...prev, name: e.target.value }));
-                                setCurrentPage(1);
-                            }}
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                        />
-                        <input
-                            type="text"
-                            placeholder="유저 ID 검색"
-                            value={filters.id}
-                            onChange={(e) => {
-                                setFilters((prev) => ({ ...prev, id: e.target.value }));
                                 setCurrentPage(1);
                             }}
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
@@ -132,8 +121,8 @@ const AttendanceSection: React.FC<AttendanceSectionProps> = ({ onOpenReport }) =
                 <table className="min-w-full text-sm">
                     <thead className="bg-gray-50">
                         <tr className="text-left text-gray-700">
-                            <th className="px-4 py-3 font-semibold">유저 ID</th>
-                            <th className="px-4 py-3 font-semibold">이름</th>
+                            <th className="px-4 py-3 font-semibold">NO</th>
+                            <th className="px-4 py-3 font-semibold">닉네임</th>
                             <th className="px-4 py-3 font-semibold">그룹</th>
                             <th className="px-4 py-3 font-semibold">평균 시청률</th>
                             <th className="px-4 py-3 font-semibold text-center">상세보기</th>
@@ -245,14 +234,6 @@ const AttendanceSection: React.FC<AttendanceSectionProps> = ({ onOpenReport }) =
                     onClose={() => setShowVideoModal(false)}
                     userName={selectedUser.name}
                     videos={watchedVideos}
-                />
-            )}
-
-            {showQuizModal && selectedUser && (
-                <QuizDetailModal
-                    onClose={() => setShowQuizModal(false)}
-                    userName={selectedUser.name}
-                    quizzes={submittedQuizzes}
                 />
             )}
         </div>

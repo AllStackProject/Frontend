@@ -48,3 +48,14 @@ export interface StartVideoSessionResponse {
     created_at: string;
   };
 }
+
+// admin video
+export interface AdminOrgVideoResponse {
+  id: number;
+  title: string;
+  thumbnail_url: string;
+  created_at: string;
+  expired_at: string | null;
+  open_scope: "PUBLIC" | "PRIVATE" | "GROUP";
+  view_cnt: number;
+}

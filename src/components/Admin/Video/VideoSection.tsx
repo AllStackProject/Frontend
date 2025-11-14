@@ -1,30 +1,34 @@
-import React, { useState, useMemo } from "react";
-import { Eye, Trash2, Filter, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useEffect, useState, useMemo } from "react";
+import {
+  Eye,
+  Trash2,
+  Filter,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import SuccessModal from "@/components/common/modals/SuccessModal";
+import { getAdminOrgVideos, deleteAdminOrgVideo } from "@/api/admin/orgVideos";
 
 interface Video {
   id: number;
   title: string;
   thumbnail: string;
-  isPublic: boolean;
   visibility: "organization" | "private" | "group";
   createdAt: string;
   expireAt?: string;
   views: number;
 }
 
-interface VideoManagementSectionProps {
-  videos: Video[];
-  onDelete: (id: number) => void;
-}
+const VideoSection: React.FC = () => {
+  const orgId = Number(localStorage.getItem("org_id"));
 
-const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
-  videos,
-  onDelete,
-}) => {
-  // 필터 및 정렬 상태
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 필터 상태
   const [searchTerm, setSearchTerm] = useState("");
   const [sortType, setSortType] = useState<"latest" | "oldest" | "views">("latest");
   const [visibilityFilter, setVisibilityFilter] = useState<
@@ -35,136 +39,173 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // 모달 상태
+  // 삭제 모달 상태
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState({ title: "", message: "" });
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // 필터 초기화
-  const resetFilters = () => {
-    setSearchTerm("");
-    setSortType("latest");
-    setVisibilityFilter("all");
-    setCurrentPage(1);
+  const formatDate = (isoString: string) => {
+    if (!isoString) return "-";
+    const date = new Date(isoString);
+    return date.toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  // 삭제 확인 열기
+  const loadVideos = async () => {
+    try {
+      setLoading(true);
+      const res = await getAdminOrgVideos(orgId);
+
+      const mapped: Video[] = res.map((v: any) => ({
+        id: v.id,
+        title: v.title,
+        thumbnail: v.thumbnail_url,
+        visibility:
+          v.open_scope === "PUBLIC"
+            ? "organization"
+            : v.open_scope === "PRIVATE"
+            ? "private"
+            : "group",
+        createdAt: v.created_at,
+        expireAt: v.expired_at,
+        views: v.view_cnt,
+      }));
+
+      setVideos(mapped);
+    } catch (err) {
+      console.error("🚨 영상 로드 실패:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
   const handleDeleteClick = (video: Video) => {
     setSelectedVideo(video);
     setShowDeleteConfirm(true);
   };
 
-  // 삭제 실행
-  const handleDeleteConfirm = () => {
-    if (selectedVideo) {
-      onDelete(selectedVideo.id);
-      setShowDeleteConfirm(false);
-      setSuccessMessage({
-        title: "삭제 완료",
-        message: `"${selectedVideo.title}"가 삭제되었습니다.`,
-      });
-      setShowSuccessModal(true);
-      setSelectedVideo(null);
+  const handleDeleteConfirm = async () => {
+    if (!selectedVideo) return;
+    try {
+      const res = await deleteAdminOrgVideo(orgId, selectedVideo.id);
+      if (res.success) {
+        setShowDeleteConfirm(false);
+        setShowSuccessModal(true);
+        await loadVideos();
+      }
+    } catch (error) {
+      console.error("❌ 삭제 실패", error);
     }
   };
 
-  // 정렬 + 필터링 처리
   const filteredVideos = useMemo(() => {
-    let result = [...videos];
+    let list = [...videos];
 
-    // 검색 필터
     if (searchTerm.trim()) {
-      result = result.filter((v) =>
+      list = list.filter((v) =>
         v.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // 공개 범위 필터
     if (visibilityFilter !== "all") {
-      result = result.filter((v) => v.visibility === visibilityFilter);
+      list = list.filter((v) => v.visibility === visibilityFilter);
     }
 
-    // 정렬
     if (sortType === "latest") {
-      result.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      list.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
     } else if (sortType === "oldest") {
-      result.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
-    } else if (sortType === "views") {
-      result.sort((a, b) => b.views - a.views);
+      list.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
+    } else {
+      list.sort((a, b) => b.views - a.views);
     }
 
-    return result;
+    return list;
   }, [videos, searchTerm, sortType, visibilityFilter]);
 
-  // 페이지 처리
   const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
   const currentVideos = filteredVideos.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 페이지 번호 생성
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
 
     if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
       if (currentPage <= 4) {
-        for (let i = 1; i <= 5; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
+        pages.push(1, 2, 3, 4, 5, "...", totalPages);
       } else if (currentPage >= totalPages - 3) {
-        pages.push(1);
-        pages.push("...");
-        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+        pages.push(
+          1,
+          "...",
+          totalPages - 4,
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages
+        );
       } else {
-        pages.push(1);
-        pages.push("...");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
+        pages.push(
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages
+        );
       }
     }
-
     return pages;
   };
 
+  if (loading) {
+    return <div className="py-10 text-center text-gray-500">불러오는 중…</div>;
+  }
+
   return (
-    <div className="space-y-5">
-      {/* 필터 영역 */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* 🔍 필터 영역 */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
           {/* 검색 */}
-          <div className="flex items-center gap-2 flex-1 w-full md:w-auto">
+          <div className="flex items-center gap-2 flex-1">
             <Filter size={18} className="text-gray-500" />
             <input
               type="text"
-              placeholder="제목으로 검색..."
+              placeholder="제목 검색..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 border rounded-lg px-3 py-2 text-sm"
             />
           </div>
 
           {/* 필터 */}
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <div className="flex gap-2">
             <select
               value={visibilityFilter}
               onChange={(e) => {
                 setVisibilityFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-sm"
             >
               <option value="all">전체 공개 범위</option>
-              <option value="organization">조직 전체공개</option>
+              <option value="organization">조직 전체 공개</option>
               <option value="group">특정 그룹 공개</option>
               <option value="private">비공개</option>
             </select>
@@ -172,118 +213,118 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
             <select
               value={sortType}
               onChange={(e) => setSortType(e.target.value as any)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-sm"
             >
               <option value="latest">최신순</option>
-              <option value="oldest">등록일 오래된순</option>
+              <option value="oldest">오래된순</option>
               <option value="views">조회수순</option>
             </select>
 
             <button
-              onClick={resetFilters}
-              className="flex items-center gap-2 text-gray-600 border border-gray-300 rounded-lg px-3 py-2 text-sm hover:bg-gray-50 transition font-medium"
+              onClick={() => {
+                setSearchTerm("");
+                setSortType("latest");
+                setVisibilityFilter("all");
+                setCurrentPage(1);
+              }}
+              className="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm text-gray-600"
             >
               <RotateCcw size={16} />
-              <span className="hidden sm:inline">초기화</span>
+              초기화
             </button>
           </div>
         </div>
       </div>
 
-      {/* 테이블 */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr className="text-left text-gray-600">
-                <th className="p-3 font-semibold">썸네일</th>
-                <th className="p-3 font-semibold">제목</th>
-                <th className="p-3 font-semibold">업로더</th>
-                <th className="p-3 font-semibold">등록일</th>
-                <th className="p-3 font-semibold">만료일</th>
-                <th className="p-3 font-semibold">공개 범위</th>
-                <th className="p-3 font-semibold">조회수</th>
-                <th className="p-3 font-semibold text-center">관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentVideos.map((video) => (
-                <tr key={video.id} className="border-b hover:bg-gray-50 transition">
-                  <td className="p-3">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-20 h-12 rounded object-cover border border-gray-200"
-                    />
-                  </td>
-                  <td className="p-3">
-                    <p className="font-medium text-gray-800 line-clamp-1">
-                      {video.title}
-                    </p>
-                  </td>
-                  <td className="p-3"> 홍길동 </td>
-                  <td className="p-3 text-gray-600">{video.createdAt}</td>
-                  <td className="p-3 text-gray-600">
-                    {video.expireAt ? (
-                      <span>{video.expireAt}</span>
-                    ) : (
-                      <span className="text-gray-400 text-xs">만료 없음</span>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
-                        video.visibility === "organization"
-                          ? "bg-green-100 text-green-700"
-                          : video.visibility === "group"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-200 text-gray-600"
-                      }`}
-                    >
-                      {video.visibility === "organization"
-                        ? "조직 전체"
+      {/* 📄 테이블 */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 border-b">
+            <tr className="text-left text-gray-600">
+              <th className="p-3">썸네일</th>
+              <th className="p-3">제목</th>
+              <th className="p-3">업로드일</th>
+              <th className="p-3">만료일</th>
+              <th className="p-3">공개 범위</th>
+              <th className="p-3">조회수</th>
+              <th className="p-3 text-center">관리</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {currentVideos.map((video) => (
+              <tr key={video.id} className="border-b hover:bg-gray-50">
+                <td className="p-3">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-20 h-12 rounded object-cover border"
+                  />
+                </td>
+
+                <td className="p-3">{video.title}</td>
+
+                <td className="p-3 text-gray-600">
+                  {formatDate(video.createdAt)}
+                </td>
+
+                <td className="p-3">
+                  {video.expireAt ? formatDate(video.expireAt) : "만료 없음"}
+                </td>
+
+                <td className="p-3">
+                  <span
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      video.visibility === "organization"
+                        ? "bg-green-100 text-green-700"
                         : video.visibility === "group"
-                        ? "특정 그룹"
-                        : "비공개"}
-                    </span>
-                  </td>
-                  <td className="p-3 text-gray-700 font-medium">
-                    {video.views.toLocaleString()}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex justify-center gap-2">
-                      <Link
-                        to={`/video/${video.id}`}
-                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition"
-                        title="미리보기"
-                      >
-                        <Eye size={16} />
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteClick(video)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
-                        title="삭제"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {video.visibility === "organization"
+                      ? "조직 전체"
+                      : video.visibility === "group"
+                      ? "그룹 공개"
+                      : "비공개"}
+                  </span>
+                </td>
+
+                <td className="p-3">{video.views}</td>
+
+                <td className="p-3 text-center">
+                  <div className="flex justify-center gap-2">
+                    <Link
+                      to={`/video/${video.id}`}
+                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
+                    >
+                      <Eye size={16} />
+                    </Link>
+
+                    <button
+                      onClick={() => handleDeleteClick(video)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {currentVideos.length === 0 && (
-          <div className="text-center text-gray-400 py-16">
-            <p className="text-lg mb-2">등록된 동영상이 없습니다.</p>
+          <div className="text-center py-16 text-gray-400">
+            등록된 영상이 없습니다
           </div>
         )}
       </div>
 
-      {/* 페이지네이션 */}
+      {/* 📌 페이지네이션 */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          
           {/* 페이지당 표시 개수 */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <span>페이지당 표시:</span>
@@ -307,38 +348,35 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
-              title="이전 페이지"
+              className="p-2 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-40"
             >
               <ChevronLeft size={18} />
             </button>
 
-            <div className="flex gap-1">
-              {getPageNumbers().map((page, index) => (
-                <React.Fragment key={index}>
-                  {page === "..." ? (
-                    <span className="px-3 py-2 text-gray-400">...</span>
-                  ) : (
-                    <button
-                      onClick={() => setCurrentPage(page as number)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                        currentPage === page
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
+            {getPageNumbers().map((page, index) =>
+              page === "..." ? (
+                <span key={index} className="px-3 py-1 text-gray-400">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPage(page as number)}
+                  className={`px-3 py-1 rounded ${
+                    currentPage === page
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
 
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
-              title="다음 페이지"
+              className="p-2 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-40"
             >
               <ChevronRight size={18} />
             </button>
@@ -350,25 +388,22 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
       {showDeleteConfirm && selectedVideo && (
         <ConfirmActionModal
           title="동영상 삭제"
-          message={`"${selectedVideo.title}"를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`}
+          message={`"${selectedVideo.title}" 을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`}
           keyword="삭제"
-          confirmText="삭제"
           color="red"
+          confirmText="삭제"
           onConfirm={handleDeleteConfirm}
-          onClose={() => {
-            setShowDeleteConfirm(false);
-            setSelectedVideo(null);
-          }}
+          onClose={() => setShowDeleteConfirm(false)}
         />
       )}
 
-      {/* 성공 모달 */}
+      {/* 삭제 완료 모달 */}
       {showSuccessModal && (
         <SuccessModal
-          title={successMessage.title}
-          message={successMessage.message}
+          title="삭제 완료"
+          message="영상이 삭제되었습니다."
           autoClose={true}
-          autoCloseDelay={2000}
+          autoCloseDelay={1800}
           onClose={() => setShowSuccessModal(false)}
         />
       )}
@@ -376,4 +411,4 @@ const VideoManagementSection: React.FC<VideoManagementSectionProps> = ({
   );
 };
 
-export default VideoManagementSection;
+export default VideoSection;

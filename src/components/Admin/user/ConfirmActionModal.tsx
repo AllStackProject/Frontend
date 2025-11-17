@@ -1,5 +1,10 @@
 import React from "react";
-import { X, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { X, CheckCircle2, XCircle } from "lucide-react";
+
+interface GroupItem {
+  id: number;
+  name: string;
+}
 
 interface ConfirmActionModalProps {
   user: {
@@ -8,6 +13,9 @@ interface ConfirmActionModalProps {
     email: string;
   };
   action: "approve" | "reject";
+  groups: GroupItem[];
+  selectedGroups: number[];
+  onToggleGroup: (id: number) => void;
   onClose: () => void;
   onConfirm: () => void;
 }
@@ -15,19 +23,24 @@ interface ConfirmActionModalProps {
 const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
   user,
   action,
+  groups,
+  selectedGroups,
+  onToggleGroup,
   onClose,
   onConfirm,
 }) => {
   const isApprove = action === "approve";
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
-        {/* 헤더 */}
-        <div className={`flex justify-between items-center px-6 py-4 border-b ${
-          isApprove ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-        }`}>
-          <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+        {/* Header */}
+        <div
+          className={`flex justify-between items-center px-6 py-4 border-b ${
+            isApprove ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+          }`}
+        >
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             {isApprove ? (
               <>
                 <CheckCircle2 size={20} className="text-green-600" />
@@ -40,81 +53,73 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
               </>
             )}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="닫기"
-          >
-            <X size={22} />
+          <button onClick={onClose}>
+            <X size={22} className="text-gray-400 hover:text-gray-600" />
           </button>
         </div>
 
-        {/* 내용 */}
+        {/* Body */}
         <div className="p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-              isApprove ? "bg-green-100" : "bg-red-100"
-            }`}>
-              {isApprove ? (
-                <CheckCircle2 size={24} className="text-green-600" />
-              ) : (
-                <AlertTriangle size={24} className="text-red-600" />
-              )}
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-semibold text-gray-800 mb-2">
-                {isApprove ? "가입을 승인하시겠습니까?" : "가입을 거절하시겠습니까?"}
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                {isApprove
-                  ? "승인 시 해당 사용자는 조직에 가입되어 서비스를 이용할 수 있습니다."
-                  : "거절 시 해당 사용자의 가입 요청이 취소됩니다."}
-              </p>
-            </div>
+          <p className="text-sm text-gray-600 mb-4">
+            {isApprove
+              ? "이 사용자를 승인하고 조직에 추가합니다."
+              : "해당 사용자 가입 요청을 거절합니다."}
+          </p>
+
+          {/* User info */}
+          <div className="bg-gray-50 border p-4 rounded-lg mb-4 space-y-1">
+            <p className="text-sm text-gray-700">
+              <strong>이름:</strong> {user.name}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>닉네임:</strong> {user.email}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>ID:</strong> {user.id}
+            </p>
           </div>
 
-          {/* 사용자 정보 */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">이름:</span>
-              <span className="text-sm font-semibold text-gray-800">{user.name}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">이메일:</span>
-              <span className="text-sm font-medium text-gray-800">{user.email}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">사용자 ID:</span>
-              <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded text-gray-700">
-                {user.id}
-              </span>
-            </div>
-          </div>
-
-          {/* 추가 안내 */}
+          {/* 그룹 선택 (승인일 때만) */}
           {isApprove && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                <span className="font-semibold">안내:</span> 승인 후 사용자는 <span className="font-semibold">'일반 사용자'</span> 권한으로 가입됩니다. 권한 변경은 사용자 목록에서 가능합니다.
-              </p>
+            <div>
+              <p className="text-sm font-semibold text-gray-800 mb-2">그룹 선택</p>
+
+              {groups.length === 0 ? (
+                <p className="text-sm text-gray-500">등록된 그룹이 없습니다.</p>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3">
+                  {groups.map((g) => (
+                    <label
+                      key={g.id}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedGroups.includes(g.id)}
+                        onChange={() => onToggleGroup(g.id)}
+                      />
+                      <span>{g.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* 하단 버튼 */}
-        <div className="flex gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        {/* Footer */}
+        <div className="flex gap-2 px-6 py-4 border-t bg-gray-50">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors"
+            className="flex-1 py-2 border rounded-lg text-sm"
           >
             취소
           </button>
+
           <button
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-              isApprove
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-red-600 text-white hover:bg-red-700"
+            className={`flex-1 py-2 rounded-lg text-sm text-white ${
+              isApprove ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
             }`}
           >
             {isApprove ? "승인" : "거절"}

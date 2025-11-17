@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { X, Shield, Info } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { updateMemberPermission } from "@/api/admin/members";
+import { useAuth } from "@/context/AuthContext";
 
 interface RoleSettingModalProps {
-  user: { name: string; email: string; role: string };
+  user: { id: number; name: string; email: string; role: string };
   onClose: () => void;
   onSubmit: (newRole: string) => void;
 }
@@ -13,13 +15,12 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { orgId } = useAuth();
   const [role, setRole] = useState(user.role);
   const [permissions, setPermissions] = useState({
-    manageVideos: true,
-    manageQuiz: true,
-    manageViewing: true,
+    manageVideosAndQuiz: true,
+    manageViewingAndStats: true,
     manageNotice: true,
-    viewStats: true,
     manageOrganization: true,
     manageUsers: false, // 슈퍼관리자만
     viewPricing: false, // 슈퍼관리자만
@@ -27,6 +28,7 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
 
   // 확인 모달 상태
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const togglePermission = (key: keyof typeof permissions) => {
     setPermissions((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -50,10 +52,32 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
     setShowConfirmModal(true);
   };
 
-  const handleConfirmSave = () => {
-    onSubmit(role);
-    setShowConfirmModal(false);
-    onClose();
+  const handleConfirmSave = async () => {
+    if (!orgId) {
+      alert("조직 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      // API 호출 - 권한 업데이트
+      await updateMemberPermission(orgId, user.id, {
+        video_manage: permissions.manageVideosAndQuiz,
+        stats_report: permissions.manageViewingAndStats,
+        notice: permissions.manageNotice,
+        org_setting: permissions.manageOrganization,
+      });
+
+      alert("✅ 권한이 성공적으로 저장되었습니다.");
+      onSubmit(role);
+      setShowConfirmModal(false);
+      onClose();
+    } catch (error: any) {
+      alert(error.message || "권한 저장 중 오류가 발생했습니다.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -276,16 +300,18 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
           <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50">
             <button
               onClick={onClose}
-              className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors"
+              disabled={saving}
+              className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {user.role === "슈퍼관리자" ? "닫기" : "취소"}
             </button>
             {user.role !== "슈퍼관리자" && (
               <button
                 onClick={handleSaveClick}
-                className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={saving}
+                className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                권한 저장
+                {saving ? "저장 중..." : "권한 저장"}
               </button>
             )}
           </div>

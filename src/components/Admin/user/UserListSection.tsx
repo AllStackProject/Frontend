@@ -1,36 +1,42 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Search, Filter, RotateCcw, Users, Layers, Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Filter,
+  RotateCcw,
+  Layers,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
 import RoleSettingModal from "./RoleSettingModal";
 import ConfirmRemoveUserModal from "@/components/admin/user/ConfirmRemoveUserModal";
 import GroupSettingModal from "@/components/admin/user/GroupSettiongModal";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  groups: string[];
-}
+import { useAuth } from "@/context/AuthContext";
+import { getOrgMembers } from "@/api/admin/members";
+import type { OrgMember } from "@/types/member";
 
-const dummyRoles = ["슈퍼관리자", "관리자", "일반 사용자"];
-const dummyGroups = ["운영팀", "개발팀", "디자인팀", "교육팀", "AI팀"];
-
-const dummyUsers: User[] = [
-  { id: "001", name: "김철수", email: "cs.kim@fisa.com", role: "슈퍼관리자", groups: ["운영팀", "AI팀"] },
-  { id: "002", name: "박민지", email: "mj.park@fisa.com", role: "관리자", groups: ["개발팀"] },
-  { id: "003", name: "이수현", email: "sh.lee@fisa.com", role: "일반 사용자", groups: ["디자인팀", "교육팀"] },
-  { id: "004", name: "정우성", email: "ws.jung@fisa.com", role: "일반 사용자", groups: ["운영팀"] },
-  { id: "005", name: "최지훈", email: "jh.choi@fisa.com", role: "관리자", groups: ["개발팀", "AI팀"] },
-  { id: "006", name: "김철수", email: "cs.kim@fisa.com", role: "슈퍼관리자", groups: ["운영팀", "AI팀"] },
-  { id: "007", name: "박민지", email: "mj.park@fisa.com", role: "관리자", groups: ["개발팀"] },
-  { id: "008", name: "이수현", email: "sh.lee@fisa.com", role: "일반 사용자", groups: ["디자인팀", "교육팀"] },
-  { id: "009", name: "정우성", email: "ws.jung@fisa.com", role: "일반 사용자", groups: ["운영팀"] },
-  { id: "010", name: "최지훈", email: "jh.choi@fisa.com", role: "관리자", groups: ["개발팀", "AI팀"] },
-];
+// 역할 옵션
+const ROLE_OPTIONS = ["슈퍼관리자", "관리자", "일반 사용자"];
 
 const UserListSection: React.FC = () => {
-  const [users, setUsers] = useState(dummyUsers);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { orgId } = useAuth();
+
+  if (!orgId) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        조직 정보를 불러올 수 없습니다.
+      </div>
+    );
+  }
+
+  // 서버 데이터
+  const [users, setUsers] = useState<OrgMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 모달 상태
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -39,19 +45,57 @@ const UserListSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
-
-  // 페이지네이션 상태
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const groupDropdownRef = useRef<HTMLDivElement>(null);
 
+  // 페이지네이션
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 서버에서 멤버 불러오기
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const members = await getOrgMembers(orgId);
+      setUsers(members);
+    } catch (err) {
+      console.error("🚨 조직 멤버 조회 실패:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [orgId]);
+
+  // 그룹 옵션 자동 생성(API 기반)
+  const GROUP_OPTIONS = Array.from(
+    new Set(
+      users.flatMap((u) => u.member_groups?.map((g) => g.name) || [])
+    )
+  );
+
+  // UI 표시용 사용자 데이터 변환
+  const uiUsers = users.map((u) => ({
+    id: u.id, // ✅ ID 포함
+    name: u.user_name,
+    email: u.nickname,
+    role: u.is_super_admin
+      ? "슈퍼관리자"
+      : u.is_admin
+      ? "관리자"
+      : "일반 사용자",
+    groups: u.member_groups?.map((g) => g.name) || [],
+  }));
+
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const clickHandler = (e: MouseEvent) => {
       if (
         roleDropdownRef.current &&
         !roleDropdownRef.current.contains(e.target as Node)
@@ -65,11 +109,12 @@ const UserListSection: React.FC = () => {
         setIsGroupDropdownOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", clickHandler);
+    return () =>
+      document.removeEventListener("mousedown", clickHandler);
   }, []);
 
-  // 필터 토글 함수
+  // 필터 로직
   const toggleRole = (role: string) => {
     setSelectedRoles((prev) =>
       prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
@@ -79,28 +124,23 @@ const UserListSection: React.FC = () => {
 
   const toggleGroup = (group: string) => {
     setSelectedGroups((prev) =>
-      prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group]
+      prev.includes(group)
+        ? prev.filter((g) => g !== group)
+        : [...prev, group]
     );
     setCurrentPage(1);
   };
 
-  // 사용자 삭제
-  const handleRemoveUser = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    setShowRemoveModal(false);
-  };
-
-  // 필터링된 사용자 목록
+  // 필터 적용
   const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
+    return uiUsers.filter((u) => {
       const matchSearch =
         u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.id.includes(searchQuery);
+        u.id.toString().includes(searchQuery);
 
       const matchRole =
-        selectedRoles.length === 0 ||
-        selectedRoles.some((r) => u.role.includes(r));
+        selectedRoles.length === 0 || selectedRoles.includes(u.role);
 
       const matchGroup =
         selectedGroups.length === 0 ||
@@ -108,52 +148,50 @@ const UserListSection: React.FC = () => {
 
       return matchSearch && matchRole && matchGroup;
     });
-  }, [users, searchQuery, selectedRoles, selectedGroups]);
+  }, [uiUsers, searchQuery, selectedRoles, selectedGroups]);
 
-  // 페이지 계산
+  // 페이지네이션 처리
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const currentUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 페이지 번호 배열 생성
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisible = 5;
+    const max = 5;
 
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
+    if (totalPages <= max) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
       if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i);
-        }
-        pages.push("...");
-        pages.push(totalPages);
+        pages.push(1, 2, 3, 4, "...", totalPages);
       } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push("...");
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pages.push(i);
-        }
+        pages.push(
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages
+        );
       } else {
-        pages.push(1);
-        pages.push("...");
-        pages.push(currentPage - 1);
-        pages.push(currentPage);
-        pages.push(currentPage + 1);
-        pages.push("...");
-        pages.push(totalPages);
+        pages.push(
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages
+        );
       }
     }
 
     return pages;
   };
 
-  // 배지 색상
+  // 역할 뱃지 컬러
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "슈퍼관리자":
@@ -165,17 +203,7 @@ const UserListSection: React.FC = () => {
     }
   };
 
-  const getGroupBadgeColor = (group: string) => {
-    const map: Record<string, string> = {
-      운영팀: "bg-green-100 text-green-700 border-green-200",
-      개발팀: "bg-orange-100 text-orange-700 border-orange-200",
-      디자인팀: "bg-pink-100 text-pink-700 border-pink-200",
-      교육팀: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      AI팀: "bg-indigo-100 text-indigo-700 border-indigo-200",
-    };
-    return map[group] || "bg-gray-100 text-gray-700 border-gray-200";
-  };
-
+  // 필터 초기화
   const resetFilters = () => {
     setSearchQuery("");
     setSelectedRoles([]);
@@ -183,179 +211,211 @@ const UserListSection: React.FC = () => {
     setCurrentPage(1);
   };
 
+  // 삭제 후 데이터 갱신
+  const handleRemoveUser = (id: number) => {
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+    setShowRemoveModal(false);
+  };
+
+  // 권한 수정 후 데이터 갱신
+  const handleRoleUpdate = () => {
+    loadData(); // 서버에서 최신 데이터 다시 로드
+    setShowRoleModal(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        불러오는 중…
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* 검색 및 필터 */}
+      {/* 검색/필터 */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Filter size={18} className="text-gray-500" />
+        <div className="flex flex-wrap items-center gap-3">
+          <Filter size={18} className="text-gray-500" />
 
-            {/* 검색 */}
-            <div className="relative">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                type="text"
-                placeholder="이름, 이메일, ID로 검색"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary w-64"
-              />
-            </div>
-
-            {/* 권한 필터 */}
-            <div className="relative" ref={roleDropdownRef}>
-              <button
-                onClick={() => setIsRoleDropdownOpen((p) => !p)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50"
-              >
-                <Shield size={14} />
-                권한 선택
-                {selectedRoles.length > 0 && (
-                  <span className="ml-1 text-xs text-blue-600">
-                    ({selectedRoles.length})
-                  </span>
-                )}
-              </button>
-              {isRoleDropdownOpen && (
-                <div className="absolute mt-2 bg-white border border-gray-200 rounded-lg shadow-lg w-48 z-20">
-                  {dummyRoles.map((role) => (
-                    <label
-                      key={role}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedRoles.includes(role)}
-                        onChange={() => toggleRole(role)}
-                      />
-                      {role}
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 그룹 필터 */}
-            <div className="relative" ref={groupDropdownRef}>
-              <button
-                onClick={() => setIsGroupDropdownOpen((p) => !p)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50"
-              >
-                <Layers size={14} />
-                그룹 선택
-                {selectedGroups.length > 0 && (
-                  <span className="ml-1 text-xs text-blue-600">
-                    ({selectedGroups.length})
-                  </span>
-                )}
-              </button>
-              {isGroupDropdownOpen && (
-                <div className="absolute mt-2 bg-white border border-gray-200 rounded-lg shadow-lg w-48 z-20">
-                  {dummyGroups.map((group) => (
-                    <label
-                      key={group}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedGroups.includes(group)}
-                        onChange={() => toggleGroup(group)}
-                      />
-                      {group}
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={resetFilters}
-              className="flex items-center gap-2 text-gray-600 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors"
-            >
-              <RotateCcw size={16} /> 필터 초기화
-            </button>
+          {/* 검색 */}
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder="이름, 닉네임으로 검색"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
           </div>
+
+          {/* 권한 필터 */}
+          <div className="relative" ref={roleDropdownRef}>
+            <button
+              onClick={() =>
+                setIsRoleDropdownOpen((prev) => !prev)
+              }
+              className="border px-3 py-2 rounded-lg text-sm flex items-center gap-2"
+            >
+              <Shield size={14} />
+              권한 선택
+              {selectedRoles.length > 0 && (
+                <span className="text-xs text-blue-600">
+                  ({selectedRoles.length})
+                </span>
+              )}
+            </button>
+
+            {isRoleDropdownOpen && (
+              <div className="absolute mt-2 bg-white border rounded-lg shadow-lg w-48 z-20">
+                {ROLE_OPTIONS.map((role) => (
+                  <label
+                    key={role}
+                    className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedRoles.includes(role)}
+                      onChange={() => toggleRole(role)}
+                    />
+                    {role}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 그룹 필터 */}
+          <div className="relative" ref={groupDropdownRef}>
+            <button
+              onClick={() =>
+                setIsGroupDropdownOpen((prev) => !prev)
+              }
+              className="border px-3 py-2 rounded-lg text-sm flex items-center gap-2"
+            >
+              <Layers size={14} />
+              그룹 선택
+              {selectedGroups.length > 0 && (
+                <span className="text-xs text-blue-600">
+                  ({selectedGroups.length})
+                </span>
+              )}
+            </button>
+
+            {isGroupDropdownOpen && GROUP_OPTIONS.length > 0 && (
+              <div className="absolute mt-2 bg-white border rounded-lg shadow-lg w-48 z-20">
+                {GROUP_OPTIONS.map((group) => (
+                  <label
+                    key={group}
+                    className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedGroups.includes(group)}
+                      onChange={() => toggleGroup(group)}
+                    />
+                    {group}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 초기화 */}
+          <button
+            onClick={resetFilters}
+            className="border px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+          >
+            <RotateCcw size={16} /> 초기화
+          </button>
         </div>
       </div>
 
       {/* 테이블 */}
-      <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div className="overflow-x-auto bg-white border rounded-lg shadow-sm">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
-            <tr className="text-left text-gray-700">
-              <th className="px-4 py-3 font-semibold">ID</th>
+            <tr className="text-left">
+              <th className="px-4 py-3 font-semibold">No</th>
               <th className="px-4 py-3 font-semibold">이름</th>
-              <th className="px-4 py-3 font-semibold">이메일</th>
+              <th className="px-4 py-3 font-semibold">닉네임</th>
               <th className="px-4 py-3 font-semibold">권한</th>
               <th className="px-4 py-3 font-semibold">그룹</th>
-              <th className="px-4 py-3 font-semibold text-center">관리</th>
+              <th className="px-4 py-3 font-semibold text-center">
+                관리
+              </th>
             </tr>
           </thead>
+
           <tbody>
-            {currentUsers.map((user) => (
+            {currentUsers.map((user, idx) => (
               <tr key={user.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3 text-gray-600 font-mono text-xs">{user.id}</td>
-                <td className="px-4 py-3 text-gray-800 font-medium">{user.name}</td>
-                <td className="px-4 py-3 text-gray-600">{user.email}</td>
+                <td className="px-4 py-3">
+                  {(currentPage - 1) * itemsPerPage + idx + 1}
+                </td>
+                <td className="px-4 py-3">{user.name}</td>
+                <td className="px-4 py-3">{user.email}</td>
                 <td className="px-4 py-3">
                   <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full border ${getRoleBadgeColor(user.role)}`}
+                    className={`px-3 py-1 text-xs font-semibold rounded-full border ${getRoleBadgeColor(
+                      user.role
+                    )}`}
                   >
                     {user.role}
                   </span>
                 </td>
+
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
-                    {user.groups.map((group) => (
+                    {user.groups.map((g, i) => (
                       <span
-                        key={group}
-                        className={`px-2 py-1 text-xs font-medium rounded-full border ${getGroupBadgeColor(
-                          group
-                        )}`}
+                        key={i}
+                        className="px-2 py-1 rounded-full text-xs bg-gray-100 border"
                       >
-                        {group}
+                        {g}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-center">
-                  <div className="flex justify-center gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowRoleModal(true);
-                      }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg text-xs font-medium transition-colors"
-                    >
-                      권한 수정
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowGroupModal(true);
-                      }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg text-xs font-medium transition-colors"
-                    >
-                      그룹 수정
-                    </button>
 
-                    <button
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowRemoveModal(true);
-                      }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg text-xs font-medium transition-colors"
-                    >
-                      내보내기
-                    </button>
-                  </div>
+                {/* 관리 버튼 */}
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowRoleModal(true);
+                    }}
+                    className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs"
+                  >
+                    권한 수정
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowGroupModal(true);
+                    }}
+                    className="ml-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs"
+                  >
+                    그룹 수정
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowRemoveModal(true);
+                    }}
+                    className="ml-2 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs"
+                  >
+                    내보내기
+                  </button>
                 </td>
               </tr>
             ))}
@@ -363,7 +423,7 @@ const UserListSection: React.FC = () => {
         </table>
 
         {currentUsers.length === 0 && (
-          <div className="text-center text-gray-500 py-12">
+          <div className="text-center py-10 text-gray-500">
             검색 결과가 없습니다.
           </div>
         )}
@@ -371,17 +431,16 @@ const UserListSection: React.FC = () => {
 
       {/* 페이지네이션 */}
       {filteredUsers.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
-          {/* 페이지당 표시 개수 */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>페이지당 표시:</span>
+        <div className="flex justify-between items-center mt-6">
+          <div className="flex items-center gap-2 text-sm">
+            페이지당:
             <select
               value={itemsPerPage}
               onChange={(e) => {
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border px-3 py-1.5 rounded-lg text-sm"
             >
               <option value={5}>5개</option>
               <option value={10}>10개</option>
@@ -390,50 +449,42 @@ const UserListSection: React.FC = () => {
             </select>
           </div>
 
-          {/* 페이지 번호 */}
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                title="이전 페이지"
-              >
-                <ChevronLeft size={18} />
-              </button>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="p-2 rounded-lg bg-gray-100 disabled:opacity-40"
+            >
+              <ChevronLeft size={18} />
+            </button>
 
-              <div className="flex gap-1">
-                {getPageNumbers().map((page, index) => (
-                  <React.Fragment key={index}>
-                    {page === "..." ? (
-                      <span className="px-3 py-2 text-gray-400">...</span>
-                    ) : (
-                      <button
-                        onClick={() => setCurrentPage(page as number)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                          currentPage === page
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
+            {getPageNumbers().map((page, i) => (
+              <React.Fragment key={i}>
+                {page === "..." ? (
+                  <span className="px-2 text-gray-400">…</span>
+                ) : (
+                  <button
+                    onClick={() => setCurrentPage(page as number)}
+                    className={`px-3 py-2 rounded-lg text-sm ${
+                      currentPage === page
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )}
+              </React.Fragment>
+            ))}
 
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                title="다음 페이지"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
-
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="p-2 rounded-lg bg-gray-100 disabled:opacity-40"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -442,26 +493,28 @@ const UserListSection: React.FC = () => {
         <RoleSettingModal
           user={selectedUser}
           onClose={() => setShowRoleModal(false)}
-          onSubmit={(roles) => {
-            setUsers((prev) =>
-              prev.map((u) =>
-                u.id === selectedUser.id ? { ...u, roles } : u
-              )
-            );
-            setShowRoleModal(false);
-          }}
+          onSubmit={handleRoleUpdate}
         />
       )}
 
       {showGroupModal && selectedUser && (
         <GroupSettingModal
           user={selectedUser}
-          availableGroups={dummyGroups}
+          availableGroups={GROUP_OPTIONS}
           onClose={() => setShowGroupModal(false)}
-          onSubmit={(groups) => {
+          onSubmit={(updatedGroups: string[]) => {
+            // UI 갱신
             setUsers((prev) =>
               prev.map((u) =>
-                u.id === selectedUser.id ? { ...u, groups } : u
+                u.id === selectedUser.id
+                  ? {
+                      ...u,
+                      member_groups: updatedGroups.map((g, idx) => ({
+                        id: 9000 + idx,
+                        name: g,
+                      })),
+                    }
+                  : u
               )
             );
             setShowGroupModal(false);

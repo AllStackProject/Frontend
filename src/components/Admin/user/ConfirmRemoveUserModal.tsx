@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { X, AlertTriangle, UserX } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
+import { removeOrgMember } from "@/api/admin/members";
+import { useAuth } from "@/context/AuthContext";
 
 interface ConfirmRemoveUserModalProps {
-  user: { name: string; email: string };
+  user: { id: number; name: string; email: string; role: string };
   onClose: () => void;
   onConfirm: () => void;
 }
@@ -12,27 +14,48 @@ const ConfirmRemoveUserModal: React.FC<ConfirmRemoveUserModalProps> = ({
   onClose,
   onConfirm,
 }) => {
-  const [confirmInput, setConfirmInput] = useState("");
+  const { orgId } = useAuth();
+  const [confirmText, setConfirmText] = useState("");
+  const [removing, setRemoving] = useState(false);
 
-  const handleConfirm = () => {
-    if (confirmInput === "내보내기") {
-      onConfirm();
-      setConfirmInput("");
+  const isConfirmValid = confirmText === "내보내기";
+
+  const handleConfirm = async () => {
+    if (!isConfirmValid || !orgId) return;
+
+    try {
+      setRemoving(true);
+
+      // API 호출
+      const success = await removeOrgMember(orgId, user.id);
+
+      if (success) {
+        alert("✅ 사용자가 성공적으로 내보내졌습니다.");
+        onConfirm(); // 부모 컴포넌트에 성공 알림
+        onClose();
+      } else {
+        alert("⚠️ 사용자 내보내기에 실패했습니다.");
+      }
+    } catch (error: any) {
+      alert(error.message || "사용자 내보내기 중 오류가 발생했습니다.");
+    } finally {
+      setRemoving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
         {/* 헤더 */}
-        <div className="flex justify-between items-center px-6 py-4 border-b bg-red-50 border-red-200">
-          <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            <UserX size={20} className="text-red-600" />
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-red-50">
+          <h2 className="text-lg font-semibold text-red-800 flex items-center gap-2">
+            <AlertTriangle size={20} className="text-red-600" />
             사용자 내보내기
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={removing}
+            className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
             aria-label="닫기"
           >
             <X size={22} />
@@ -40,73 +63,64 @@ const ConfirmRemoveUserModal: React.FC<ConfirmRemoveUserModalProps> = ({
         </div>
 
         {/* 내용 */}
-        <div className="p-6">
-          {/* 경고 아이콘 및 메시지 */}
-          <div className="flex items-start gap-3 mb-4">
-            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <AlertTriangle size={24} className="text-red-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-semibold text-gray-800 mb-2">
-                정말 내보내시겠습니까?
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                이 작업은 되돌릴 수 없으며, 해당 사용자는 조직에서 즉시 제거됩니다.
-              </p>
-            </div>
+        <div className="p-6 space-y-4">
+          {/* 경고 메시지 */}
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800 font-semibold mb-2">
+              ⚠️ 이 작업은 되돌릴 수 없습니다
+            </p>
+            <p className="text-xs text-red-700">
+              사용자를 조직에서 내보내면 해당 사용자는 더 이상 조직의 콘텐츠와 데이터에 접근할 수 없습니다.
+            </p>
           </div>
 
           {/* 사용자 정보 */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-            <p className="text-xs text-gray-600 mb-2">내보낼 사용자</p>
-            <p className="font-semibold text-gray-800 mb-1">{user.name}</p>
-            <p className="text-sm text-gray-600">{user.email}</p>
-          </div>
-
-          {/* 영향 안내 */}
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <p className="text-xs text-red-800 mb-2">
-              <span className="font-semibold">내보내기 후 영향:</span>
-            </p>
-            <ul className="text-xs text-red-700 space-y-1 list-disc list-inside">
-              <li>조직 접근 권한이 즉시 박탈됩니다</li>
-              <li>다시 초대하려면 새로운 초대가 필요합니다</li>
-            </ul>
+          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">이름</span>
+              <span className="text-sm font-semibold text-gray-800">{user.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">닉네임</span>
+              <span className="text-sm font-semibold text-gray-800">{user.email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">권한</span>
+              <span className="text-sm font-semibold text-gray-800">{user.role}</span>
+            </div>
           </div>
 
           {/* 확인 입력 */}
           <div>
-            <p className="text-sm text-gray-700 mb-2">
-              계속하려면 아래에 <span className="font-bold text-gray-800">"내보내기"</span>를 입력하세요.
-            </p>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              확인을 위해 "<span className="text-red-600">내보내기</span>"를 입력하세요
+            </label>
             <input
               type="text"
-              value={confirmInput}
-              onChange={(e) => setConfirmInput(e.target.value)}
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
               placeholder="내보내기"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              disabled={removing}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
 
         {/* 하단 버튼 */}
-        <div className="flex gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors"
+            disabled={removing}
+            className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             취소
           </button>
           <button
             onClick={handleConfirm}
-            disabled={confirmInput !== "내보내기"}
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-              confirmInput === "내보내기"
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
+            disabled={!isConfirmValid || removing}
+            className="px-5 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            내보내기
+            {removing ? "처리 중..." : "내보내기"}
           </button>
         </div>
       </div>

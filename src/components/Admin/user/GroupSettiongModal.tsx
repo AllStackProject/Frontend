@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { X, Users, Info } from "lucide-react";
+import { X, Layers } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { updateMemberGroups } from "@/api/admin/members";
+import { useAuth } from "@/context/AuthContext";
 
 interface GroupSettingModalProps {
-  user: { id: string; name: string; email: string; groups: string[] };
+  user: { id: number; name: string; email: string; groups: string[] };
   availableGroups: string[];
   onClose: () => void;
-  onSubmit: (groups: string[]) => void;
+  onSubmit: (updatedGroups: string[]) => void;
 }
 
 const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
@@ -15,12 +17,16 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [selectedGroups, setSelectedGroups] = useState<string[]>(user.groups);
+  const { orgId } = useAuth();
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(user.groups || []);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const toggleGroup = (group: string) => {
     setSelectedGroups((prev) =>
-      prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group]
+      prev.includes(group)
+        ? prev.filter((g) => g !== group)
+        : [...prev, group]
     );
   };
 
@@ -28,30 +34,45 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
     setShowConfirmModal(true);
   };
 
-  const handleConfirmSave = () => {
-    onSubmit(selectedGroups);
-    setShowConfirmModal(false);
-    onClose();
-  };
+  const handleConfirmSave = async () => {
+    if (!orgId) {
+      alert("조직 정보를 찾을 수 없습니다.");
+      return;
+    }
 
-  // 외부 클릭 시 닫기
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
+    try {
+      setSaving(true);
+
+      // 그룹 이름을 ID로 변환 (임시 - 실제로는 availableGroups에 id가 포함되어야 함)
+      // TODO: availableGroups를 { id: number, name: string }[] 형태로 변경
+      const groupIds = selectedGroups.map((_, idx) => idx + 1); // 임시 매핑
+      
+      // API 호출
+      const success = await updateMemberGroups(orgId, user.id, groupIds);
+
+      if (success) {
+        alert("✅ 그룹이 성공적으로 변경되었습니다.");
+        onSubmit(selectedGroups);
+        setShowConfirmModal(false);
+        onClose();
+      } else {
+        alert("⚠️ 그룹 변경에 실패했습니다.");
+      }
+    } catch (error: any) {
+      alert(error.message || "그룹 변경 중 오류가 발생했습니다.");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <>
-      <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        onClick={handleBackdropClick}
-      >
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
           {/* 헤더 */}
           <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <Users size={20} className="text-blue-600" />
+              <Layers size={20} className="text-green-600" />
               그룹 설정
             </h2>
             <button
@@ -64,112 +85,88 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
           </div>
 
           {/* 내용 */}
-          <div className="p-6 overflow-y-auto flex-1">
+          <div className="p-6 space-y-4">
             {/* 사용자 정보 */}
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-gray-600 mb-2">그룹을 변경할 사용자</p>
               <p className="font-semibold text-gray-800">{user.name}</p>
               <p className="text-sm text-gray-600">{user.email}</p>
             </div>
 
-            {/* 현재 소속 그룹 표시 */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                현재 소속 그룹
-              </label>
-              {selectedGroups.length > 0 ? (
-                <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  {selectedGroups.map((group) => (
-                    <span
-                      key={group}
-                      className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full"
-                    >
-                      {group}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-sm text-gray-500">소속된 그룹이 없습니다.</p>
-                </div>
-              )}
-            </div>
-
             {/* 그룹 선택 */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
-                그룹 선택 <span className="text-xs text-gray-500 font-normal">(복수 선택 가능)</span>
+                소속 그룹 선택
               </label>
-
-              {availableGroups.length > 0 ? (
-                <div className="space-y-2">
-                  {availableGroups.map((group) => {
-                    const isSelected = selectedGroups.includes(group);
-
-                    return (
-                      <label
-                        key={group}
-                        className={`flex items-center gap-3 p-3 border rounded-lg transition-colors cursor-pointer ${
-                          isSelected
-                            ? "border-blue-300 bg-blue-50"
-                            : "border-gray-200 hover:bg-gray-50"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleGroup(group)}
-                          className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-800">
-                            {group}
-                          </p>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              ) : (
+              
+              {availableGroups.length === 0 ? (
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
                   <p className="text-sm text-gray-600">
-                    선택 가능한 그룹이 없습니다.
+                    생성된 그룹이 없습니다.
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    관리자가 그룹을 먼저 생성해야 합니다.
+                    조직 설정에서 그룹을 먼저 생성해주세요.
                   </p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {availableGroups.map((group) => (
+                    <label
+                      key={group}
+                      className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedGroups.includes(group)}
+                        onChange={() => toggleGroup(group)}
+                        className="w-4 h-4 text-green-600 focus:ring-2 focus:ring-green-500 rounded"
+                      />
+                      <span className="text-sm font-medium text-gray-800">
+                        {group}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* 안내 메시지 */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex gap-2">
-                <Info size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-blue-800">
-                  <p className="font-semibold mb-1">그룹 설정 안내</p>
-                  <ul className="space-y-1 list-disc list-inside">
-                    <li>한 사용자는 여러 그룹에 소속될 수 있습니다.</li>
-                    <li>그룹 변경은 즉시 적용되며, 해당 그룹의 콘텐츠 접근 권한이 변경됩니다.</li>
-                  </ul>
-                </div>
+            {/* 선택된 그룹 표시 */}
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <p className="text-xs text-gray-600 mb-2">
+                선택된 그룹: {selectedGroups.length}개
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedGroups.length === 0 ? (
+                  <span className="text-xs text-gray-500">선택된 그룹이 없습니다</span>
+                ) : (
+                  selectedGroups.map((group, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium"
+                    >
+                      {group}
+                    </span>
+                  ))
+                )}
               </div>
             </div>
           </div>
 
-          {/* 하단 */}
+          {/* 하단 버튼 */}
           <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50">
             <button
               onClick={onClose}
-              className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors"
+              disabled={saving}
+              className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               취소
             </button>
             <button
               onClick={handleSaveClick}
-              className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={saving || availableGroups.length === 0}
+              className="px-5 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              그룹 저장
+              {saving ? "저장 중..." : "그룹 저장"}
             </button>
           </div>
         </div>
@@ -178,11 +175,11 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
       {/* 그룹 저장 확인 모달 */}
       {showConfirmModal && (
         <ConfirmActionModal
-          title="그룹 저장"
-          message={`"${user.name}"님의 그룹을 변경하시겠습니까?\n그룹 변경은 즉시 적용되며, 콘텐츠 접근 권한이 변경됩니다.`}
+          title="그룹 변경"
+          message={`"${user.name}"님의 소속 그룹을 변경하시겠습니까?\n선택된 그룹: ${selectedGroups.length}개`}
           keyword="저장"
           confirmText="저장"
-          color="blue"
+          color="green"
           onConfirm={handleConfirmSave}
           onClose={() => setShowConfirmModal(false)}
         />

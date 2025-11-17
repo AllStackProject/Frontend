@@ -52,10 +52,10 @@ const TimePatternSection: React.FC = () => {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Clock size={20} className="text-purple-600" />
-          <h3 className="text-lg font-bold text-gray-800">시청 완료 패턴</h3>
+          <h3 className="text-lg font-bold text-gray-800">시청 패턴</h3>
         </div>
         <p className="text-sm text-gray-600">
-          요일별, 시간대별 사용자 활동 패턴 분석(30일 기준)
+          요일별, 시간대별 사용자 시청 활동 패턴 분석(30일 기준)
         </p>
       </div>
 
@@ -64,7 +64,7 @@ const TimePatternSection: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={18} className="text-blue-600" />
-            <p className="text-sm font-semibold text-gray-700">요일별 시청 완료 수</p>
+            <p className="text-sm font-semibold text-gray-700">요일별 시청 수</p>
           </div>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={dayData}>
@@ -91,7 +91,7 @@ const TimePatternSection: React.FC = () => {
           </ResponsiveContainer>
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs text-blue-800">
-              <span className="font-semibold">{peakDay?.day}요일</span>에 가장 높은 시청 완료율을 기록했습니다.
+              <span className="font-semibold">{peakDay?.day}요일</span>에 가장 높은 시청률을 기록했습니다.
             </p>
           </div>
         </div>
@@ -100,7 +100,7 @@ const TimePatternSection: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Clock size={18} className="text-green-600" />
-            <p className="text-sm font-semibold text-gray-700">시간대별 시청 완료 수</p>
+            <p className="text-sm font-semibold text-gray-700">시간대별 시청 수</p>
           </div>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={timeData}>
@@ -130,7 +130,7 @@ const TimePatternSection: React.FC = () => {
           </ResponsiveContainer>
           <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-xs text-green-800">
-              <span className="font-semibold">{peakTime?.time}</span>에 가장 활발한 학습 활동이 이루어집니다.
+              <span className="font-semibold">{peakTime?.time}</span>에 가장 활발한 활동이 이루어집니다.
             </p>
           </div>
         </div>

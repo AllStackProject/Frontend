@@ -53,7 +53,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
                                     <tr className="text-gray-700">
                                         <th className="px-4 py-3 text-left font-semibold">제목</th>
                                         <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">시청률</th>
-                                        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">시청일</th>
+                                        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">최근 시청일</th>
                                         <th className="px-4 py-3 text-center font-semibold whitespace-nowrap">동영상</th>
                                     </tr>
                                 </thead>

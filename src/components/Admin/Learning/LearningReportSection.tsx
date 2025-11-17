@@ -91,7 +91,7 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
             <Search size={16} className="text-gray-400 mr-2" />
             <input
               type="text"
-              placeholder="이름 또는 ID로 검색"
+              placeholder="닉네임으로 검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="flex-1 text-sm outline-none bg-transparent"
@@ -141,9 +141,6 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
                 <div className="flex flex-col text-center sm:text-left">
                   <h3 className="text-sm font-semibold text-gray-800 leading-tight">
                     {selectedUser.userName}
-                    <span className="text-xs text-gray-500 ml-1">
-                      ({selectedUser.userId})
-                    </span>
                   </h3>
                   <p className="text-xs text-gray-600 mt-0.5">
                     그룹: {selectedUser.group}
@@ -154,7 +151,7 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
 
             {/* 총 시청 수 */}
             <div className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-4">
-              <p className="text-xs text-gray-500 mb-1">총 시청한 영상 수</p>
+              <p className="text-xs text-gray-500 mb-1">시청 완료한 총 영상 수</p>
               <p className="text-xl font-bold text-blue-600">
                 {selectedUser.totalViews} <span className="text-xs text-gray-400 mt-0.5">개</span>
               </p>
@@ -193,13 +190,6 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
                   dataKey="views"
                   stroke="#3b82f6"
                   name="시청한 영상 수"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="quizzes"
-                  stroke="#10b981"
-                  name="완료한 퀴즈 수"
                   strokeWidth={2}
                 />
               </LineChart>

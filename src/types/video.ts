@@ -102,3 +102,21 @@ export interface AdminOrgSingleVideoWatchResponse {
     watched_members: AdminWatchedMember[];
   };
 }
+
+// ----------- 멤버별 영상 시청 조회 -----------
+
+// 전체 멤버 시청 요약
+export interface MemberWatchSummary {
+  id: number;
+  nickname: string;
+  groups: string[];
+  avg_watch_rate: number;
+}
+
+// 특정 멤버 상세 시청 기록
+export interface MemberWatchDetail {
+  id: number;
+  title: string;
+  watch_rate: number;
+  watched_at: string;
+}

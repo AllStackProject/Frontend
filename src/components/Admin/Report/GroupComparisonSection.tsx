@@ -51,7 +51,7 @@ const GroupComparisonSection: React.FC = () => {
             <h3 className="text-lg font-bold text-gray-800">그룹별 시청 완료율 비교</h3>
           </div>
           <p className="text-sm text-gray-600">
-            각 그룹의 평균 시청 완료율을 비교합니다.
+            각 그룹의 평균 시청 완료율을 비교합니다.(3개월 기준)
           </p>
         </div>
 

@@ -120,3 +120,12 @@ export interface MemberWatchDetail {
   watch_rate: number;
   watched_at: string;
 }
+
+// ----------- 리포트 - 활동 분석 -----------
+export interface HourWatchReport {
+    hour_watch_cnts: number[]; // 00-03 03-06 06-09 ...
+}
+
+export interface DayWatchReport {
+    day_watch_cnts: number[]; // 길이 7 예상 (월~일)
+}

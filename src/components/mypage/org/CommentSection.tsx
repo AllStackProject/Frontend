@@ -4,6 +4,7 @@ import { Trash2, X, MessageSquare } from "lucide-react";
 import { getMyComments } from "@/api/myactivity/getComment";
 import { deleteComment } from "@/api/myactivity/deleteComment";
 import type { Comment } from "@/types/comment";
+import { useAuth } from "@/context/AuthContext";
 
 const CommentSection: React.FC = () => {
   const navigate = useNavigate();
@@ -14,17 +15,18 @@ const CommentSection: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
   const handleGoToVideo = (videoId: number) => navigate(`/video/${videoId}`);
   const visibleComments = showAll ? comments : comments.slice(0, 4);
+  const { orgName, orgId } = useAuth();
 
   // 현재 조직 정보 (로컬스토리지에서)
-  const orgId = Number(localStorage.getItem("org_id"));
-  const orgName = localStorage.getItem("org_name") || "조직 미선택";
+  //const orgId = Number(localStorage.getItem("org_id"));
+  //const orgName = localStorage.getItem("org_name") || "조직 미선택";
 
   // 댓글 조회
   useEffect(() => {
     const fetchComments = async () => {
       try {
         setLoading(true);
-        const data = await getMyComments(orgId);
+        const data = await getMyComments(orgId || 0);
         setComments(data);
       } catch (err: any) {
         console.error("🚨 댓글 로드 실패:", err);
@@ -42,7 +44,7 @@ const CommentSection: React.FC = () => {
     if (!deleteTarget) return;
 
     try {
-      const success = await deleteComment(orgId, deleteTarget.id);
+      const success = await deleteComment(orgId || 0, deleteTarget.id);
       if (success) {
         setComments((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       } else {

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import SuccessModal from "@/components/common/modals/SuccessModal";
+import { useAuth } from "@/context/AuthContext";
 
 interface Video {
     id: number;
@@ -105,7 +106,6 @@ const MyVideoSection: React.FC<VideoManagementSectionProps> = ({
     onEdit,
     onDelete,
 }) => {
-    const orgName = localStorage.getItem("org_name") || "조직";
     // 필터 및 정렬 상태
     const [searchTerm, setSearchTerm] = useState("");
     const [sortType, setSortType] = useState<"latest" | "oldest" | "views">("latest");
@@ -113,6 +113,7 @@ const MyVideoSection: React.FC<VideoManagementSectionProps> = ({
         "all" | "organization" | "private" | "group"
     >("all");
 
+    const { orgName } = useAuth();
     // 페이지네이션
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);

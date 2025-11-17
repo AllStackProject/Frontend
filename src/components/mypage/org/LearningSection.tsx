@@ -5,6 +5,7 @@ import { getWatchedVideos } from "@/api/myactivity/getWatchedVideos";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
 import { Heart, HeartOff, PlayCircle, Loader2 } from "lucide-react";
 import type { WatchedVideo } from "@/types/video";
+import { useAuth } from "@/context/AuthContext";
 
 const LearningSection: React.FC = () => {
   const navigate = useNavigate();
@@ -13,9 +14,10 @@ const LearningSection: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const { orgName, orgId } = useAuth();
 
-  const orgId = Number(localStorage.getItem("org_id"));
-  const orgName = localStorage.getItem("org_name") || "조직";
+  //const orgId = Number(localStorage.getItem("org_id"));
+  //const orgName = localStorage.getItem("org_name") || "조직";
 
   /** 시청 기록 + 스크랩 목록 병합 로드 */
   useEffect(() => {
@@ -54,7 +56,7 @@ const LearningSection: React.FC = () => {
     try {
       if (currentState) {
         // 스크랩 해제
-        const res = await deleteVideoScrap(orgId, id);
+        const res = await deleteVideoScrap(orgId || 0, id);
         if (res.is_success) {
           setVideos((prev) =>
             prev.map((v) => (v.id === id ? { ...v, is_scrapped: false } : v))
@@ -62,7 +64,7 @@ const LearningSection: React.FC = () => {
         }
       } else {
         // 스크랩 등록
-        const res = await postVideoScrap(orgId, id);
+        const res = await postVideoScrap(orgId || 0, id);
         if (res.is_success) {
           setVideos((prev) =>
             prev.map((v) => (v.id === id ? { ...v, is_scrapped: true } : v))

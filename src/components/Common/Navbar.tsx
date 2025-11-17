@@ -16,6 +16,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { nickname, orgName, orgId } = useAuth();
 
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -88,6 +89,12 @@ const Navbar = () => {
     isChild?: boolean;
   };
 
+  // 검색
+  const handleSearch = () => {
+    if (!searchKeyword.trim()) return;
+    navigate(`/search?keyword=${encodeURIComponent(searchKeyword.trim())}`);
+  };
+
   const menuItems: MenuItem[] = [
     { icon: Home, label: "홈", path: "/home" },
     { type: "divider", label: "" },
@@ -132,10 +139,18 @@ const Navbar = () => {
               type="text"
               placeholder="원하는 영상을 검색해 보세요.."
               className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 px-3 text-sm"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
             />
 
             {/* 검색 버튼 */}
-            <button className="flex items-center justify-center bg-primary-light hover:bg-primary text-white rounded-full w-9 h-9 transition-all duration-300 shadow-md hover:shadow-lg">
+            <button
+              className="flex items-center justify-center bg-primary-light hover:bg-primary text-white rounded-full w-9 h-9 transition-all duration-300 shadow-md hover:shadow-lg"
+              onClick={handleSearch}
+            >
               <Search className="w-4 h-4" strokeWidth={2} />
             </button>
           </div>

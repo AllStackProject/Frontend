@@ -6,12 +6,14 @@ import {
   HiCalendar,
   HiHeart,
   HiOutlineHeart,
+  HiUser
 } from "react-icons/hi";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
 
 interface VideoCardProps {
   thumbnail: string;
   title: string;
+  uploader: string;
   duration?: string;
   views?: number;
   uploadDate?: string;
@@ -24,6 +26,7 @@ interface VideoCardProps {
 const VideoCard = ({
   thumbnail,
   title,
+  uploader,
   duration = "0:00",
   views = 0,
   uploadDate,
@@ -36,12 +39,12 @@ const VideoCard = ({
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  /** ✅ props 변경 시 자동 반영 */
+  /** props 변경 시 자동 반영 */
   useEffect(() => {
     setIsFavorite(initialFavorite);
   }, [initialFavorite]);
 
-  /** ✅ 서버 연동 */
+  /** API 연동 */
   const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -50,14 +53,14 @@ const VideoCard = ({
 
     try {
       if (isFavorite) {
-        // 🔹 스크랩 해제
+        // 스크랩 해제
         const res = await deleteVideoScrap(orgId, videoId);
         if (res.is_success) {
           setIsFavorite(false);
           onFavoriteToggle?.(videoId, false);
         }
       } else {
-        // 🔹 스크랩 등록
+        // 스크랩 등록
         const res = await postVideoScrap(orgId, videoId);
         if (res.is_success) {
           setIsFavorite(true);
@@ -158,8 +161,13 @@ const VideoCard = ({
         >
           {title}
         </h3>
+       
 
         <div className="flex items-center gap-3 text-xs text-text-muted">
+           <div className="flex items-center gap-1">
+            <HiUser className="text-sm" />
+            <span>{uploader}</span>
+          </div>
           <div className="flex items-center gap-1">
             <HiEye className="text-sm" />
             <span>{formatViews(views)}회</span>

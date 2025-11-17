@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import OrgMyPageTabs from "@/components/mypage/org/OrgMyPageTabs";
+import { useAuth } from "@/context/AuthContext";
 
 const OrgMyPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { orgName, orgId } = useAuth();
 
   // URL 기반 탭 추출
   const currentTab = location.pathname.split("/")[2] || "learning";
@@ -20,8 +22,8 @@ const OrgMyPage: React.FC = () => {
 
   // localStorage에서 조직 정보 불러오기
   useEffect(() => {
-    const orgId = localStorage.getItem("org_id");
-    const orgName = localStorage.getItem("org_name");
+    //const orgId = localStorage.getItem("org_id");
+    //const orgName = localStorage.getItem("org_name");
 
     if (orgId && orgName) {
       setCurrentOrganization({

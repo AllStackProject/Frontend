@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface Video {
     id: string;
     title: string;
+    uploader: string;
     thumbnail: string;
     duration?: string;
     views?: number;
@@ -29,6 +30,7 @@ const DUMMY_VIDEOS: Video[] = Array.from({ length: 50 }, (_, i) => {
     return {
         id: `${i + 1}`,
         title: `예시 동영상 ${i + 1} — 동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라 만세 무궁화 삼천리 화려강산`,
+        uploader:`IT팀_홍길동`,
         thumbnail: `/dummy/thum${randomThumb}.png`,
         duration: `${Math.floor(Math.random() * 15) + 3}:${Math.floor(
             Math.random() * 60
@@ -283,6 +285,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                             <VideoCard
                                 key={video.id}
                                 thumbnail={video.thumbnail}
+                                uploader={video.uploader}
                                 title={video.title}
                                 duration={video.duration}
                                 views={video.views}

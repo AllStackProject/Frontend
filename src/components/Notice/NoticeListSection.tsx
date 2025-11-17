@@ -23,7 +23,6 @@ const dummyNotices: Notice[] = [
     views: 125,
     visibility: "전체공개",
     content: "우리 조직의 신규 서비스가 오픈되었습니다!",
-    linkedVideo: "AI교육-1편",
   },
   {
     id: 2,
@@ -34,7 +33,6 @@ const dummyNotices: Notice[] = [
     visibility: "특정그룹공개",
     content: "AI 퀴즈 기능 점검으로 일시 중단됩니다.",
   },
-  // ... 생략
 ];
 
 const NoticeSection: React.FC = () => {
@@ -100,7 +98,7 @@ const NoticeSection: React.FC = () => {
                 className={`border-b last:border-b-0 hover:bg-blue-50/40 transition-colors ${
                   index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                 } cursor-pointer`}
-                onClick={() => setSelectedNotice(n)} // ✅ 클릭 시 모달 열기
+                onClick={() => setSelectedNotice(n)}
               >
                 <td className="px-4 py-3 font-medium text-gray-800 hover:text-blue-600 transition-colors">
                   {n.title}
@@ -174,7 +172,7 @@ const NoticeSection: React.FC = () => {
         )}
       </div>
 
-      {/* ✅ 공지 상세 모달 */}
+      {/* 공지 상세 모달 */}
       {selectedNotice && (
         <NoticeDetailModal
           notice={selectedNotice}

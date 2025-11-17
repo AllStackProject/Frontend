@@ -5,6 +5,7 @@ import { HiClock } from "react-icons/hi";
 import { getScrapVideos } from "@/api/myactivity/getScrap";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
 import type { ScrapVideo } from "@/types/scrap";
+import { useAuth } from "@/context/AuthContext";
 
 type ScrapVideoWithState = ScrapVideo & { is_scrapped?: boolean };
 
@@ -16,15 +17,14 @@ const ScrapSection: React.FC = () => {
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
 
-  const orgId = Number(localStorage.getItem("org_id"));
-  const orgName = localStorage.getItem("org_name") || "조직 미선택";
+  const { orgName, orgId } = useAuth();
 
   /** 스크랩 목록 불러오기 */
   useEffect(() => {
     const fetchScraps = async () => {
       try {
         setLoading(true);
-        const data = await getScrapVideos(orgId);
+        const data = await getScrapVideos(orgId || 0);
         const formatted = data.map((v: ScrapVideo) => ({
           ...v,
           is_scrapped: true,
@@ -53,14 +53,14 @@ const ScrapSection: React.FC = () => {
 
     try {
       if (currentState) {
-        const res = await deleteVideoScrap(orgId, id);
+        const res = await deleteVideoScrap(orgId || 0, id);
         if (res.is_success) {
           setVideos((prev) =>
             prev.map((v) => (v.id === id ? { ...v, is_scrapped: false } : v))
           );
         }
       } else {
-        const res = await postVideoScrap(orgId, id);
+        const res = await postVideoScrap(orgId || 0, id);
         if (res.is_success) {
           setVideos((prev) =>
             prev.map((v) => (v.id === id ? { ...v, is_scrapped: true } : v))

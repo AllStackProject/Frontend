@@ -1,6 +1,5 @@
 import React from "react";
-import { X, Megaphone, Paperclip, Play, Calendar, BarChart3, Earth } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { X, Megaphone, Calendar, BarChart3, Earth } from "lucide-react";
 
 interface Notice {
   id: number;
@@ -10,9 +9,6 @@ interface Notice {
   visibility: string;
   content: string;
   selectedGroups?: string[];
-  attachments?: string[];
-  linkedVideo?: string;
-  linkedVideoId?: string; // 동영상 ID 추가
 }
 
 interface ViewNoticeModalProps {
@@ -21,17 +17,6 @@ interface ViewNoticeModalProps {
 }
 
 const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({ notice, onClose }) => {
-  const navigate = useNavigate();
-
-  // 동영상 클릭 핸들러
-  const handleVideoClick = () => {
-    if (notice.linkedVideoId) {
-      navigate(`/video/${notice.linkedVideoId}`);
-    } else {
-      // linkedVideoId가 없으면 기본 /video 페이지로
-      navigate("/video/1");
-    }
-  };
 
   // 모달 외부 클릭 핸들러
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -116,53 +101,6 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({ notice, onClose }) =>
               {notice.content}
             </div>
           </div>
-
-          {/* 첨부파일 */}
-          {notice.attachments && notice.attachments.length > 0 && (
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2 pb-2 border-b border-gray-200">
-                <Paperclip size={16} className="text-gray-500" />
-                첨부파일 ({notice.attachments.length})
-              </h4>
-              <div className="space-y-2">
-                {notice.attachments.map((file, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <Paperclip size={14} className="text-gray-500" />
-                    <span className="text-sm text-gray-700">{file}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 연결된 동영상 */}
-          {notice.linkedVideo && (
-            <div className="mb-4">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2 pb-2 border-b border-gray-200">
-                <Play size={16} className="text-gray-500" />
-                연결된 동영상
-              </h4>
-              <button 
-                onClick={handleVideoClick}
-                className="w-full flex items-center gap-3 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors group"
-              >
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full group-hover:bg-blue-700 transition-colors">
-                  <Play size={18} className="text-white fill-white ml-0.5" />
-                </div>
-                <div className="text-left flex-1">
-                  <p className="text-sm font-semibold text-gray-800">
-                    {notice.linkedVideo}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-0.5">
-                    클릭하여 동영상 보기
-                  </p>
-                </div>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* 하단 */}

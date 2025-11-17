@@ -1,4 +1,3 @@
-// src/components/Home/HashtagSection.tsx
 import { useState } from "react";
 
 interface HashtagSectionProps {
@@ -30,7 +29,6 @@ const HashtagSection = ({ onCategoryChange }: HashtagSectionProps) => {
     <div className="flex flex-wrap justify-center gap-3 py-2">
       {categories.map((category, index) => {
         const isSelected = selected === category;
-        const isHovered = hoveredIndex === index;
 
         return (
           <button
@@ -54,7 +52,7 @@ const HashtagSection = ({ onCategoryChange }: HashtagSectionProps) => {
             )}
             
             {/* 텍스트 */}
-            <span className="relative z-10">#{category}</span>
+            <span className="relative z-10">{category}</span>
           </button>
         );
       })}

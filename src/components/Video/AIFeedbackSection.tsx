@@ -1,14 +1,16 @@
 import React from "react";
 import { MessageSquareText } from "lucide-react";
 
-interface AIFeedbackSectionProps {
+export interface AIFeedbackSectionProps {
   isOpen: boolean;
   onToggle: () => void;
+  feedback: string;
 }
 
 const AIFeedbackSection: React.FC<AIFeedbackSectionProps> = ({
   isOpen,
   onToggle,
+  feedback,
 }) => {
   return (
     <div className="bg-bg-card border border-border-light rounded-xl shadow-base overflow-hidden">
@@ -29,12 +31,11 @@ const AIFeedbackSection: React.FC<AIFeedbackSectionProps> = ({
       {/* 내용 */}
       {isOpen && (
         <div className="bg-bg-page p-6 text-sm text-text-secondary space-y-3">
-          <p>💬 AI가 학습 내용을 분석한 피드백을 제공합니다.</p>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
-            <li>핵심 요약은 잘 되었어요 👏</li>
-            <li>예시를 조금 더 구체적으로 작성해보세요.</li>
-            <li>좋은 학습 태도를 유지하고 있습니다!</li>
-          </ul>
+          {feedback ? (
+            <p className="whitespace-pre-wrap leading-relaxed">{feedback}</p>
+          ) : (
+            <p className="text-gray-500">피드백이 제공되지 않았습니다.</p>
+          )}
         </div>
       )}
     </div>

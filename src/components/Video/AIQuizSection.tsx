@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { CheckCircle, XCircle, Award, HelpCircle } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import {startVideoSession} from "@/api/video/getvideo";
+import {startVideoSession} from "@/api/video/video";
 
 interface QuizQuestion {
   id: number;

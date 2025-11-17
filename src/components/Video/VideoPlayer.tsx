@@ -8,16 +8,18 @@ import type { NormalizedSegment } from "@/types/videoHeatmap";
 
 interface VideoPlayerProps {
   videoUrl: string;
-  userId?: number;
-  videoId?: number;
-  orgId?: number;
+  sessionId: string;
+  videoId: number;
+  orgId: number;
+  wholeTime: number;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
-  videoUrl,
-  userId = 1,
-  videoId = 1001,
+ videoUrl,
+  sessionId,
+  videoId,
   orgId,
+  wholeTime,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,12 +45,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [heatMapData, setHeatMapData] = useState<NormalizedSegment[]>([]);
   const [showHeatMap, setShowHeatMap] = useState(false);
 
-  const analytics = useVideoAnalytics({
-    userId,
-    videoId,
-    orgId,
-    getVideoEl: () => videoRef.current,
-  });
+const analytics = useVideoAnalytics({
+  sessionId,
+  videoId,
+  orgId,
+  wholeTime,
+  getVideoEl: () => videoRef.current,
+});
 
   // ---- Heat Map 데이터 로드
   useEffect(() => {

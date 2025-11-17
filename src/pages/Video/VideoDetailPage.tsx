@@ -6,7 +6,7 @@ import CommentSection from "@/components/video/CommentSection";
 import AIQuizSection from "@/components/video/AIQuizSection";
 import AIFeedbackSection from "@/components/video/AIFeedbackSection";
 import AISummarySection from "@/components/video/AISummarySection";
-import { startVideoSession } from "@/api/video/getvideo";
+import { startVideoSession } from "@/api/video/video";
 
 const VideoDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +14,7 @@ const VideoDetailPage: React.FC = () => {
   const [sessionData, setSessionData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // 각 AI 섹션 토글 상태
+  // AI 섹션 토글 상태
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -31,29 +31,13 @@ const VideoDetailPage: React.FC = () => {
 
         const data = await startVideoSession(orgId, Number(id));
 
-        // ⚡ 더미 데이터 주입 (AI 퀴즈 3문제)
-        const dummyQuizzes = [
-          {
-            id: 1,
-            question: "H.264 코덱은 영상 압축을 위한 표준 코덱이다.",
-            correctAnswer: true,
-          },
-          {
-            id: 2,
-            question: "AWS S3는 영상 스트리밍을 위한 전용 트랜스코더 서비스이다.",
-            correctAnswer: false,
-          },
-          {
-            id: 3,
-            question: "MediaConvert는 영상을 다른 포맷으로 변환할 때 사용된다.",
-            correctAnswer: true,
-          },
-        ];
-
+        const result = data;
         setSessionData({
-          ...data,
-          ai_type: data.is_comment || "QUIZ", // 수정 필요 QUIZ FEEDBACK Summary
-          quizzes: data.quizzes?.length ? data.quizzes : dummyQuizzes,
+          ...result,
+          ai_type: result.ai_type ?? null,
+          quizzes: result.ai_quizzes ?? [],
+          feedback: result.ai_feedback ?? "",
+          summary: result.ai_summary ?? "",
         });
       } catch (err: any) {
         console.error("🚨 영상 세션 시작 실패:", err);
@@ -87,18 +71,30 @@ const VideoDetailPage: React.FC = () => {
       </div>
     );
 
+  // ====== API 데이터 구조 분리 ======
   const video = sessionData.video;
   const comments = sessionData.comments || [];
-  const hashtags = sessionData.hashtags || [];
+  const categories = sessionData.categories || [];
   const showComments = sessionData.is_comment === true;
+
   const quizzes = sessionData.quizzes || [];
+  const feedbackText = sessionData.feedback || "";
+  const summaryText = sessionData.summary || "";
+  const ai_type = sessionData.ai_type; // QUIZ | FEEDBACK | SUMMARY
 
   return (
     <div className="w-full min-h-screen bg-page px-5 md:px-8 py-10">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
-        {/* 왼쪽: 동영상 + 댓글 */}
+
+        {/* 왼쪽 영역: 플레이어 + 댓글 */}
         <div className="flex flex-col gap-6">
-          <VideoPlayer videoUrl={video.url || video.video_url || ""} />
+          <VideoPlayer
+            videoUrl={video.url || video.video_url || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"}
+            videoId={video.id}
+            orgId={orgId}
+            sessionId={sessionData.session_id}
+            wholeTime={video.whole_time}
+          />
 
           {showComments && (
             <CommentSection
@@ -109,35 +105,47 @@ const VideoDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* 오른쪽: 정보 + AI 섹션 */}
+        {/* 오른쪽 영역 */}
         <div className="flex flex-col gap-6">
+
+          {/* 영상 기본 정보 */}
           <VideoInfo
             orgId={orgId}
             videoId={video.id}
             title={video.title}
-            description={video.desc}
+            description={video.description}
             views={video.watch_cnt}
             uploadDate={new Date(video.created_at).toLocaleDateString("ko-KR")}
-            categories={hashtags}
+            categories={categories}
             initialFavorite={sessionData.is_scrapped}
           />
 
-          {/* AI 섹션 3종 토글형 */}
-          <AIQuizSection
-            quiz={{ questions: quizzes }}
-            isOpen={isQuizOpen}
-            onToggle={() => setIsQuizOpen(!isQuizOpen)}
-          />
+          {/* AI QUIZ */}
+          {ai_type === "QUIZ" && (
+            <AIQuizSection
+              quiz={{ questions: quizzes }}
+              isOpen={isQuizOpen}
+              onToggle={() => setIsQuizOpen(!isQuizOpen)}
+            />
+          )}
 
-          <AIFeedbackSection
-            isOpen={isFeedbackOpen}
-            onToggle={() => setIsFeedbackOpen(!isFeedbackOpen)}
-          />
+          {/* AI FEEDBACK */}
+          {ai_type === "FEEDBACK" && (
+            <AIFeedbackSection
+              feedback={feedbackText}
+              isOpen={isFeedbackOpen}
+              onToggle={() => setIsFeedbackOpen(!isFeedbackOpen)}
+            />
+          )}
 
-          <AISummarySection
-            isOpen={isSummaryOpen}
-            onToggle={() => setIsSummaryOpen(!isSummaryOpen)}
-          />
+          {/* AI SUMMARY */}
+          {ai_type === "SUMMARY" && (
+            <AISummarySection
+              summary={summaryText}
+              isOpen={isSummaryOpen}
+              onToggle={() => setIsSummaryOpen(!isSummaryOpen)}
+            />
+          )}
         </div>
       </div>
     </div>

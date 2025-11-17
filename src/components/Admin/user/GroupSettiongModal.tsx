@@ -51,7 +51,6 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
       const success = await updateMemberGroups(orgId, user.id, groupIds);
 
       if (success) {
-        alert("✅ 그룹이 성공적으로 변경되었습니다.");
         onSubmit(selectedGroups);
         setShowConfirmModal(false);
         onClose();

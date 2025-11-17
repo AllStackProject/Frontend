@@ -1,93 +1,65 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Filter, RotateCcw, Eye, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import WatchUserModal from "@/components/admin/history/WatchUserModal";
-
-interface WatchRecord {
-  id: number;
-  video: string;
-  uploader: string;
-  uploadDate: string;
-  expireAt?: string;
-  visibility: "organization" | "group" | "private";
-  viewRate: number;
-  viewers: number;
-}
-
-const dummyRecords: WatchRecord[] = [
-  {
-    id: 1,
-    video: "AI 트렌드 2025",
-    uploader: "홍길동",
-    uploadDate: "2025-10-10",
-    expireAt: "2025-11-10",
-    visibility: "organization",
-    viewRate: 82,
-    viewers: 56,
-  },
-  {
-    id: 2,
-    video: "딥러닝 기초 강의",
-    uploader: "이영희",
-    uploadDate: "2025-09-15",
-    expireAt: "",
-    visibility: "group",
-    viewRate: 63,
-    viewers: 34,
-  },
-  {
-    id: 3,
-    video: "AI 윤리와 프라이버시",
-    uploader: "박철수",
-    uploadDate: "2025-08-21",
-    expireAt: "2025-09-21",
-    visibility: "organization",
-    viewRate: 91,
-    viewers: 68,
-  },
-  {
-    id: 4,
-    video: "R&D 워크샵",
-    uploader: "이수현",
-    uploadDate: "2025-10-01",
-    visibility: "private",
-    viewRate: 45,
-    viewers: 18,
-  },
-  {
-    id: 5,
-    video: "AI 데이터 동의 안내",
-    uploader: "최지훈",
-    uploadDate: "2025-07-19",
-    expireAt: "",
-    visibility: "organization",
-    viewRate: 72,
-    viewers: 40,
-  },
-];
+import { fetchAdminOrgVideoWatchList } from "@/api/admin/viewVideo";
+import type { AdminVideoWatchItem } from "@/types/video";
+import { useAuth } from "@/context/AuthContext";
 
 const VideoWatchSection: React.FC = () => {
-  const [records] = useState<WatchRecord[]>(dummyRecords);
+  const { orgId } = useAuth();
+
+  const [records, setRecords] = useState<AdminVideoWatchItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState<
     "all" | "organization" | "group" | "private"
   >("all");
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [selectedVideo, setSelectedVideo] = useState<WatchRecord | null>(null);
 
-  // 필터링
+  const [selectedVideo, setSelectedVideo] = useState<AdminVideoWatchItem | null>(null);
+
+  /** ⭐ 전체 영상 시청 목록 API 호출 */
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await fetchAdminOrgVideoWatchList(orgId || 0);
+        setRecords(data);
+      } catch (e) {
+        console.error("❌ 전체 영상 시청 목록 불러오기 실패:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (orgId) load();
+  }, [orgId]);
+
+  /** 필터링 */
   const filteredRecords = useMemo(() => {
     return records.filter((v) => {
       const matchesSearch =
-        v.video.toLowerCase().includes(search.toLowerCase()) ||
-        v.uploader.toLowerCase().includes(search.toLowerCase());
+        v.title.toLowerCase().includes(search.toLowerCase()) ||
+        v.creator.toLowerCase().includes(search.toLowerCase());
+
+      const visibilityMap: Record<string, "organization" | "group" | "private"> = {
+        PUBLIC: "organization",
+        GROUP: "group",
+        PRIVATE: "private",
+      };
+
+      const mapped = visibilityMap[v.open_scope];
+
       const matchesVisibility =
-        visibilityFilter === "all" || v.visibility === visibilityFilter;
+        visibilityFilter === "all" || mapped === visibilityFilter;
+
       return matchesSearch && matchesVisibility;
     });
   }, [records, search, visibilityFilter]);
 
-  // 페이징
+  /** 페이징 */
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
   const currentRecords = filteredRecords.slice(
     (currentPage - 1) * itemsPerPage,
@@ -99,6 +71,9 @@ const VideoWatchSection: React.FC = () => {
     setVisibilityFilter("all");
     setCurrentPage(1);
   };
+
+  if (loading)
+    return <div className="text-center py-10 text-gray-500">불러오는 중...</div>;
 
   return (
     <div>
@@ -174,85 +149,70 @@ const VideoWatchSection: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {currentRecords.map((r, index) => (
-              <tr
-                key={r.id}
-                className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+            {currentRecords.map((r, index) => {
+              const visibilityMap = {
+                PUBLIC: "organization",
+                GROUP: "group",
+                PRIVATE: "private",
+              } as const;
+
+              const openLabel =
+                r.open_scope === "PUBLIC"
+                  ? "조직 전체"
+                  : r.open_scope === "GROUP"
+                  ? "특정 그룹"
+                  : "비공개";
+
+              const openColor =
+                r.open_scope === "PUBLIC"
+                  ? "bg-green-100 text-green-700"
+                  : r.open_scope === "GROUP"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-gray-200 text-gray-700";
+
+              return (
+                <tr
+                  key={r.id}
+                  className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                   }`}
-              >
-                <td className="px-4 py-3 font-medium text-gray-800">{r.video}</td>
-                <td className="px-4 py-3 text-gray-600">{r.uploader}</td>
-                <td className="px-4 py-3 text-gray-600">{r.uploadDate}</td>
-                <td className="px-4 py-3 text-gray-600">
-                  {r.expireAt ? (
-                    <span>{r.expireAt}</span>
-                  ) : (
-                    <span className="text-gray-400 text-xs">만료 없음</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${r.visibility === "organization"
-                      ? "bg-green-100 text-green-700"
-                      : r.visibility === "group"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-200 text-gray-700"
-                      }`}
-                  >
-                    {r.visibility === "organization"
-                      ? "조직 전체"
-                      : r.visibility === "group"
-                        ? "특정 그룹"
-                        : "비공개"}
-                  </span>
-                </td>
-
-                {/* 시청률 그래프 */}
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${r.viewRate >= 80
-                          ? "bg-green-500"
-                          : r.viewRate >= 50
-                            ? "bg-blue-500"
-                            : "bg-red-400"
-                          }`}
-                        style={{ width: `${r.viewRate}%` }}
-                      />
-                    </div>
-                    <span
-                      className={`text-sm font-semibold min-w-[45px] ${r.viewRate >= 80
-                        ? "text-green-600"
-                        : r.viewRate >= 50
-                          ? "text-blue-600"
-                          : "text-red-500"
-                        }`}
-                    >
-                      {r.viewRate}%
-                    </span>
-                  </div>
-                </td>
-
-                {/* 시청자 수 */}
-                <td
-                  onClick={() => setSelectedVideo(r)}
-                  className="px-4 py-3 text-center cursor-pointer transition-all duration-200 hover:bg-blue-50"
                 >
-                  <div className="flex items-center justify-center gap-1.5 text-gray-700 group">
-                    <Eye
-                      size={15}
-                      className="text-gray-500 transition-colors duration-200 group-hover:text-blue-600"
-                    />
-                    <span
-                      className="font-medium text-sm transition-all duration-200 group-hover:text-blue-700 group-hover:font-semibold"
-                    >
-                      {r.viewers.toLocaleString()}명
+                  <td className="px-4 py-3 font-medium text-gray-800">{r.title}</td>
+                  <td className="px-4 py-3 text-gray-600">{r.creator}</td>
+                  <td className="px-4 py-3 text-gray-600">{r.expired_at}</td>
+                  <td className="px-4 py-3 text-gray-600">{r.expired_at}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block px-3 py-1 text-xs rounded-full ${openColor}`}>
+                      {openLabel}
                     </span>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+
+                  {/* 시청률 */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-blue-500"
+                          style={{ width: `${r.watch_complete_rate}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold min-w-[45px]">
+                        {r.watch_complete_rate}%
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* 시청자 수 (모달 열기) */}
+                  <td
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-blue-50 text-gray-700"
+                    onClick={() => setSelectedVideo(r)}
+                  >
+                    <Eye size={15} className="inline-block mr-1" />
+                    {r.watch_member_cnt}명
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
@@ -322,7 +282,8 @@ const VideoWatchSection: React.FC = () => {
       {/* 모달 */}
       {selectedVideo && (
         <WatchUserModal
-          video={{ title: selectedVideo.video }}
+          videoId={selectedVideo.id}
+          video={{ title: selectedVideo.title }}
           onClose={() => setSelectedVideo(null)}
         />
       )}

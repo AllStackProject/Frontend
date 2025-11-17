@@ -69,7 +69,6 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
         org_setting: permissions.manageOrganization,
       });
 
-      alert("✅ 권한이 성공적으로 저장되었습니다.");
       onSubmit(role);
       setShowConfirmModal(false);
       onClose();

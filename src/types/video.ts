@@ -62,3 +62,43 @@ export interface StartVideoSessionResult {
 
   created_at: string;
 }
+
+
+/* admin */
+
+export interface AdminVideoWatchItem {
+  id: number;
+  title: string;
+  creator: string;
+  expired_at: string;
+  open_scope: "PUBLIC" | "PRIVATE" | "GROUP";
+  watch_complete_rate: number;
+  watch_member_cnt: number;
+}
+
+export interface AdminOrgVideoWatchResponse {
+  code: number;
+  status: string;
+  message: string;
+  result: {
+    all_video_watch: AdminVideoWatchItem[];
+  };
+}
+
+// ----------- 개별 영상 상세 조회 -----------
+
+export interface AdminWatchedMember {
+  nickname: string;
+  groups: string[];
+  watch_rate: number;
+  watched_at: string | null;
+}
+
+export interface AdminOrgSingleVideoWatchResponse {
+  code: number;
+  status: string;
+  message: string;
+  result: {
+    watched_members: AdminWatchedMember[];
+  };
+}

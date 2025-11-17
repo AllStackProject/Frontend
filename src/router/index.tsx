@@ -10,6 +10,7 @@ import LoginSelect from "@/pages/auth/LoginSelect";
 import Register from "@/pages/auth/Register";
 import LoginPasswordReset from "@/pages/auth/LoginPasswordReset";
 import NoticePage from "@/pages/notice/NoticePage";
+import SearchResultPage from "@/pages/home/SearchResultPage";
 
 // 마이페이지 관련 import
 import OrgMyPage from "@/pages/mypage/OrgMyPage";
@@ -37,7 +38,7 @@ import SettingPage from "@/pages/admin/SettingPage";
 import UserLayout from "@/layouts/UserLayout";
 import AdminLayout from "@/layouts/AdminLayout";
 
-// ✅ 보호된 라우트 컴포넌트 (로그인 필요)
+// 보호된 라우트 컴포넌트 (로그인 필요)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, orgToken } = useAuth();
 
@@ -53,7 +54,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// ✅ 공개 라우트 (로그인 상태면 /home으로 리다이렉트)
+// 공개 라우트 (로그인 상태면 /home으로 리다이렉트)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, orgToken } = useAuth();
 
@@ -67,7 +68,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// ✅ 랜딩 페이지 라우트 (로그인 상태면 /home으로 리다이렉트)
+// 랜딩 페이지 라우트 (로그인 상태면 /home으로 리다이렉트)
 const LandingRoute = () => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/home" replace /> : <Landing />;
@@ -97,19 +98,23 @@ export const router = createBrowserRouter([
       </PublicRoute>
     ),
   },
-  {
-    path: "/login/select",
-    element: (
-      <PublicRoute>
-        <LoginSelect />
-      </PublicRoute>
-    ),
-  },
+
   {
     path: "/reset-password",
     element: (
       <PublicRoute>
         <LoginPasswordReset />
+      </PublicRoute>
+    ),
+  },
+  // -----------------------------
+  // 사용자 전용 레이아웃
+  // -----------------------------
+  {
+    path: "/login/select",
+    element: (
+      <PublicRoute>
+        <LoginSelect />
       </PublicRoute>
     ),
   },
@@ -122,13 +127,17 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/search",
+    element: (
+      <ProtectedRoute>
+        <SearchResultPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/notice",
     element: <NoticePage />,
   },
-
-  // -----------------------------
-  // 사용자 전용 레이아웃
-  // -----------------------------
   {
     element: (
       <ProtectedRoute>

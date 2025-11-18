@@ -3,14 +3,14 @@ import { useAuth } from "@/context/AuthContext";
 
 // 페이지 import
 import Landing from "@/pages/home/Landing.tsx";
-import OrgMainPage from "@/pages/home/OrgMainPage";
-import VideoDetailPage from "@/pages/video/VideoDetailPage";
-import LoginHome from "@/pages/auth/LoginPage";
-import LoginSelect from "@/pages/auth/LoginSelect";
-import Register from "@/pages/auth/Register";
-import LoginPasswordReset from "@/pages/auth/LoginPasswordReset";
-import NoticePage from "@/pages/notice/NoticePage";
-import SearchResultPage from "@/pages/home/SearchResultPage";
+import OrgMainPage from "@/pages/home/OrgMainPage.tsx";
+import VideoDetailPage from "@/pages/video/VideoDetailPage.tsx";
+import LoginHome from "@/pages/auth/LoginPage.tsx";
+import LoginSelect from "@/pages/auth/LoginSelect.tsx";
+import Register from "@/pages/auth/Register.tsx";
+import LoginPasswordReset from "@/pages/auth/LoginPasswordReset.tsx";
+import NoticePage from "@/pages/notice/NoticePage.tsx";
+import SearchResultPage from "@/pages/home/SearchResultPage.tsx";
 
 // 마이페이지 관련 import
 import OrgMyPage from "@/pages/mypage/OrgMyPage";

@@ -85,3 +85,47 @@ export async function fetchTopRankVideos(orgId: number) {
     );
   }
 }
+
+/* 동영상별 시청 구간  조회 */
+
+// 영상별 구간 분석 목록
+export async function fetchIntervalList(orgId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/report/interval`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+    return response.data.result.all_video_interval;
+  } catch (error: any) {
+    console.error("❌ 구간 분석 목록 조회 실패:", error);
+    throw new Error(error.response?.data?.message || "구간 분석 목록 조회 실패");
+  }
+}
+
+// 중도 이탈 분석
+export async function fetchQuitAnalysis(orgId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/report/quit`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+    return response.data.result;
+  } catch (error: any) {
+    console.error("❌ 중도 이탈 분석 조회 실패:", error);
+    throw new Error(error.response?.data?.message || "중도 이탈 분석 조회 실패");
+  }
+}
+
+// 특정 영상의 구간 분석 상세
+export async function fetchIntervalDetail(orgId: number, videoId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/report/interval/${videoId}`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+    return response.data.result.video_interval_log_items;
+  } catch (error: any) {
+    console.error("❌ 구간 상세 조회 실패:", error);
+    throw new Error(error.response?.data?.message || "구간 상세 조회 실패");
+  }
+}

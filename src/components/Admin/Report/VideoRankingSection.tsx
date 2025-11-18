@@ -1,50 +1,7 @@
-import React from "react";
-import { Trophy, Play, Eye, TrendingUp, Calendar } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Trophy, Eye, TrendingUp, Calendar } from "lucide-react";
+import { fetchTopRankVideos } from "@/api/admin/report";
 
-const topVideos = [
-  { 
-    id: 1,
-    title: "AI 트렌드 2025", 
-    views: 520, 
-    completion: 94,
-    uploadDate: "2025-09-05",
-    videoUrl: "/admin/videos/1"
-  },
-  { 
-    id: 2,
-    title: "윤리 교육 가이드", 
-    views: 480, 
-    completion: 88,
-    uploadDate: "2025-08-20",
-    videoUrl: "/admin/videos/2"
-  },
-  { 
-    id: 3,
-    title: "보안의 기본", 
-    views: 400, 
-    completion: 92,
-    uploadDate: "2025-09-10",
-    videoUrl: "/admin/videos/3"
-  },
-  { 
-    id: 4,
-    title: "신입사원 교육", 
-    views: 390, 
-    completion: 87,
-    uploadDate: "2025-08-15",
-    videoUrl: "/admin/videos/4"
-  },
-  { 
-    id: 5,
-    title: "AI 윤리와 법", 
-    views: 310, 
-    completion: 90,
-    uploadDate: "2025-09-25",
-    videoUrl: "/admin/videos/5"
-  },
-];
-
-// 순위별 배지 색상
 const getRankBadge = (rank: number) => {
   switch (rank) {
     case 1:
@@ -58,19 +15,57 @@ const getRankBadge = (rank: number) => {
   }
 };
 
-// 순위별 아이콘
 const getRankIcon = (rank: number) => {
-  if (rank <= 3) {
-    return <Trophy size={18} />;
-  }
+  if (rank <= 3) return <Trophy size={18} />;
   return null;
 };
 
 const VideoRankingSection: React.FC = () => {
-  const totalViews = topVideos.reduce((sum, v) => sum + v.views, 0);
-  const avgCompletion = Math.round(
-    topVideos.reduce((sum, v) => sum + v.completion, 0) / topVideos.length
-  );
+  const orgId = Number(localStorage.getItem("org_id"));
+
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // API 호출
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const list = await fetchTopRankVideos(orgId);
+
+        const mapped = list.map((v: any, idx: number) => ({
+          id: idx + 1,
+          title: v.title,
+          views: v.watch_cnt,
+          completion: v.watch_complete_rate,
+          uploadDate: v.created_at.split("T")[0],
+        }));
+
+        setVideos(mapped);
+      } catch (e) {
+        console.error("❌ 인기 동영상 조회 실패", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [orgId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm text-gray-600 text-center">
+        인기 동영상 불러오는 중...
+      </div>
+    );
+  }
+
+  if (videos.length === 0) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm text-gray-600 text-center">
+        인기 동영상 데이터가 없습니다.
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -81,19 +76,17 @@ const VideoRankingSection: React.FC = () => {
             <Trophy size={20} className="text-yellow-600" />
             <h3 className="text-lg font-bold text-gray-800">인기 동영상 TOP 5</h3>
           </div>
-          <p className="text-sm text-gray-600">
-            조회수와 완료율이 높은 상위 동영상 목록
-          </p>
+          <p className="text-sm text-gray-600">조회수 및 완료율 기준 인기 영상 목록</p>
         </div>
       </div>
 
       {/* 동영상 목록 */}
       <div className="space-y-3">
-        {topVideos.map((video, idx) => {
+        {videos.map((video, idx) => {
           const rank = idx + 1;
           return (
             <div
-              key={video.id}
+              key={idx}
               className={`flex items-center gap-4 p-4 border rounded-lg transition-all ${
                 rank === 1
                   ? "bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-300 shadow-sm"
@@ -104,47 +97,45 @@ const VideoRankingSection: React.FC = () => {
                   : "bg-white border-gray-200 hover:bg-gray-50"
               }`}
             >
-              {/* 순위 배지 */}
+              {/* 순위 */}
               <div
-                className={`flex items-center justify-center w-12 h-12 rounded-lg font-bold text-lg flex-shrink-0 ${getRankBadge(
+                className={`flex items-center justify-center w-12 h-12 rounded-lg font-bold text-lg ${getRankBadge(
                   rank
                 )}`}
               >
                 {rank <= 3 ? getRankIcon(rank) : rank}
               </div>
 
-              {/* 동영상 정보 */}
+              {/* 영상 제목 */}
               <div className="flex-1 min-w-0">
-                <a
-                  href={video.videoUrl}
-                  className="text-sm font-semibold text-gray-800 hover:text-blue-600 hover:underline transition-colors block mb-1"
-                >
+                <p className="text-sm font-semibold text-gray-800">
                   {video.title}
-                </a>
+                </p>
                 <div className="flex items-center gap-3 text-xs text-gray-600">
                   <span className="flex items-center gap-1">
-                    <Calendar size={12} />
-                    {video.uploadDate}
+                    <Calendar size={12} /> {video.uploadDate}
                   </span>
                 </div>
               </div>
 
-              {/* 통계 */}
+              {/* 조회수/완료율 */}
               <div className="flex gap-6">
+                {/* 조회수 */}
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <Eye size={14} className="text-blue-600" />
                     <p className="text-xs text-gray-600">조회수</p>
                   </div>
                   <p className="text-lg font-bold text-blue-600">
-                    {video.views.toLocaleString()}
+                    {video.views}
                   </p>
                 </div>
 
+                {/* 완료율 */}
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <TrendingUp size={14} className="text-green-600" />
-                    <p className="text-xs text-gray-600">시청완료율</p>
+                    <p className="text-xs text-gray-600">완료율</p>
                   </div>
                   <p className="text-lg font-bold text-green-600">
                     {video.completion}%
@@ -152,7 +143,7 @@ const VideoRankingSection: React.FC = () => {
                 </div>
               </div>
 
-              {/* 완료율 프로그레스 바 */}
+              {/* 완료율 바 */}
               <div className="w-24 flex-shrink-0">
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
@@ -170,32 +161,6 @@ const VideoRankingSection: React.FC = () => {
             </div>
           );
         })}
-      </div>
-
-      {/* 하단 인사이트 */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <Trophy size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-semibold text-yellow-900 mb-0.5">
-              1위 동영상
-            </p>
-            <p className="text-xs text-yellow-700">
-              "{topVideos[0].title}"이(가) {topVideos[0].views.toLocaleString()}회 조회로 1위를 차지했습니다.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <TrendingUp size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-semibold text-green-900 mb-0.5">
-              높은 완료율
-            </p>
-            <p className="text-xs text-green-700">
-              상위 5개 동영상의 평균 완료율은 {avgCompletion}%로 우수합니다.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -66,3 +66,22 @@ export async function fetchGroupWatchRate(
     );
   }
 }
+
+/* 인기 동영상 조회 */
+export async function fetchTopRankVideos(orgId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/report/top-rank`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+
+    return response.data.result.all_video_rank;
+  } catch (error: any) {
+    console.error("❌ 인기 동영상 TOP 조회 실패:", error);
+
+    throw new Error(
+      error.response?.data?.message ||
+        "인기 동영상을 불러오는 중 오류가 발생했습니다."
+    );
+  }
+}

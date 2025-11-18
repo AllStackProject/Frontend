@@ -40,12 +40,12 @@ const ReportsPage: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">통계 및 리포트</h1>
         <p className="text-sm text-gray-600">
-          시청률, 참여도, 시간대별 분석 등 조직의 학습 데이터를 시각화하여 확인합니다.
+          시청률, 시간대별 분석 등 조직의 시청 데이터를 시각화하여 확인합니다.
         </p>
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+      <div className="bg-white rounded-lg shadow-sm mb-6">
         <div className="flex border-b border-gray-200">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -55,7 +55,7 @@ const ReportsPage: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
                   activeTab === tab.id
-                    ? "border-primary text-primary bg-blue-50"
+                    ? "border-primary text-primary "
                     : "border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                 }`}
               >

@@ -139,3 +139,16 @@ export interface HourWatchReport {
 export interface DayWatchReport {
     day_watch_cnts: number[]; // 길이 7 예상 (월~일)
 }
+
+// ----------- 리포트 - 사용자 분석 -----------
+export interface HourWatchReport {
+  hour_watch_cnts: number[];
+}
+
+export interface GroupWatchRate {
+  avg_complete_rate: number;
+  group_watch_complete_rates: {
+    name: string;
+    avg_group_complete_rate: number;
+  }[];
+}

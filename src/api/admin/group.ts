@@ -1,31 +1,53 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 
-// 1) 그룹 추가
-export const addGroup = async (orgId: number, name: string) => {
-  const res = await api.post(
-    `/admin/org/${orgId}/group`,
-    { name },
-    { tokenType: "org" } as CustomAxiosRequestConfig
-  );
-  return res.data.result;
-};
+// 전체 그룹 조회
+export async function fetchMemberGroups(orgId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/group`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
 
-// 2) 그룹 삭제
-export const deleteGroupApi = async (orgId: number, groupId: number) => {
-  const res = await api.delete(
-    `/admin/org/${orgId}/group/${groupId}`,
-    { tokenType: "org" } as CustomAxiosRequestConfig
-  );
-  return res.data.result;
-};
+    return response.data.result.member_groups;
+  } catch (error: any) {
+    console.error("❌ 그룹 목록 조회 실패:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        "그룹 목록 조회 중 오류가 발생했습니다."
+    );
+  }
+}
 
-// 3) 그룹 이름 수정
-export const updateGroup = async (orgId: number, groupId: number, newName: string) => {
-  const res = await api.put(
-    `/admin/org/${orgId}/group/${groupId}`,
-    { name: newName },
-    { tokenType: "org" } as CustomAxiosRequestConfig
-  );
-  return res.data.result;
-};
+// 그룹 추가
+export async function addGroup(orgId: number, name: string) {
+  try {
+    const res = await api.post(
+      `/admin/org/${orgId}/group`,
+      { name },
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+    return res.data.result;
+  } catch (error: any) {
+    console.error("❌ 그룹 추가 실패:", error);
+    throw new Error(
+      error.response?.data?.message || "그룹 추가 중 오류가 발생했습니다."
+    );
+  }
+}
+
+// 그룹 삭제
+export async function deleteGroupApi(orgId: number, groupId: number) {
+  try {
+    const res = await api.delete(
+      `/admin/org/${orgId}/group/${groupId}`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+    return res.data.result;
+  } catch (error: any) {
+    console.error("❌ 그룹 삭제 실패:", error);
+    throw new Error(
+      error.response?.data?.message || "그룹 삭제 중 오류가 발생했습니다."
+    );
+  }
+}

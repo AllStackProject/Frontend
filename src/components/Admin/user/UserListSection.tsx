@@ -16,6 +16,12 @@ import GroupSettingModal from "@/components/admin/user/GroupSettiongModal";
 import { useAuth } from "@/context/AuthContext";
 import { getOrgMembers } from "@/api/admin/members";
 import type { OrgMember } from "@/types/member";
+import { fetchMemberGroups } from "@/api/admin/group";
+
+interface Group {
+  id: number;
+  name: string;
+}
 
 // 역할 옵션
 const ROLE_OPTIONS = ["슈퍼관리자", "관리자", "일반 사용자"];
@@ -56,6 +62,26 @@ const UserListSection: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [groupList, setGroupList] = useState<Group[]>([]);
+
+  // 그룹 목록 조회
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const raw = await fetchMemberGroups(orgId);
+        const mapped: Group[] = raw.map((g: any) => ({
+          id: g.id,
+          name: g.name
+        }));
+        setGroupList(mapped);
+      } catch (e) {
+        console.error("❌ 그룹 목록 로딩 실패:", e);
+      }
+    };
+
+    loadGroups();
+  }, [orgId]);
+
   // 서버에서 멤버 불러오기
   const loadData = async () => {
     try {
@@ -73,12 +99,6 @@ const UserListSection: React.FC = () => {
     loadData();
   }, [orgId]);
 
-  // 그룹 옵션 자동 생성(API 기반)
-  const GROUP_OPTIONS = Array.from(
-    new Set(
-      users.flatMap((u) => u.member_groups?.map((g) => g.name) || [])
-    )
-  );
 
   // UI 표시용 사용자 데이터 변환
   const uiUsers = users.map((u) => ({
@@ -88,8 +108,8 @@ const UserListSection: React.FC = () => {
     role: u.is_super_admin
       ? "슈퍼관리자"
       : u.is_admin
-      ? "관리자"
-      : "일반 사용자",
+        ? "관리자"
+        : "일반 사용자",
     groups: u.member_groups?.map((g) => g.name) || [],
   }));
 
@@ -295,9 +315,7 @@ const UserListSection: React.FC = () => {
           {/* 그룹 필터 */}
           <div className="relative" ref={groupDropdownRef}>
             <button
-              onClick={() =>
-                setIsGroupDropdownOpen((prev) => !prev)
-              }
+              onClick={() => setIsGroupDropdownOpen((prev) => !prev)}
               className="border px-3 py-2 rounded-lg text-sm flex items-center gap-2"
             >
               <Layers size={14} />
@@ -309,19 +327,19 @@ const UserListSection: React.FC = () => {
               )}
             </button>
 
-            {isGroupDropdownOpen && GROUP_OPTIONS.length > 0 && (
-              <div className="absolute mt-2 bg-white border rounded-lg shadow-lg w-48 z-20">
-                {GROUP_OPTIONS.map((group) => (
+            {isGroupDropdownOpen && groupList.length > 0 && (
+              <div className="absolute left-0 mt-2 bg-white border rounded-lg shadow-lg w-48 z-50 max-h-60 overflow-y-auto">
+                {groupList.map((group) => (
                   <label
-                    key={group}
-                    className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+                    key={group.id}
+                    className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
-                      checked={selectedGroups.includes(group)}
-                      onChange={() => toggleGroup(group)}
+                      checked={selectedGroups.includes(group.name)}
+                      onChange={() => toggleGroup(group.name)}
                     />
-                    {group}
+                    {group.name}
                   </label>
                 ))}
               </div>
@@ -398,14 +416,23 @@ const UserListSection: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setShowGroupModal(true);
-                    }}
-                    className="ml-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs"
-                  >
-                    그룹 수정
-                  </button>
+  onClick={() => {
+    const original = users.find(u => u.id === user.id);
+    if (!original) return;
+
+    setSelectedUser({
+      id: original.id,
+      name: original.user_name,
+      email: original.nickname,
+      groups: original.member_groups // ← {id, name}
+    });
+
+    setShowGroupModal(true);
+  }}
+  className="ml-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs"
+>
+  그룹 수정
+</button>
 
                   <button
                     onClick={() => {
@@ -465,11 +492,10 @@ const UserListSection: React.FC = () => {
                 ) : (
                   <button
                     onClick={() => setCurrentPage(page as number)}
-                    className={`px-3 py-2 rounded-lg text-sm ${
-                      currentPage === page
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    className={`px-3 py-2 rounded-lg text-sm ${currentPage === page
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                   >
                     {page}
                   </button>
@@ -500,20 +526,14 @@ const UserListSection: React.FC = () => {
       {showGroupModal && selectedUser && (
         <GroupSettingModal
           user={selectedUser}
-          availableGroups={GROUP_OPTIONS}
+          availableGroups={groupList}   // ❗ FIXED: 여기!
           onClose={() => setShowGroupModal(false)}
-          onSubmit={(updatedGroups: string[]) => {
+          onSubmit={(updatedGroups) => {
             // UI 갱신
             setUsers((prev) =>
               prev.map((u) =>
                 u.id === selectedUser.id
-                  ? {
-                      ...u,
-                      member_groups: updatedGroups.map((g, idx) => ({
-                        id: 9000 + idx,
-                        name: g,
-                      })),
-                    }
+                  ? { ...u, member_groups: updatedGroups }
                   : u
               )
             );

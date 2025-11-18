@@ -1,13 +1,26 @@
-import React, { useState } from "react";
-import { Edit, Users, KeyRound, Building2, ImagePlus, Copy, Check, RefreshCcw, Settings } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Edit,
+  Users,
+  KeyRound,
+  Building2,
+  ImagePlus,
+  Copy,
+  Check,
+  RefreshCcw,
+  Settings,
+  Save,
+} from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import GroupCategoryModal from "@/components/admin/setting/GroupCategoryModal";
 import { patchOrgImage, regenerateOrgCode } from "@/api/admin/orgInfo";
 import { useAuth } from "@/context/AuthContext";
+import { fetchMemberGroups } from "@/api/admin/group";
 
 interface GroupCategory {
+  id: number;
   name: string;
-  categories: string[];
+  categories: { id: number; title: string }[];
 }
 
 interface OrganizationInfo {
@@ -20,28 +33,56 @@ interface OrganizationInfo {
 }
 
 const OrganizationSection: React.FC = () => {
-    const { orgName, orgId } = useAuth();
+  const { orgName, orgId } = useAuth();
 
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: orgId || 0,
     name: orgName || "조직",
     image: "/dummy/woori-logo.png",
-    members: 86,
-    inviteCode: "123456",
-    groups: [
-      { name: "HR팀", categories: ["AI", "윤리"] },
-      { name: "IT팀", categories: ["보안", "클라우드"] },
-    ],
+    members: 86, // TODO: API 연동 시 실제 멤버 수로 교체
+    inviteCode: "123456", // TODO: 조직 코드 조회 API와 연동
+    groups: [],
   });
 
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 조직 이미지 수정 API 연동
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* ---------------------------------------------------------
+    그룹 목록 로드
+  --------------------------------------------------------- */
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const rawGroups = await fetchMemberGroups(orgId || 0);
+
+        const mapped: GroupCategory[] = rawGroups.map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          categories: g.categories || [], // [{id, title}] 그대로 사용
+        }));
+
+        setOrganization((prev) => ({
+          ...prev,
+          groups: mapped,
+        }));
+      } catch (e) {
+        console.error("❌ 그룹 목록 로딩 실패:", e);
+      }
+    };
+
+    if (orgId) {
+      loadGroups();
+    }
+  }, [orgId]);
+
+  /* ---------------------------------------------------------
+    이미지 선택 (미리보기)
+  --------------------------------------------------------- */
+  const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -51,22 +92,39 @@ const OrganizationSection: React.FC = () => {
       return;
     }
 
-    try {
-      const preview = URL.createObjectURL(file);
-      setOrganization((prev) => ({ ...prev, image: preview }));
+    setSelectedImageFile(file);
 
-      const res = await patchOrgImage(orgId||0, file); 
+    const preview = URL.createObjectURL(file);
+    setOrganization((prev) => ({ ...prev, image: preview }));
+  };
+
+  /* ---------------------------------------------------------
+    이미지 저장 (API 호출)
+  --------------------------------------------------------- */
+  const handleSaveImage = async () => {
+    if (!selectedImageFile) {
+      setErrorMessage("변경할 이미지가 없습니다. 먼저 이미지를 선택해주세요.");
+      setShowErrorModal(true);
+      return;
+    }
+
+    try {
+      const res = await patchOrgImage(orgId || 0, selectedImageFile);
+
       if (res?.is_success) {
-        // 서버가 이미지 URL 제공 시 반영
-        // setOrganization((prev) => ({ ...prev, image: res.image_url }));
+        // 서버에서 최종 이미지 URL을 내려준다면 여기서 적용 가능
+        // setOrganization(prev => ({ ...prev, image: res.image_url }));
+        alert("이미지 변경이 저장되었습니다.");
       }
     } catch (err: any) {
-      setErrorMessage(err.message);
+      setErrorMessage(err.message || "이미지 저장 중 오류가 발생했습니다.");
       setShowErrorModal(true);
     }
   };
 
-  // 초대 메세지 
+  /* ---------------------------------------------------------
+    초대 메세지 복사
+  --------------------------------------------------------- */
   const copyInviteMessage = () => {
     const inviteMessage = `${organization.name}에 참가해보세요!\n\n조직 초대 코드: ${organization.inviteCode}`;
     navigator.clipboard
@@ -78,18 +136,27 @@ const OrganizationSection: React.FC = () => {
       .catch(() => alert("복사에 실패했습니다."));
   };
 
-  // 조직 코드 재발급 API
+  /* ---------------------------------------------------------
+    조직 코드 재발급
+  --------------------------------------------------------- */
   const handleRegenerateClick = () => setShowRegenerateConfirm(true);
 
   const generateNewCode = async () => {
     try {
-      const newCode = await regenerateOrgCode(orgId||0);
+      const newCode = await regenerateOrgCode(orgId || 0);
       setOrganization((prev) => ({ ...prev, inviteCode: newCode }));
       setShowRegenerateConfirm(false);
     } catch (err: any) {
-      setErrorMessage(err.message);
+      setErrorMessage(err.message || "조직 코드 재생성 중 오류가 발생했습니다.");
       setShowErrorModal(true);
     }
+  };
+/* ---------------------------------------------------------
+     모달 닫기 → 그룹 목록 최신화
+  --------------------------------------------------------- */
+  const handleCloseModal = () => {
+    setShowModal(false);
+    window.location.reload();
   };
 
   return (
@@ -97,19 +164,36 @@ const OrganizationSection: React.FC = () => {
       {/* 조직 정보 */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          {/* 이미지 */}
-          <div className="relative flex-shrink-0">
+          {/* 이미지 영역 */}
+          <div className="relative flex-shrink-0 flex flex-col items-center">
+            {/* 이미지 박스 */}
             <div className="relative w-32 h-32">
               <img
-                src={organization.image || "/default-organization.png"}
+                src={organization.image}
                 alt="Organization Logo"
-                className="w-full h-full object-cover rounded-2xl border-2 border-gray-200"
+                className="w-full h-full object-cover rounded-2xl border-2 border-gray-200 shadow-sm"
               />
-              <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 border-2 border-white rounded-full p-2 shadow-lg cursor-pointer transition">
-                <ImagePlus size={16} className="text-white" />
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+
+              {/* 이미지 선택 버튼 (우측 하단) */}
+              <label className="absolute bottom-1 right-1 bg-blue-600 hover:bg-blue-700 border-2 border-white rounded-full p-1.5 shadow-lg cursor-pointer transition">
+                <ImagePlus size={14} className="text-white" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleSelectImage}
+                />
               </label>
             </div>
+
+            {/* 이미지 저장 버튼 */}
+            <button
+              onClick={handleSaveImage}
+              className="mt-3 flex items-center gap-1 px-3 py-1.5 bg-blue-700 text-white text-xs rounded-md shadow-sm hover:bg-blue-600 transition"
+            >
+              <Save size={12} />
+              저장
+            </button>
           </div>
 
           {/* 정보 */}
@@ -126,7 +210,9 @@ const OrganizationSection: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs text-gray-600">소속 멤버</p>
-                <p className="text-lg font-bold text-gray-800">{organization.members}명</p>
+                <p className="text-lg font-bold text-gray-800">
+                  {organization.members}명
+                </p>
               </div>
             </div>
 
@@ -146,19 +232,21 @@ const OrganizationSection: React.FC = () => {
 
                   <button
                     onClick={copyInviteMessage}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
-                      copied ? "bg-green-600 text-white" : "bg-blue-600 text-white hover:bg-blue-700"
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${
+                      copied
+                        ? "bg-green-600 text-white"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
                     }`}
                   >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                    {copied ? "복사됨" : "초대 복사"}
+                    {copied ? <Check size={12} /> : <Copy size={12} />}
+                    {copied ? "복사됨" : "초대메세지 복사"}
                   </button>
 
                   <button
                     onClick={handleRegenerateClick}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                   >
-                    <RefreshCcw size={16} />
+                    <RefreshCcw size={12} />
                     재생성
                   </button>
                 </div>
@@ -185,10 +273,10 @@ const OrganizationSection: React.FC = () => {
         </div>
 
         {organization.groups.length > 0 ? (
-          <div className="space-y-4">
-            {organization.groups.map((group, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {organization.groups.map((group) => (
               <div
-                key={i}
+                key={group.id}
                 className="border border-gray-200 rounded-lg p-4 bg-gray-50"
               >
                 <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
@@ -198,12 +286,12 @@ const OrganizationSection: React.FC = () => {
 
                 {group.categories.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {group.categories.map((tag, j) => (
+                    {group.categories.map((cat) => (
                       <span
-                        key={j}
+                        key={cat.id}
                         className="px-3 py-1 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm"
                       >
-                        {tag}
+                        {cat.title}
                       </span>
                     ))}
                   </div>
@@ -224,7 +312,7 @@ const OrganizationSection: React.FC = () => {
       {showModal && (
         <GroupCategoryModal
           groups={organization.groups}
-          onClose={() => setShowModal(false)}
+          onClose={handleCloseModal}
           onSubmit={(updated) =>
             setOrganization((prev) => ({ ...prev, groups: updated }))
           }
@@ -244,10 +332,10 @@ const OrganizationSection: React.FC = () => {
         />
       )}
 
-      {/* 이미지 에러 */}
+      {/* 이미지 / 기타 오류 모달 */}
       {showErrorModal && (
         <ConfirmActionModal
-          title="입력 오류"
+          title="오류"
           message={errorMessage}
           confirmText="확인"
           color="red"

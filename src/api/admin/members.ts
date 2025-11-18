@@ -33,11 +33,20 @@ export const updateMemberPermission = async (
       body,
       { tokenType: "org" } as CustomAxiosRequestConfig
     );
+    
+    const result = response.data.result;
 
-    return response.data.result;
+    if (!result?.is_success) {
+      throw new Error("권한 수정에 실패했습니다.");
+    }
+
+    return result;
   } catch (err: any) {
     console.error("🚨 권한 수정 실패:", err);
-    throw new Error(err.response?.data?.message || "권한 수정 실패");
+
+    // 백엔드에서 내려주는 메시지 우선 사용
+    const msg = err.response?.data?.message || "권한 수정 실패";
+    throw new Error(msg);
   }
 };
 

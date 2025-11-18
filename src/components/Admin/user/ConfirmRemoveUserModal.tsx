@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, AlertTriangle } from "lucide-react";
-import { removeOrgMember } from "@/api/admin/members";
+import { removeOrgMember } from "@/api/adminSuper/members";
 import { useAuth } from "@/context/AuthContext";
 
 interface ConfirmRemoveUserModalProps {

@@ -12,6 +12,8 @@ export interface ApiResponse<T> {
  * 댓글 (부모)
  */
 export interface Comment {
+  user_avatar: string;
+  user_name: string;
   id: number;
   text: string;
   created_at?: string;

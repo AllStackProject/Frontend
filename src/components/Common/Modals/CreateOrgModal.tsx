@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { X, ImagePlus } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import { createOrganization, checkOrgNameAvailability } from "@/api/orgs/createOrg";
+import { createOrganization, checkOrgNameAvailability } from "@/api/organization/orgs";
 
 interface CreateOrgModalProps {
   onClose: () => void;

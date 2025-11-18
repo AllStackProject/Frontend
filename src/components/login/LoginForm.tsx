@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '@/api/auth/login';
+import { login } from '@/api/user/login';
 import type { LoginRequest } from '@/types/auth';
 
 type Errors = { email?: string; password?: string; general?: string };

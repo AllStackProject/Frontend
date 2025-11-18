@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Building2, CheckCircle, Clock, XCircle } from "lucide-react";
-import { getOrganizations } from "@/api/orgs/getOrg";
-import { useSelectOrganization } from "@/api/orgs/selectOrg";
+import { getOrganizations } from "@/api/organization/orgs";
+import { useSelectOrganization } from "@/api/organization/orgs";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";

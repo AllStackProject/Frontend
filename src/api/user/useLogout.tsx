@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import { type NavigateFunction } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { performLogout } from "@/api/auth/logout";
+import { performLogout } from "@/api/user/logout";
 
 /**
  * 로그아웃 훅

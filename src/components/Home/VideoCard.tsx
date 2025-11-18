@@ -172,7 +172,6 @@ const VideoCard = ({
             <HiEye className="text-sm" />
             <span>{formatViews(views)}회</span>
           </div>
-          <span className="text-text-secondary">•</span>
           <div className="flex items-center gap-1">
             <HiCalendar className="text-sm" />
             <span>{formatDate(uploadDate)}</span>

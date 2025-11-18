@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, } from "react";
 import VideoCard from "@/components/home/VideoCard";
 
 interface Video {
-  id: string;
+  id: number;
   title: string;
   uploader: string;
   thumbnail: string;
@@ -17,32 +17,13 @@ interface SearchResultSectionProps {
   keyword: string;
 }
 
-const DUMMY_SEARCH_RESULTS: Video[] = Array.from({ length: 18 }, (_, i) => {
-  const randomThumb = Math.floor(Math.random() * 9) + 1;
-
-  return {
-    id: `search-${i + 1}`,
-    title: `검색된 영상 ${i + 1} — ${["AI", "클라우드", "보안"][i % 3]} 관련 콘텐츠`,
-    uploader: `홍길동_${i + 1}`,
-    thumbnail: `/dummy/thum${randomThumb}.png`,
-    duration: `${Math.floor(Math.random() * 15) + 1}:${Math.floor(
-      Math.random() * 60
-    )
-      .toString()
-      .padStart(2, "0")}`,
-    views: Math.floor(Math.random() * 50000),
-    uploadDate: `2025-0${(i % 9) + 1}-10`,
-    hashtags: ["검색결과", "테스트"],
-    isFavorite: i % 2 === 0,
-  };
-});
 
 const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) => {
   const [searchResults, setSearchResults] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
   // --------------------------------------
-  // 🔍 검색어 기반 결과 불러오기 (API 연동 가능)
+  // 검색어 기반 결과 불러오기 
   // --------------------------------------
   useEffect(() => {
     setLoading(true);
@@ -50,7 +31,25 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
     // TODO: 검색 API로 교체할 부분
     setTimeout(() => {
       // 키워드 포함된 더미 데이터만 필터링
-      const filtered = DUMMY_SEARCH_RESULTS.filter((v) =>
+      const filtered = (Array.from({ length: 18 }, (_, i) => {
+        const randomThumb = Math.floor(Math.random() * 9) + 1;
+
+        return {
+          id: `${i + 1}`,
+          title: `검색된 영상 ${i + 1} — ${["AI", "클라우드", "보안"][i % 3]} 관련 콘텐츠`,
+          uploader: `홍길동_${i + 1}`,
+          thumbnail: `/dummy/thum${randomThumb}.png`,
+          duration: `${Math.floor(Math.random() * 15) + 1}:${Math.floor(
+            Math.random() * 60
+          )
+            .toString()
+            .padStart(2, "0")}`,
+          views: Math.floor(Math.random() * 50000),
+          uploadDate: `2025-0${(i % 9) + 1}-10`,
+          hashtags: ["검색결과", "테스트"],
+          isFavorite: i % 2 === 0,
+        };
+      })).filter((v) =>
         v.title.includes(keyword)
       );
       setSearchResults(filtered);
@@ -64,7 +63,7 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
 
   return (
     <div className="w-full">
-      {/* 🔍 상단 검색 헤더 */}
+      {/*  상단 검색 헤더 */}
       <div className="mb-10 mt-5">
         <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">
           "<span className="text-primary">{keyword}</span>" 검색 결과
@@ -102,8 +101,7 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
                 views={video.views}
                 uploadDate={video.uploadDate}
                 videoId={video.id}
-                isFavorite={video.isFavorite}
-              />
+                isFavorite={video.isFavorite} orgId={0}              />
             ))}
           </div>
         </>

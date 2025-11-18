@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, ExternalLink, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { fetchAdminMemberWatchDetail } from "@/api/admin/viewMember";
+import { fetchAdminMemberWatchDetail } from "@/api/adminStats/view";
 import type { MemberWatchDetail } from "@/types/video";
 
 interface VideoDetailModalProps {

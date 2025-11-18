@@ -7,7 +7,7 @@ import RegisterForm from '@/components/signup/RegisterForm';
 import RegisterComplete from '@/components/signup/RegisterComplete';
 import ConfirmActionModal from '@/components/common/modals/ConfirmActionModal';
 
-import { signup } from "@/api/auth/signup";
+import { signup } from "@/api/user/signup";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const phoneRe = /^[0-9]{10,11}$/;

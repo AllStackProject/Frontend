@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Trophy, Eye, TrendingUp, Calendar } from "lucide-react";
-import { fetchTopRankVideos } from "@/api/admin/report";
+import { fetchTopRankVideos } from "@/api/adminStats/report";
 
 const getRankBadge = (rank: number) => {
   switch (rank) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Eye, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import VideoAnalyticsModal from "./VideoAnalyticsModal";
-import { fetchIntervalList } from "@/api/admin/report";
+import { fetchIntervalList } from "@/api/adminStats/report";
 
 interface VideoData {
   id: number;

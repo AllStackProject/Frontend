@@ -7,9 +7,9 @@ import {
   addCategory,
   deleteCategory,
   updateCategory,
-} from "@/api/admin/category";
+} from "@/api/adminOrg/category";
 
-import { addGroup, deleteGroupApi, fetchMemberGroups } from "@/api/admin/group";
+import { addGroup, deleteGroupApi, fetchMemberGroups } from "@/api/adminOrg/group";
 import { useAuth } from "@/context/AuthContext";
 
 /* ---------------------------------------------------------

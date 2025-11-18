@@ -88,7 +88,7 @@ export async function fetchTopRankVideos(orgId: number) {
 
 /* 동영상별 시청 구간  조회 */
 
-// 영상별 구간 분석 목록
+// 영상 시청 구간 분석 목록 조회
 export async function fetchIntervalList(orgId: number) {
   try {
     const response = await api.get(
@@ -102,7 +102,7 @@ export async function fetchIntervalList(orgId: number) {
   }
 }
 
-// 중도 이탈 분석
+// 중도 이탈 분석 조회
 export async function fetchQuitAnalysis(orgId: number) {
   try {
     const response = await api.get(
@@ -116,7 +116,7 @@ export async function fetchQuitAnalysis(orgId: number) {
   }
 }
 
-// 특정 영상의 구간 분석 상세
+// 영상 시청 구간 분석 조회
 export async function fetchIntervalDetail(orgId: number, videoId: number) {
   try {
     const response = await api.get(

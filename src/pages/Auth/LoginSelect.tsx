@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Building2, ChevronRight, Plus } from "lucide-react";
-import { getOrganizations } from "@/api/orgs/getOrg";
-import { getUserInfo } from "@/api/mypage/user";
-import { useSelectOrganization } from "@/api/orgs/selectOrg";
+import { getOrganizations } from "@/api/organization/orgs";
+import { getUserInfo } from "@/api/user/userInfo";
+import { useSelectOrganization } from "@/api/organization/orgs";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";

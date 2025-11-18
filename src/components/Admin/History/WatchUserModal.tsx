@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Users } from "lucide-react";
-import { fetchAdminOrgSingleVideoWatch } from "@/api/admin/viewVideo";
+import { fetchAdminOrgSingleVideoWatch } from "@/api/adminStats/view";
 import type { AdminWatchedMember } from "@/types/video";
 import { useAuth } from "@/context/AuthContext";
 

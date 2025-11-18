@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import OrgMainLayout from "@/layouts/OrgMainLayout";
 import SearchResultSection from "@/components/home/SearchResultSection";
+import { useAuth } from "@/context/AuthContext";
 
 const SearchResultPage = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const SearchResultPage = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const orgToken = localStorage.getItem("access_token");
+      const { orgToken } = useAuth();
       if (!orgToken) navigate("/login/select", { replace: true });
     }, 100);
     return () => clearTimeout(timer);

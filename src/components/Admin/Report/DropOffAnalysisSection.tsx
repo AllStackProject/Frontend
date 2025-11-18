@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AlertTriangle, ThumbsUp, TrendingDown, Calendar, TrendingUp } from "lucide-react";
-import { fetchQuitAnalysis } from "@/api/admin/report";
+import { fetchQuitAnalysis } from "@/api/adminStats/report";
 
 interface QuitVideo {
   title: string;

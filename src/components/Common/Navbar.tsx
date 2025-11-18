@@ -5,12 +5,11 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
-import { getUserInfo } from "@/api/mypage/user";
-import { getOrganizations } from "@/api/orgs/getOrg";
+import { getUserInfo } from "@/api/user/userInfo";
+import { getOrganizations } from "@/api/organization/orgs";
 import type { OrganizationResponse } from "@/types/org";
-import { useLogout } from "@/api/auth/useLogout";
+import { useLogout } from "@/api/user/useLogout";
 import { useAuth } from "@/context/AuthContext";
-
 
 const Navbar = () => {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Edit2, Lock, AlertCircle, Eye, EyeOff, UserX } from "lucide-react";
-import { getUserInfo, updateUserInfo, deleteUser } from "@/api/mypage/user";
+import { getUserInfo, updateUserInfo, deleteUser } from "@/api/user/userInfo";
 import type { UserInfoResponse } from "@/types/user";
 import ConfirmDeleteModal from "@/components/common/modals/ConfirmDeleteModal";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";

@@ -1,5 +1,4 @@
 import LoginForm from '@/components/login/LoginForm';
-import BrandSection from '@/components/login/BrandSection';
 
 export default function LoginHome() {
   return (
@@ -12,7 +11,15 @@ export default function LoginHome() {
           </div>
 
           {/* 우측: 브랜드 섹션 */}
-          <BrandSection />
+          <div className="hidden lg:flex items-center justify-center bg-[#2e1074] from-primary to-primary-light">
+            <div className="text-center text-white">
+              <img
+                src="/brand.png"
+                alt="Privideo 홍보 이미지"
+                className="max-w-[80%] h-auto mx-auto"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

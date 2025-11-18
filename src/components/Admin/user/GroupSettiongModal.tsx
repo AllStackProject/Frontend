@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Layers } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import { updateMemberGroups } from "@/api/admin/members";
+import { updateMemberGroups } from "@/api/adminSuper/members";
 import { useAuth } from "@/context/AuthContext";
 
 interface Group {

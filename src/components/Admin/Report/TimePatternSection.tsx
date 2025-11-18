@@ -10,7 +10,7 @@ import {
   Cell,
 } from "recharts";
 import { Clock, Calendar } from "lucide-react";
-import { fetchHourlyReport, fetchDayReport } from "@/api/admin/report";
+import { fetchHourlyReport, fetchDayReport } from "@/api/adminStats/report";
 import ReportFilterBar from "@/components/admin/report/ReportFilterBar";
 
 interface DayData {

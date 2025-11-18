@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import {
   getJoinRequests,
   handleJoinRequest,
-} from "@/api/admin/members";
+} from "@/api/adminSuper/members";
 
 import type { JoinRequestUser, JoinRequestGroup } from "@/types/member";
 

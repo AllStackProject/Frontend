@@ -14,9 +14,9 @@ import ConfirmRemoveUserModal from "@/components/admin/user/ConfirmRemoveUserMod
 import GroupSettingModal from "@/components/admin/user/GroupSettiongModal";
 
 import { useAuth } from "@/context/AuthContext";
-import { getOrgMembers } from "@/api/admin/members";
+import { getOrgMembers } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
-import { fetchMemberGroups } from "@/api/admin/group";
+import { fetchMemberGroups } from "@/api/adminOrg/group";
 
 interface Group {
   id: number;

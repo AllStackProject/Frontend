@@ -1,4 +1,3 @@
-// src/api/auth/logout.ts
 import { type NavigateFunction } from "react-router-dom";
 
 /**

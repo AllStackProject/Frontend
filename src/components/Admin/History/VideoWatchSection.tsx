@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Filter, RotateCcw, Eye, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import WatchUserModal from "@/components/admin/history/WatchUserModal";
-import { fetchAdminOrgVideoWatchList } from "@/api/admin/viewVideo";
+import { fetchAdminOrgVideoWatchList } from "@/api/adminStats/view";
 import type { AdminVideoWatchItem } from "@/types/video";
 import { useAuth } from "@/context/AuthContext";
 

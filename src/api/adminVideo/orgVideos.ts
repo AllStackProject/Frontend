@@ -1,6 +1,6 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
-import type { AdminOrgVideoResponse } from "@/types/video";
+import type { AdminOrgVideoWatchResponse } from "@/types/video";
 
 // 조직 내 모든 영상 조회
 export const getAdminOrgVideos = async (orgId: number) => {
@@ -10,7 +10,7 @@ export const getAdminOrgVideos = async (orgId: number) => {
     } as CustomAxiosRequestConfig);
 
     const list = response.data?.result?.vidoes ?? [];
-    return list as AdminOrgVideoResponse[];
+    return list as AdminOrgVideoWatchResponse[];
   } catch (err: any) {
     console.error("🚨 조직 영상 조회 실패:", err);
     throw new Error(err.response?.data?.message || "조직 영상 조회에 실패했습니다.");

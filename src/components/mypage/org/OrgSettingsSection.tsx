@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Building2, CheckCircle, Clock, LogOut, Network, X, Edit3, Users, Shield, } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { getOrganizations } from "@/api/orgs/getOrg";
-import { exitOrganization } from "@/api/orgs/exitOrg";
+import { getOrganizations, exitOrganization } from "@/api/organization/orgs";
 
 type JoinStatus = "APPROVED" | "PENDING" | "REJECTED";
 
@@ -76,7 +75,7 @@ const CurrentOrganizationSettings: React.FC = () => {
       alert(e?.message || "조직 나가기 중 오류가 발생했습니다.");
     }
   };
-
+/*
   const handleNicknameSave = async (newNickname: string) => {
     if (!org) return;
     try {
@@ -92,7 +91,7 @@ const CurrentOrganizationSettings: React.FC = () => {
       alert(err.message || "닉네임 수정 중 오류가 발생했습니다.");
     }
   };
-
+*/
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -238,6 +237,7 @@ const CurrentOrganizationSettings: React.FC = () => {
       </div>
 
       {/* 닉네임 수정 모달 */}
+      {/*
       {showNicknameModal && (
         <EditNicknameModal
           currentNickname={myNickname}
@@ -245,6 +245,7 @@ const CurrentOrganizationSettings: React.FC = () => {
           onSave={handleNicknameSave}
         />
       )}
+      */}
 
       {/* 조직 나가기 모달 */}
       {showLeaveModal && (

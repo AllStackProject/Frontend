@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import { getUserInfo } from "@/api/mypage/user";
-import { joinOrganization, checkNicknameAvailability } from "@/api/orgs/joinOrg";
+import { getUserInfo } from "@/api/user/userInfo";
+import { joinOrganization, checkNicknameAvailability } from "@/api/organization/orgs";
 
 interface JoinOrgModalProps {
   onClose: () => void;

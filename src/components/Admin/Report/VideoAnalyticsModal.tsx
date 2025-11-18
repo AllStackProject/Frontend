@@ -17,7 +17,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { fetchIntervalDetail } from "@/api/admin/report";
+import { fetchIntervalDetail } from "@/api/adminStats/report";
 
 interface Props {
   video: {

@@ -10,7 +10,7 @@ import {
 import { Link } from "react-router-dom";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import SuccessModal from "@/components/common/modals/SuccessModal";
-import { getAdminOrgVideos, deleteAdminOrgVideo } from "@/api/admin/orgVideos";
+import { getAdminOrgVideos, deleteAdminOrgVideo } from "@/api/adminVideo/orgVideos";
 
 interface Video {
   id: number;

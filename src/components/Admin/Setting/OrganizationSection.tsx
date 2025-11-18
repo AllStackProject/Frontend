@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import GroupCategoryModal from "@/components/admin/setting/GroupCategoryModal";
-import { patchOrgImage, regenerateOrgCode } from "@/api/admin/orgInfo";
+import { patchOrgImage, regenerateOrgCode } from "@/api/adminOrg/info";
 import { useAuth } from "@/context/AuthContext";
-import { fetchMemberGroups } from "@/api/admin/group";
+import { fetchMemberGroups } from "@/api/adminOrg/group";
 
 interface GroupCategory {
   id: number;

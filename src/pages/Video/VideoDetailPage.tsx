@@ -7,8 +7,10 @@ import AIQuizSection from "@/components/video/AIQuizSection";
 import AIFeedbackSection from "@/components/video/AIFeedbackSection";
 import AISummarySection from "@/components/video/AISummarySection";
 import { startVideoSession } from "@/api/video/video";
+import { useAuth } from "@/context/AuthContext";
 
 const VideoDetailPage: React.FC = () => {
+  const { orgId } = useAuth();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [sessionData, setSessionData] = useState<any>(null);
@@ -18,8 +20,6 @@ const VideoDetailPage: React.FC = () => {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
-
-  const orgId = Number(localStorage.getItem("org_id"));
 
   useEffect(() => {
     const fetchVideoDetail = async () => {
@@ -91,14 +91,14 @@ const VideoDetailPage: React.FC = () => {
           <VideoPlayer
             videoUrl={video.url || video.video_url || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"}
             videoId={video.id}
-            orgId={orgId}
+            orgId={orgId || 0}
             sessionId={sessionData.session_id}
             wholeTime={video.whole_time}
           />
 
           {showComments && (
             <CommentSection
-              orgId={orgId}
+              orgId={orgId || 0}
               videoId={video.id}
               initialComments={comments}
             />
@@ -110,7 +110,7 @@ const VideoDetailPage: React.FC = () => {
 
           {/* 영상 기본 정보 */}
           <VideoInfo
-            orgId={orgId}
+            orgId={orgId || 0}
             videoId={video.id}
             title={video.title}
             description={video.description}

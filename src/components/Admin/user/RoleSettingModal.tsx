@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Shield, Info } from "lucide-react";
 import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import { updateMemberPermission } from "@/api/admin/members";
+import { updateMemberPermission } from "@/api/adminSuper/members";
 import { useAuth } from "@/context/AuthContext";
 
 interface RoleSettingModalProps {

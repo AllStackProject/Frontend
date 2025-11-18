@@ -12,7 +12,7 @@ import {
   Layers,
 } from "lucide-react";
 import VideoDetailModal from "@/components/admin/learning/VideoDetailModal";
-import { fetchAdminMemberWatchList } from "@/api/admin/viewMember";
+import { fetchAdminMemberWatchList } from "@/api/adminStats/view";
 import type { MemberWatchSummary } from "@/types/video";
 
 const AttendanceSection: React.FC<{

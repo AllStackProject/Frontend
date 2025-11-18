@@ -11,7 +11,7 @@ const OrgMyPage: React.FC = () => {
   // URL 기반 탭 추출
   const currentTab = location.pathname.split("/")[2] || "learning";
 
-  // 현재 조직 상태 (localStorage 기반)
+  // 현재 조직 상태
   const [currentOrganization, setCurrentOrganization] = useState<{
     id: number | null;
     name: string;
@@ -20,18 +20,13 @@ const OrgMyPage: React.FC = () => {
     name: ""
   });
 
-  // localStorage에서 조직 정보 불러오기
   useEffect(() => {
-    //const orgId = localStorage.getItem("org_id");
-    //const orgName = localStorage.getItem("org_name");
-
     if (orgId && orgName) {
       setCurrentOrganization({
         id: Number(orgId),
         name: orgName
       });
     } else {
-      // 조직 정보가 없으면 선택 페이지로 이동
       navigate("/login/select", { replace: true });
     }
   }, [navigate]);

@@ -10,7 +10,7 @@ import {
   Cell,
 } from "recharts";
 import { Users, Info } from "lucide-react";
-import { fetchGroupWatchRate } from "@/api/admin/report";
+import { fetchGroupWatchRate } from "@/api/adminStats/report";
 import ReportFilterBar from "@/components/admin/report/ReportFilterBar";
 
 // 커스텀 툴팁

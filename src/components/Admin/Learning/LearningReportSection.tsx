@@ -11,8 +11,8 @@ import {
 import { Search, UserCircle } from "lucide-react";
 import {
   fetchAdminMemberReport,
-} from "@/api/admin/viewVideo";
-import { getOrgMembers } from "@/api/admin/members";
+} from "@/api/adminStats/view";
+import { getOrgMembers } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
 import { useAuth } from "@/context/AuthContext";
 

@@ -1,7 +1,7 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 
-// 전체 그룹 조회
+// 멤버 그룹 전체 조회
 export async function fetchMemberGroups(orgId: number) {
   try {
     const response = await api.get(
@@ -19,7 +19,7 @@ export async function fetchMemberGroups(orgId: number) {
   }
 }
 
-// 그룹 추가
+// 멤버 그룹 추가
 export async function addGroup(orgId: number, name: string) {
   try {
     const res = await api.post(
@@ -36,7 +36,7 @@ export async function addGroup(orgId: number, name: string) {
   }
 }
 
-// 그룹 삭제
+// 멤버 그룹 삭제
 export async function deleteGroupApi(orgId: number, groupId: number) {
   try {
     const res = await api.delete(

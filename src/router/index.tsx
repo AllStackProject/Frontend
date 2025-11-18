@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 // 페이지 import
-import Landing from "@/pages/home/Landing";
+import Landing from "@/pages/home/Landing.tsx";
 import OrgMainPage from "@/pages/home/OrgMainPage";
 import VideoDetailPage from "@/pages/video/VideoDetailPage";
 import LoginHome from "@/pages/auth/LoginPage";

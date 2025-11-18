@@ -7,10 +7,10 @@ import { useAuth } from "@/context/AuthContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { orgToken } = useAuth();
   
   useEffect(() => {
     const timer = setTimeout(() => {
-      const { orgToken } = useAuth();
       if (!orgToken) navigate("/login/select", { replace: true });
     }, 100);
     return () => clearTimeout(timer);

@@ -120,6 +120,16 @@ export interface MemberWatchDetail {
   watch_rate: number;
   watched_at: string;
 }
+// 특정 멤버 영상 리포트
+export interface MemberReportResponse {
+    total_watched_video_cnt: number;
+    most_watched_categories: string[];
+    monthly_watched_cnts: {
+        year: number;
+        month: number;
+        watched_video_cnt: number;
+    }[];
+}
 
 // ----------- 리포트 - 활동 분석 -----------
 export interface HourWatchReport {

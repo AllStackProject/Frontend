@@ -96,12 +96,18 @@ export function useVideoAnalytics({
         const rawRate = (watchedSeconds / wholeTime) * 100;
         const watch_rate = Math.min(100, Math.round(rawRate));
 
+        // 이탈률 계산
+        const recent = v.currentTime || 0;
+        const completion_rate = Math.min(100, (recent / wholeTime) * 100);
+        const dropoff_rate = Math.max(0, Math.round(100 - completion_rate));
+
         return {
             session_id: sessionId,
             watch_rate,
             watch_segments,
-            recent_position: v.currentTime || 0,
+            recent_position: recent,
             is_quit: !hadEnd,
+            dropoff_rate,
         };
     };
 

@@ -9,7 +9,7 @@ export async function fetchHourlyReport(
 ): Promise<HourWatchReport> {
   try {
     const response = await api.get(
-      `/admin/org/${orgId}/report/${standardMonth}/hour`,
+      `/admin/org/${orgId}/report/hour/${standardMonth}`,
       { tokenType: "org" } as CustomAxiosRequestConfig
     );
 
@@ -31,7 +31,7 @@ export async function fetchDayReport(
 ): Promise<DayWatchReport> {
   try {
     const response = await api.get(
-      `/admin/org/${orgId}/report/${standardMonth}/day`,
+      `/admin/org/${orgId}/report/day/${standardMonth}`,
       { tokenType: "org" } as CustomAxiosRequestConfig
     );
 

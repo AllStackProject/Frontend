@@ -4,6 +4,7 @@ import type {
     AdminOrgVideoWatchResponse,
     AdminOrgSingleVideoWatchResponse,
     AdminWatchedMember,
+    MemberReportResponse
 } from "@/types/video";
 
 /* 영상별 시청 기록 목록 조회 */
@@ -48,3 +49,26 @@ export const fetchAdminOrgSingleVideoWatch = async (
         );
     }
 };
+
+/** 멤버별 영상 리포트 조회 */
+export async function fetchAdminMemberReport(
+    orgId: number,
+    memberId: number
+): Promise<MemberReportResponse> {
+    try {
+        const response = await api.get(
+            `/admin/org/${orgId}/view/report/member/${memberId}`,
+            {
+                tokenType: "org",
+            } as CustomAxiosRequestConfig
+        );
+
+        return response.data.result;
+    } catch (error: any) {
+        console.error("❌ 멤버 리포트 조회 실패:", error);
+        throw new Error(
+            error.response?.data?.message ||
+                "멤버 영상 리포트 조회 중 오류가 발생했습니다."
+        );
+    }
+}

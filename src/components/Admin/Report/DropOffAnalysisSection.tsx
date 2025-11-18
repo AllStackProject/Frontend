@@ -1,27 +1,27 @@
 import React from "react";
-import { AlertTriangle, ThumbsUp, TrendingDown, TrendingUp } from "lucide-react";
+import { AlertTriangle, ThumbsUp, TrendingDown, Calendar, TrendingUp } from "lucide-react";
 
 const dropOffHigh = [
-  { 
+  {
     id: 1,
-    title: "보안 가이드 101", 
-    dropOff: 42, 
+    title: "보안 가이드 101",
+    dropOff: 42,
     avgTime: "15분",
     uploadDate: "2025-09-15",
     videoUrl: "/admin/videos/1"
   },
-  { 
+  {
     id: 2,
-    title: "AI 개론", 
-    dropOff: 35, 
+    title: "AI 개론",
+    dropOff: 35,
     avgTime: "22분",
     uploadDate: "2025-09-22",
     videoUrl: "/admin/videos/2"
   },
-  { 
+  {
     id: 3,
-    title: "윤리 교육", 
-    dropOff: 33, 
+    title: "윤리 교육",
+    dropOff: 33,
     avgTime: "18분",
     uploadDate: "2025-10-01",
     videoUrl: "/admin/videos/3"
@@ -29,26 +29,26 @@ const dropOffHigh = [
 ];
 
 const dropOffLow = [
-  { 
+  {
     id: 4,
-    title: "신입사원 오리엔테이션", 
-    dropOff: 5, 
+    title: "신입사원 오리엔테이션",
+    dropOff: 5,
     avgTime: "45분",
     uploadDate: "2025-08-10",
     videoUrl: "/admin/videos/4"
   },
-  { 
+  {
     id: 5,
-    title: "AI 트렌드 2025", 
-    dropOff: 7, 
+    title: "AI 트렌드 2025",
+    dropOff: 7,
     avgTime: "38분",
     uploadDate: "2025-09-05",
     videoUrl: "/admin/videos/5"
   },
-  { 
+  {
     id: 6,
-    title: "리더십 교육", 
-    dropOff: 9, 
+    title: "리더십 교육",
+    dropOff: 9,
     avgTime: "42분",
     uploadDate: "2025-09-18",
     videoUrl: "/admin/videos/6"
@@ -76,7 +76,7 @@ const DropOffAnalysisSection: React.FC = () => (
             <AlertTriangle size={18} className="text-red-600" />
           </div>
           <div className="flex-1">
-            <h4 className="text-sm font-semibold text-gray-800">이탈률이 높은 영상</h4>
+            <h4 className="text-sm font-semibold text-gray-800">평균 이탈률 90% 이상 TOP3</h4>
             <p className="text-xs text-gray-600">개선이 필요한 콘텐츠</p>
           </div>
         </div>
@@ -95,7 +95,12 @@ const DropOffAnalysisSection: React.FC = () => (
                   >
                     {v.title}
                   </a>
-                  <p className="text-xs text-gray-500 mt-1">업로드: {v.uploadDate}</p>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={12} />
+                      {v.uploadDate}
+                    </span>
+                  </div>
                 </div>
                 <span className="text-lg font-bold text-red-600 ml-2">{v.dropOff}%</span>
               </div>
@@ -129,7 +134,7 @@ const DropOffAnalysisSection: React.FC = () => (
             <ThumbsUp size={18} className="text-green-600" />
           </div>
           <div className="flex-1">
-            <h4 className="text-sm font-semibold text-gray-800">이탈률이 낮은 영상</h4>
+            <h4 className="text-sm font-semibold text-gray-800">평균 이탈률 90% 미만 TOP3</h4>
             <p className="text-xs text-gray-600">추천 우수 콘텐츠</p>
           </div>
         </div>
@@ -148,7 +153,12 @@ const DropOffAnalysisSection: React.FC = () => (
                   >
                     {v.title}
                   </a>
-                  <p className="text-xs text-gray-500 mt-1">업로드: {v.uploadDate}</p>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={12} />
+                      {v.uploadDate}
+                    </span>
+                  </div>
                 </div>
                 <span className="text-lg font-bold text-green-600 ml-2">{v.dropOff}%</span>
               </div>

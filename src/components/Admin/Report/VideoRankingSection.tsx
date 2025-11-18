@@ -144,7 +144,7 @@ const VideoRankingSection: React.FC = () => {
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <TrendingUp size={14} className="text-green-600" />
-                    <p className="text-xs text-gray-600">완료율</p>
+                    <p className="text-xs text-gray-600">시청완료율</p>
                   </div>
                   <p className="text-lg font-bold text-green-600">
                     {video.completion}%

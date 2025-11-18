@@ -1,4 +1,5 @@
 export interface OrgMember {
+  groups: any;
   id: number;
   user_name: string;
   nickname: string;

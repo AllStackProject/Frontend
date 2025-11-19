@@ -8,8 +8,15 @@ export default function BrandSection() {
         <div className="mb-8">
           <div className="w-32 h-32 mx-auto bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
             <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
-              <span className="text-4xl text-primary font-bold">P</span>
+              <img 
+                src="/logo.png" 
+                alt="Privideo Logo" 
+                className="w-30 h-30 object-contain"
+              />
             </div>
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              
+      </div>
           </div>
         </div>
 

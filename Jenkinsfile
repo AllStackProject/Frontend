@@ -6,6 +6,12 @@ metadata:
     jenkins/kaniko: "true"
 spec:
   containers:
+    - name: sonar-scanner
+      image: sonarsource/sonar-scanner-cli:latest
+      command:
+        - cat
+      tty: true
+  
     - name: kaniko
       image: gcr.io/kaniko-project/executor:v1.6.0-debug
       imagePullPolicy: Always

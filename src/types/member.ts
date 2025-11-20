@@ -36,3 +36,10 @@ export interface OrgMyActivityResponse {
   joined_at: string;
   member_groups: string[];
 }
+
+export interface OrgMyActivityGroupResponse {
+  id: number;
+  name: string;
+  categories: string[];
+  title: string
+}

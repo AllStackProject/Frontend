@@ -28,6 +28,7 @@ interface AuthContextType {
   ) => void;
   clearOrganization: () => void;
   setAuthenticated: (value: boolean) => void;
+  setNickname: (value: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -139,6 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setOrganization,
         clearOrganization,
         setAuthenticated,
+        setNickname,
       }}
     >
       {children}

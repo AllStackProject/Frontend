@@ -152,3 +152,14 @@ export interface GroupWatchRate {
     avg_group_complete_rate: number;
   }[];
 }
+
+// ----------- 내활동 - 내가 올린 동영상 목록 -----------
+export interface MyVideoItem {
+  id: number;
+  title: string;
+  thumbnail_url: string;
+  created_at: string;
+  expired_at: string | null;
+  open_scope: "PUBLIC" | "GROUP" | "PRIVATE";
+  view_cnt: number;
+}

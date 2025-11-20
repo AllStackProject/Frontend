@@ -43,3 +43,18 @@ export interface OrgMyActivityGroupResponse {
   categories: string[];
   title: string
 }
+
+export interface GroupCategory {
+  id: number;
+  title: string;
+}
+
+export interface MemberGroup {
+  id: number;
+  name: string;
+  categories: GroupCategory[];
+}
+
+export interface OrgMyActivityGroupResponse {
+  member_groups: MemberGroup[];
+}

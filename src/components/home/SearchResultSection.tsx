@@ -1,5 +1,7 @@
-import React, { useEffect, useState, } from "react";
+import React, { useEffect, useState } from "react";
 import VideoCard from "@/components/home/VideoCard";
+import { useAuth } from "@/context/AuthContext";
+import { fetchSearchVideos } from "@/api/home/home";
 
 interface Video {
   id: number;
@@ -17,59 +19,65 @@ interface SearchResultSectionProps {
   keyword: string;
 }
 
-
 const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) => {
+  const { orgId } = useAuth();
   const [searchResults, setSearchResults] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // --------------------------------------
-  // 검색어 기반 결과 불러오기 
-  // --------------------------------------
+  /* ============================================
+      검색 API 호출
+  ============================================ */
   useEffect(() => {
-    setLoading(true);
+    const load = async () => {
+      if (!orgId) return;
 
-    // TODO: 검색 API로 교체할 부분
-    setTimeout(() => {
-      // 키워드 포함된 더미 데이터만 필터링
-      const filtered = (Array.from({ length: 18 }, (_, i) => {
-        const randomThumb = Math.floor(Math.random() * 9) + 1;
+      setLoading(true);
 
-        return {
-          id: `${i + 1}`,
-          title: `검색된 영상 ${i + 1} — ${["AI", "클라우드", "보안"][i % 3]} 관련 콘텐츠`,
-          uploader: `홍길동_${i + 1}`,
-          thumbnail: `/dummy/thum${randomThumb}.png`,
-          duration: `${Math.floor(Math.random() * 15) + 1}:${Math.floor(
-            Math.random() * 60
-          )
-            .toString()
-            .padStart(2, "0")}`,
-          views: Math.floor(Math.random() * 50000),
-          uploadDate: `2025-0${(i % 9) + 1}-10`,
-          hashtags: ["검색결과", "테스트"],
-          isFavorite: i % 2 === 0,
-        };
-      })).filter((v) =>
-        v.title.includes(keyword)
-      );
-      setSearchResults(filtered);
-      setLoading(false);
-    }, 400);
-  }, [keyword]);
+      try {
+        const videos = await fetchSearchVideos(orgId, keyword);
 
-  // 페이지네이션 설정
+        const mapped: Video[] = videos.map((v: any) => ({
+          id: v.id,
+          title: v.title,
+          uploader: v.creator,
+          thumbnail: v.thumbnail_url,
+          duration: `${Math.floor(v.whole_time / 60)}:${String(v.whole_time % 60).padStart(2, "0")}`,
+          views: v.watch_cnt,
+          uploadDate: v.created_at,
+          hashtags: v.categories || [],
+          isFavorite: v.is_scrapped,
+        }));
+
+        setSearchResults(mapped);
+      } catch (err) {
+        console.error("❌ 검색 실패:", err);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [keyword, orgId]);
+
+  /* ============================================
+      페이지네이션 설정 (원하면 확장)
+  ============================================ */
   const itemsPerPage = 12;
-  const totalPages = Math.ceil(searchResults.length / itemsPerPage);
 
   return (
     <div className="w-full">
-      {/*  상단 검색 헤더 */}
+      {/* 검색 헤더 */}
       <div className="mb-10 mt-5">
         <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">
           "<span className="text-primary">{keyword}</span>" 검색 결과
         </h2>
         <p className="text-sm text-text-secondary">
-          총 <span className="font-semibold text-text-primary">{searchResults.length}</span>개의 영상
+          총{" "}
+          <span className="font-semibold text-text-primary">
+            {searchResults.length}
+          </span>{" "}
+          개의 영상
         </p>
       </div>
 
@@ -101,7 +109,9 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
                 views={video.views}
                 uploadDate={video.uploadDate}
                 videoId={video.id}
-                isFavorite={video.isFavorite} orgId={0}              />
+                orgId={orgId!}
+                isFavorite={video.isFavorite}
+              />
             ))}
           </div>
         </>

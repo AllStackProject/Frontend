@@ -24,7 +24,7 @@ export const fetchOrgMyActivityInfo = async (
 };
 
 /**
- * 조직 단건 정보 조회 (내 조직 활동 정보)
+ * 내 그룹 목록 조회
  */
 export const fetchOrgMyActivityGroup = async (
   orgId: number

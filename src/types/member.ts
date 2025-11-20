@@ -27,3 +27,12 @@ export interface JoinRequestGroup {
   id: number;
   name: string;
 }
+
+export interface OrgMyActivityResponse {
+  org_name: string;
+  org_code: string;
+  nickname: string;
+  is_admin: boolean;
+  joined_at: string;
+  member_groups: string[];
+}

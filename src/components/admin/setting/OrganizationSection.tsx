@@ -15,7 +15,7 @@ import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
 import GroupCategoryModal from "@/components/admin/setting/GroupCategoryModal";
 import { patchOrgImage, regenerateOrgCode } from "@/api/adminOrg/info";
 import { useAuth } from "@/context/AuthContext";
-import { fetchMemberGroups } from "@/api/adminOrg/group";
+import { fetchOrgInfo } from "@/api/adminOrg/info";
 
 interface GroupCategory {
   id: number;
@@ -33,14 +33,14 @@ interface OrganizationInfo {
 }
 
 const OrganizationSection: React.FC = () => {
-  const { orgName, orgId } = useAuth();
+  const { orgId } = useAuth();
 
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: orgId || 0,
-    name: orgName || "조직",
-    image: "/dummy/woori-logo.png",
-    members: 86, // TODO: API 연동 시 실제 멤버 수로 교체
-    inviteCode: "123456", // TODO: 조직 코드 조회 API와 연동
+    name: "",
+    image: "/dummy/woori-logo.png", // 더미 수정 필요
+    members: 0,
+    inviteCode: "",
     groups: [],
   });
 
@@ -52,30 +52,33 @@ const OrganizationSection: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   /* ---------------------------------------------------------
-    그룹 목록 로드
-  --------------------------------------------------------- */
+  조직 정보 + 그룹 조회
+--------------------------------------------------------- */
   useEffect(() => {
-    const loadGroups = async () => {
+    const loadOrgInfo = async () => {
       try {
-        const rawGroups = await fetchMemberGroups(orgId || 0);
+        const response = await fetchOrgInfo(orgId || 0);
 
-        const mapped: GroupCategory[] = rawGroups.map((g: any) => ({
-          id: g.id,
-          name: g.name,
-          categories: g.categories || [], // [{id, title}] 그대로 사용
-        }));
+        setOrganization({
+          id: orgId || 0,
+          name: response.org_name,
+          image: response.img_url || "/dummy/woori-logo.png",
+          members: response.member_cnt,
+          inviteCode: response.org_code,
+          groups: response.member_groups.map((g: any) => ({
+            id: g.id,
+            name: g.name,
+            categories: g.categories ?? [],
+          })),
+        });
 
-        setOrganization((prev) => ({
-          ...prev,
-          groups: mapped,
-        }));
       } catch (e) {
-        console.error("❌ 그룹 목록 로딩 실패:", e);
+        console.error("❌ 조직 정보 로딩 실패:", e);
       }
     };
 
     if (orgId) {
-      loadGroups();
+      loadOrgInfo();
     }
   }, [orgId]);
 
@@ -151,9 +154,9 @@ const OrganizationSection: React.FC = () => {
       setShowErrorModal(true);
     }
   };
-/* ---------------------------------------------------------
-     모달 닫기 → 그룹 목록 최신화
-  --------------------------------------------------------- */
+  /* ---------------------------------------------------------
+       모달 닫기 → 그룹 목록 최신화
+    --------------------------------------------------------- */
   const handleCloseModal = () => {
     setShowModal(false);
     window.location.reload();
@@ -232,11 +235,10 @@ const OrganizationSection: React.FC = () => {
 
                   <button
                     onClick={copyInviteMessage}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${
-                      copied
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${copied
                         ? "bg-green-600 text-white"
                         : "bg-blue-600 text-white hover:bg-blue-700"
-                    }`}
+                      }`}
                   >
                     {copied ? <Check size={12} /> : <Copy size={12} />}
                     {copied ? "복사됨" : "초대메세지 복사"}

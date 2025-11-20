@@ -1,6 +1,24 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 
+/* 조직 정보 조회(그룹 조회 포함) */
+export async function fetchOrgInfo(orgId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/orgs/info`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+
+    return response.data.result;
+  } catch (error: any) {
+    console.error("❌ 조직 정보 조회 실패:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        "조직 정보 조회 중 오류가 발생했습니다."
+    );
+  }
+}
+
 /** 조직 이미지 수정 */
 export const patchOrgImage = async (orgId: number, file: File) => {
   const formData = new FormData();

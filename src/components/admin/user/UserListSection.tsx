@@ -16,7 +16,7 @@ import GroupSettingModal from "@/components/admin/user/GroupSettiongModal";
 import { useAuth } from "@/context/AuthContext";
 import { getOrgMembers } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
-import { fetchMemberGroups } from "@/api/adminOrg/group";
+import { fetchOrgInfo } from "@/api/adminOrg/info";
 
 interface Group {
   id: number;
@@ -68,10 +68,11 @@ const UserListSection: React.FC = () => {
   useEffect(() => {
     const loadGroups = async () => {
       try {
-        const raw = await fetchMemberGroups(orgId);
-        const mapped: Group[] = raw.map((g: any) => ({
+        const raw = await fetchOrgInfo(orgId);
+
+        const mapped: Group[] = raw.member_groups.map((g: any) => ({
           id: g.id,
-          name: g.name
+          name: g.name,
         }));
         setGroupList(mapped);
       } catch (e) {
@@ -99,10 +100,9 @@ const UserListSection: React.FC = () => {
     loadData();
   }, [orgId]);
 
-
   // UI 표시용 사용자 데이터 변환
   const uiUsers = users.map((u) => ({
-    id: u.id, // ✅ ID 포함
+    id: u.id,
     name: u.user_name,
     email: u.nickname,
     role: u.is_super_admin
@@ -416,23 +416,23 @@ const UserListSection: React.FC = () => {
                   </button>
 
                   <button
-  onClick={() => {
-    const original = users.find(u => u.id === user.id);
-    if (!original) return;
+                    onClick={() => {
+                      const original = users.find(u => u.id === user.id);
+                      if (!original) return;
 
-    setSelectedUser({
-      id: original.id,
-      name: original.user_name,
-      email: original.nickname,
-      groups: original.member_groups // ← {id, name}
-    });
+                      setSelectedUser({
+                        id: original.id,
+                        name: original.user_name,
+                        email: original.nickname,
+                        groups: original.member_groups // ← {id, name}
+                      });
 
-    setShowGroupModal(true);
-  }}
-  className="ml-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs"
->
-  그룹 수정
-</button>
+                      setShowGroupModal(true);
+                    }}
+                    className="ml-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs"
+                  >
+                    그룹 수정
+                  </button>
 
                   <button
                     onClick={() => {

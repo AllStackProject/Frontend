@@ -1,24 +1,6 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 
-// 멤버 그룹 전체 조회
-export async function fetchMemberGroups(orgId: number) {
-  try {
-    const response = await api.get(
-      `/admin/org/${orgId}/group`,
-      { tokenType: "org" } as CustomAxiosRequestConfig
-    );
-
-    return response.data.result.member_groups;
-  } catch (error: any) {
-    console.error("❌ 그룹 목록 조회 실패:", error);
-    throw new Error(
-      error.response?.data?.message ||
-        "그룹 목록 조회 중 오류가 발생했습니다."
-    );
-  }
-}
-
 // 멤버 그룹 추가
 export async function addGroup(orgId: number, name: string) {
   try {

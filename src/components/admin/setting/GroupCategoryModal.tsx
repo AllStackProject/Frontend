@@ -9,7 +9,8 @@ import {
   updateCategory,
 } from "@/api/adminOrg/category";
 
-import { addGroup, deleteGroupApi, fetchMemberGroups } from "@/api/adminOrg/group";
+import { addGroup, deleteGroupApi } from "@/api/adminOrg/group";
+import { fetchOrgInfo } from "@/api/adminOrg/info";
 import { useAuth } from "@/context/AuthContext";
 
 /* ---------------------------------------------------------
@@ -42,32 +43,46 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GroupCategory | null>(null);
 
-  // 그룹 추가
   const [newGroup, setNewGroup] = useState("");
+
+  /* ---------------------------------------------------------
+     📌 서버에서 최신 그룹 목록 다시 불러오는 함수
+  --------------------------------------------------------- */
+  const refreshGroups = async () => {
+    try {
+      const info = await fetchOrgInfo(orgId || 0);
+
+      const mapped: GroupCategory[] = (info.member_groups || []).map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        categories: g.categories ?? [],
+      }));
+
+      setGroupList(mapped);
+    } catch (err: any) {
+      console.error("❌ 그룹 목록 갱신 실패:", err);
+    }
+  };
 
   /* ---------------------------------------------------------
      그룹 추가
   --------------------------------------------------------- */
   const handleAddGroup = async () => {
-  if (!newGroup.trim()) return;
+    if (!newGroup.trim()) return;
 
-  try {
-    const res = await addGroup(orgId || 0, newGroup.trim());
-    if (!res?.is_success) {
-      alert("그룹 추가 실패");
-      return;
+    try {
+      const res = await addGroup(orgId || 0, newGroup.trim());
+      if (!res?.is_success) {
+        alert("그룹 추가 실패");
+        return;
+      }
+
+      await refreshGroups(); // 🔥 서버 최신 목록 반영
+      setNewGroup("");
+    } catch (err: any) {
+      alert(err.message || "그룹 추가 실패");
     }
-
-    // 🔥 추가 후 서버에서 최신 목록 다시 불러옴
-    const updated = await fetchMemberGroups(orgId || 0);
-
-    setGroupList(updated);
-
-    setNewGroup("");
-  } catch (err: any) {
-    alert(err.message || "그룹 추가 실패");
-  }
-};
+  };
 
   /* ---------------------------------------------------------
      그룹 삭제
@@ -83,7 +98,7 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
     try {
       await deleteGroupApi(orgId || 0, deleteTarget.id);
 
-      setGroupList((prev) => prev.filter((g) => g.id !== deleteTarget.id));
+      await refreshGroups(); // 🔥 서버 최신 목록 반영
       setShowConfirm(false);
     } catch (err: any) {
       alert(err.message || "그룹 삭제 실패");
@@ -152,7 +167,6 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
                     </button>
                   </div>
 
-                  {/* 카테고리 관리 콜 */}
                   <CategoryManager group={group} />
                 </div>
               ))
@@ -180,7 +194,7 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
         </div>
       </div>
 
-      {/* 그룹 삭제 모달 */}
+      {/* 삭제 모달 */}
       {showConfirm && deleteTarget && (
         <ConfirmActionModal
           title="그룹 삭제"
@@ -199,14 +213,13 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
 export default GroupCategoryModal;
 
 /* ---------------------------------------------------------
-   ⭐ CategoryManager (동일 파일 내 포함)
+   ⭐ CategoryManager
 --------------------------------------------------------- */
 const CategoryManager = ({ group }: { group: GroupCategory }) => {
   const { orgId } = useAuth();
   const [categories, setCategories] = useState(group.categories);
   const [newCat, setNewCat] = useState("");
 
-  // 수정 상태
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
 
@@ -223,45 +236,28 @@ const CategoryManager = ({ group }: { group: GroupCategory }) => {
     load();
   }, []);
 
-  /* 추가 */
   const add = async () => {
     if (!newCat.trim()) return;
-    try {
-      await addCategory(orgId || 0, group.id, newCat.trim());
-      setNewCat("");
-      load();
-    } catch (err: any) {
-      alert(err.message || "카테고리 추가 실패");
-    }
+    await addCategory(orgId || 0, group.id, newCat.trim());
+    setNewCat("");
+    load();
   };
 
-  /* 삭제 */
   const remove = async (catId: number) => {
-    try {
-      await deleteCategory(orgId || 0, group.id, catId);
-      load();
-    } catch (err: any) {
-      alert(err.message || "카테고리 삭제 실패");
-    }
+    await deleteCategory(orgId || 0, group.id, catId);
+    load();
   };
 
-  /* 수정 시작 */
   const startEdit = (cat: { id: number; title: string }) => {
     setEditingCatId(cat.id);
     setEditingTitle(cat.title);
   };
 
-  /* 수정 저장 */
   const confirmEdit = async (catId: number) => {
     if (!editingTitle.trim()) return;
-
-    try {
-      await updateCategory(orgId || 0, group.id, catId, editingTitle.trim());
-      setEditingCatId(null);
-      load();
-    } catch (err: any) {
-      alert(err.message || "카테고리 수정 실패");
-    }
+    await updateCategory(orgId || 0, group.id, catId, editingTitle.trim());
+    setEditingCatId(null);
+    load();
   };
 
   return (
@@ -320,9 +316,7 @@ const CategoryManager = ({ group }: { group: GroupCategory }) => {
                 </>
               ) : (
                 <>
-                  <span className="font-medium text-gray-700">
-                    {cat.title}
-                  </span>
+                  <span className="font-medium text-gray-700">{cat.title}</span>
                   <button
                     className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
                     onClick={() => startEdit(cat)}

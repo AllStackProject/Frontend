@@ -163,3 +163,19 @@ export interface MyVideoItem {
   open_scope: "PUBLIC" | "GROUP" | "PRIVATE";
   view_cnt: number;
 }
+
+// ----------- 영상 업로드 -----------
+export interface UploadVideoRequest {
+  title: string;
+  description: string;
+  thumbnailFile: File;        // 썸네일 PNG
+  whole_time: number;         // 영상 전체 길이(초)
+  is_comment: boolean;
+  ai_function: "NONE" | "QUIZ" | "FEEDBACK" | "SUMMARY";
+  expired_at?: string | null; // null 가능
+}
+
+export interface UploadVideoResponse {
+  presigned_url: string;
+}
+

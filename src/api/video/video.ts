@@ -1,6 +1,7 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
-import type { StartVideoSessionResponse } from "@/types/video";
+import type { StartVideoSessionResponse, UploadVideoRequest, UploadVideoResponse } from "@/types/video";
+import axios from "axios";
 
 /**
  * 영상 시청 세션 시작 (조직별 org_token 인증)
@@ -64,5 +65,74 @@ export const leaveVideoSession = async (
     return response.data.result;
   } catch (err: any) {
     console.error("🚨 LEAVE API 실패", err);
+  }
+};
+
+/* 영상 업로드 */
+/**
+ * Step 1. 영상 메타데이터 + 썸네일 업로드 → presigned URL 받기
+ */
+export const requestVideoUpload = async (
+  orgId: number,
+  payload: {
+    title: string;
+    description: string;
+    whole_time: number;
+    is_comment: boolean;
+    ai_function: string;
+    expired_at: string | null;
+    thumbnail_img: File;
+  }
+): Promise<{ presigned_url: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append("title", payload.title);
+    formData.append("description", payload.description);
+    formData.append("whole_time", String(payload.whole_time));
+    formData.append("is_comment", String(payload.is_comment));
+    formData.append("ai_function", payload.ai_function);
+
+    if (payload.expired_at) {
+      formData.append("expired_at", payload.expired_at);
+    }
+
+    formData.append("thumbnail_img", payload.thumbnail_img);
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/${orgId}/video`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("org_token")}`,
+        },
+      }
+    );
+
+    return res.data.result;
+  } catch (err: any) {
+    console.error("❌ requestVideoUpload error:", err);
+    throw new Error(err.response?.data?.message || "영상 정보 업로드 실패");
+  }
+};
+
+/**
+ * Step 2. presigned URL로 영상 PUT 업로드
+ */
+export const uploadVideoToS3 = async (presignedUrl: string, file: File) => {
+  try {
+    const res = await fetch(presignedUrl, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": "video/mp4",
+      },
+    });
+
+    if (!res.ok) throw new Error("S3 업로드 실패");
+
+    return true;
+  } catch (error) {
+    console.error("❌ S3 업로드 실패:", error);
+    throw error;
   }
 };

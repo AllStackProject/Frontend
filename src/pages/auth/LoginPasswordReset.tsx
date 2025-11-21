@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Mail, Key, Lock, CheckCircle } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 
 const LoginPasswordReset: React.FC = () => {
+  const { openModal, closeModal } = useModal();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -11,17 +12,20 @@ const LoginPasswordReset: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // 모달 상태
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // 이메일 전송
+  /* -----------------------------
+      Step 1 - 이메일 전송
+  ------------------------------ */
   const handleSendCode = async () => {
     if (!email.includes("@")) {
-      setErrorMessage("유효한 이메일 주소를 입력하세요.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "이메일 오류",
+        message: "유효한 이메일 주소를 입력하세요.",
+        confirmText: "확인",
+      });
       return;
     }
+
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -29,13 +33,21 @@ const LoginPasswordReset: React.FC = () => {
     }, 1000);
   };
 
-  // 코드 확인
+
+  /* -----------------------------
+      Step 2 - 인증 코드 확인
+  ------------------------------ */
   const handleVerifyCode = async () => {
     if (code.trim().length !== 6) {
-      setErrorMessage("6자리 인증 코드를 입력하세요.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "코드 오류",
+        message: "6자리 인증 코드를 입력하세요.",
+        confirmText: "확인",
+      });
       return;
     }
+
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -43,22 +55,43 @@ const LoginPasswordReset: React.FC = () => {
     }, 1000);
   };
 
-  // 비밀번호 재설정
+  /* -----------------------------
+     Step 3 - 비밀번호 재설정
+ ------------------------------ */
   const handleResetPassword = async () => {
     if (newPassword.length < 8) {
-      setErrorMessage("비밀번호는 8자 이상이어야 합니다.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "비밀번호 오류",
+        message: "비밀번호는 8자 이상이어야 합니다.",
+        confirmText: "확인",
+      });
       return;
     }
+
     if (newPassword !== confirmPassword) {
-      setErrorMessage("비밀번호가 일치하지 않습니다.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "비밀번호 불일치",
+        message: "비밀번호가 일치하지 않습니다.",
+        confirmText: "확인",
+      });
       return;
     }
+
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
+
+      openModal({
+        type: "success",
+        title: "비밀번호 재설정 완료",
+        message: "새로운 비밀번호로 로그인할 수 있습니다.",
+        confirmText: "확인",
+        autoClose: true,
+        autoCloseDelay: 1500,
+      });
     }, 1000);
   };
 
@@ -215,18 +248,6 @@ const LoginPasswordReset: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* 에러 모달 */}
-      {showErrorModal && (
-        <ConfirmActionModal
-          title="입력 오류"
-          message={errorMessage}
-          confirmText="확인"
-          color="red"
-          onConfirm={() => setShowErrorModal(false)}
-          onClose={() => setShowErrorModal(false)}
-        />
-      )}
     </>
   );
 };

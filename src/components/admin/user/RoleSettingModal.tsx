@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Shield, Info } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 import { updateMemberPermission } from "@/api/adminSuper/members";
 import { useAuth } from "@/context/AuthContext";
 
@@ -16,6 +16,7 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
   onSubmit,
 }) => {
   const { orgId } = useAuth();
+  const { openModal } = useModal();
   const [role, setRole] = useState(user.role);
   const [permissions, setPermissions] = useState({
     manageVideosAndQuiz: true,
@@ -26,8 +27,6 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
     viewPricing: false, // 슈퍼관리자만
   });
 
-  // 확인 모달 상태
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const togglePermission = (key: keyof typeof permissions) => {
@@ -49,19 +48,28 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
   };
 
   const handleSaveClick = () => {
-    setShowConfirmModal(true);
+    openModal({
+      type: "confirm",
+      title: "권한 저장",
+      message: `"${user.name}"님의 권한을 "${role}"로 변경하시겠습니까?\n권한 변경은 즉시 적용됩니다.`,
+      requiredKeyword: "저장",
+      confirmText: "저장",
+      onConfirm: handleConfirmSave,
+    });
   };
 
   const handleConfirmSave = async () => {
     if (!orgId) {
-      alert("조직 정보를 찾을 수 없습니다.");
-      return;
+      return openModal({
+        type: "error",
+        title: "오류",
+        message: "조직 정보를 찾을 수 없습니다.",
+      });
     }
 
     try {
       setSaving(true);
 
-      // API 호출 - 권한 업데이트
       await updateMemberPermission(orgId, user.id, {
         video_manage: permissions.manageVideosAndQuiz,
         stats_report: permissions.manageViewingAndStats,
@@ -70,10 +78,13 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
       });
 
       onSubmit(role);
-      setShowConfirmModal(false);
       onClose();
     } catch (error: any) {
-      alert(error.message || "권한 저장 중 오류가 발생했습니다.");
+      openModal({
+        type: "error",
+        title: "권한 저장 실패",
+        message: error.message || "권한 저장 중 오류가 발생했습니다.",
+      });
     } finally {
       setSaving(false);
     }
@@ -190,7 +201,7 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     세부 권한 설정
                   </label>
-                  
+
                   {role === "일반 사용자" ? (
                     <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
                       <p className="text-sm text-gray-600">
@@ -203,59 +214,58 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                   ) : (
                     <div className="space-y-3">
                       {[
-                        { 
-                          key: "manageVideosAndQuiz", 
-                          label: "동영상 관리", 
+                        {
+                          key: "manageVideosAndQuiz",
+                          label: "동영상 관리",
                           description: "동영상 삭제 및 관리",
                           adminOnly: false
                         },
-                        { 
-                          key: "manageViewingAndStats", 
-                          label: "시청 관리 & 통계 및 리포트", 
+                        {
+                          key: "manageViewingAndStats",
+                          label: "시청 관리 & 통계 및 리포트",
                           description: "사용자 시청 기록 조회 및 분석 & 조직 통계 및 리포트 조회",
                           adminOnly: false
                         },
-                        { 
-                          key: "manageNotice", 
-                          label: "공지 등록", 
+                        {
+                          key: "manageNotice",
+                          label: "공지 등록",
                           description: "공지사항 작성, 수정, 삭제",
                           adminOnly: false
                         },
-                        { 
-                          key: "manageOrganization", 
-                          label: "조직 설정", 
+                        {
+                          key: "manageOrganization",
+                          label: "조직 설정",
                           description: "조직 정보, 그룹, 해시태그 관리",
                           adminOnly: false
                         },
-                        { 
-                          key: "manageUsers", 
-                          label: "사용자 관리", 
+                        {
+                          key: "manageUsers",
+                          label: "사용자 관리",
                           description: "사용자 승인, 권한 설정 및 관리",
                           adminOnly: true
                         },
-                        { 
-                          key: "viewPricing", 
-                          label: "요금제 & 배너", 
+                        {
+                          key: "viewPricing",
+                          label: "요금제 & 배너",
                           description: "조직의 요금제와 배너 관리",
                           adminOnly: true
                         },
                       ].map((item) => {
                         const isDisabled = item.adminOnly;
-                        
+
                         return (
                           <label
                             key={item.key}
-                            className={`flex items-start gap-3 p-3 border rounded-lg transition-colors ${
-                              isDisabled
+                            className={`flex items-start gap-3 p-3 border rounded-lg transition-colors ${isDisabled
                                 ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
                                 : "border-gray-200 hover:bg-gray-50 cursor-pointer"
-                            }`}
+                              }`}
                           >
                             <input
                               type="checkbox"
                               checked={
-                                isDisabled 
-                                  ? false 
+                                isDisabled
+                                  ? false
                                   : permissions[item.key as keyof typeof permissions]
                               }
                               onChange={() => !isDisabled && togglePermission(item.key as keyof typeof permissions)}
@@ -316,19 +326,6 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 권한 저장 확인 모달 */}
-      {showConfirmModal && (
-        <ConfirmActionModal
-          title="권한 저장"
-          message={`"${user.name}"님의 권한을 "${role}"(으)로 변경하시겠습니까?\n권한 변경은 즉시 적용되며, 해당 사용자의 접근 권한이 변경됩니다.`}
-          keyword="저장"
-          confirmText="저장"
-          color="blue"
-          onConfirm={handleConfirmSave}
-          onClose={() => setShowConfirmModal(false)}
-        />
-      )}
     </>
   );
 };

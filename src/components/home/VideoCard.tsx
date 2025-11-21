@@ -133,7 +133,7 @@ const VideoCard = ({
           type="button"
           onClick={handleFavoriteClick}
           disabled={loading}
-          className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all duration-200 backdrop-blur-sm ${
+          className={`absolute top-2 right-2  p-2 rounded-full transition-all duration-200 backdrop-blur-sm ${
             loading
               ? "bg-black/30 cursor-not-allowed"
               : "bg-black/50 hover:bg-black/70"

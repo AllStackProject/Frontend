@@ -5,7 +5,7 @@ import AgeGroupSelect from '@/components/signup/AgeGroupSelect';
 import TermsAgreement from '@/components/signup/TermsAgreement';
 import RegisterForm from '@/components/signup/RegisterForm';
 import RegisterComplete from '@/components/signup/RegisterComplete';
-import ConfirmActionModal from '@/components/common/modals/ConfirmActionModal';
+
 
 import { signup } from "@/api/user/signup";
 
@@ -271,10 +271,8 @@ export default function Register() {
       const res = await signup(payload);
 
       if (res.code === 1000 || res.status === 'OK') {
-        // console.log("✅ 회원가입 성공:", res);
          setStep(3);
       } else {
-        // console.log("❌ 회원가입 실패:", res);
         openModal(res.message || "회원가입에 실패했습니다.", {
           title: "가입 실패",
           color: "red",
@@ -282,7 +280,6 @@ export default function Register() {
         });
       }
     } catch (err: any) {
-      //console.error("❌ 회원가입 에러:", err);
       openModal(err.message || "회원가입 중 문제가 발생했습니다.", {
         title: "오류 발생",
         color: "red",
@@ -380,19 +377,6 @@ export default function Register() {
           </form>
         </div>
       </div>
-
-      {/* 모달 */}
-      {modal.isOpen && (
-        <ConfirmActionModal
-          title={modal.title || "알림"}
-          message={modal.message}
-          confirmText="확인"
-          cancelText="취소"
-          color={modal.color || "blue"}
-          onConfirm={modal.onConfirm || closeModal}
-          onClose={closeModal}
-        />
-      )}
     </>
   );
 }

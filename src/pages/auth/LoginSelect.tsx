@@ -4,7 +4,7 @@ import { Building2, ChevronRight, Plus } from "lucide-react";
 import { getOrganizations } from "@/api/organization/orgs";
 import { getUserInfo } from "@/api/user/userInfo";
 import { useSelectOrganization } from "@/api/organization/orgs";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
 
@@ -19,6 +19,7 @@ interface Organization {
 
 export default function LoginSelect() {
   const navigate = useNavigate();
+  const { openModal } = useModal();
   const [userName, setUserName] = useState<string>("");
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -29,8 +30,6 @@ export default function LoginSelect() {
   // 모달 상태
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   // 유저 정보 & 조직 목록 불러오기
   useEffect(() => {
@@ -85,15 +84,22 @@ export default function LoginSelect() {
       const success = await selectOrganization(orgId, orgName);
 
       if (!success) {
-        setSuccessMessage("조직 토큰 발급에 실패했습니다.");
-        setShowSuccessModal(true);
+
+        openModal({
+  type: "error",
+  title: "오류 발생",
+  message: "조직 토큰 발급에 실패했습니다.",
+});
         return;
       }
 
       navigate("/home", { replace: true });
     } catch (error: any) {
-      setSuccessMessage(error.message || "조직 선택 중 오류가 발생했습니다.");
-      setShowSuccessModal(true);
+      openModal({
+  type: "error",
+  title: "오류 발생",
+  message: error.message || "조직 선택 중 오류가 발생했습니다."
+});
     }
   };
 
@@ -172,9 +178,8 @@ export default function LoginSelect() {
                   key={org.id}
                   onClick={() => handleSelectOrg(org.id, org.name)}
                   disabled={org.joinStatus === "PENDING"}
-                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${
-                    org.joinStatus === "PENDING" ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
+                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${org.joinStatus === "PENDING" ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                 >
                   {/* 상단 그라데이션 */}
                   <div className={`h-28 bg-gradient-to-br ${style.gradient} relative`}>
@@ -286,8 +291,13 @@ export default function LoginSelect() {
           onClose={() => setShowJoinModal(false)}
           refresh={refreshOrganizations}
           onSuccess={(nickname) => {
-            setSuccessMessage(`"${nickname}" 님의 가입 신청이 완료되었습니다.`);
-            setShowSuccessModal(true);
+            openModal({
+              type: "success",
+              title: "가입 신청 완료!",
+              message: `"${nickname}" 님의 가입 신청이 완료되었습니다.`,
+              autoClose: true,
+              autoCloseDelay: 2000,
+            });
           }}
         />
       )}
@@ -297,18 +307,6 @@ export default function LoginSelect() {
         <CreateOrgModal
           onClose={() => setShowCreateModal(false)}
           refresh={refreshOrganizations}
-        />
-      )}
-
-      {/* 성공 모달 */}
-      {showSuccessModal && (
-        <ConfirmActionModal
-          title="가입 신청 완료"
-          message={successMessage}
-          confirmText="확인"
-          color="green"
-          onConfirm={() => setShowSuccessModal(false)}
-          onClose={() => setShowSuccessModal(false)}
         />
       )}
     </>

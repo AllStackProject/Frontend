@@ -10,9 +10,8 @@ import {
     PlayCircle,
 } from "lucide-react";
 
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 import EditVideoModal from "@/components/mypage/org/EditVideoModal";
-import SuccessModal from "@/components/common/modals/SuccessModal";
 import VideoStatsModal from "@/components/mypage/org/VideoStatsModal";
 import { useAuth } from "@/context/AuthContext";
 import { fetchMyUploadedVideos, fetchMyVideoStats } from "@/api/myactivity/video";
@@ -29,6 +28,7 @@ interface Video {
 
 const MyVideoSection: React.FC = () => {
     const { orgId, orgName } = useAuth();
+    const { openModal } = useModal();
 
     const [videos, setVideos] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,19 +45,11 @@ const MyVideoSection: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
 
-    // ===== 모달 상태 =====
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [showEditConfirm, setShowEditConfirm] = useState(false);
+    //  모달 상태 
     const [showEditModal, setShowEditModal] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);
     const [videoStats, setVideoStats] = useState<any[]>([]);
-
     const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-    const [successMessage, setSuccessMessage] = useState({
-        title: "",
-        message: "",
-    });
 
     /* ============================================================
         API 호출
@@ -102,26 +94,30 @@ const MyVideoSection: React.FC = () => {
 
     const handleDeleteClick = (video: Video) => {
         setSelectedVideo(video);
-        setShowDeleteConfirm(true);
+
+        openModal({
+            type: "delete",
+            title: "정말 삭제하시겠습니까?",
+            message: `"${video.name}"을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+            requiredKeyword: "삭제",
+            onConfirm: () => handleDeleteConfirm(video),
+        });
     };
 
-    const handleDeleteConfirm = () => {
-        if (!selectedVideo) return;
+    const handleDeleteConfirm = (video: Video) => {
+        setVideos((prev) => prev.filter((v) => v.id !== video.id));
 
-        // 실제 삭제 API는 아직 없음 → placeholder
-        setVideos((prev) => prev.filter((v) => v.id !== selectedVideo.id));
-
-        setShowDeleteConfirm(false);
-        setSuccessMessage({
+        openModal({
+            type: "success",
             title: "삭제 완료",
-            message: `"${selectedVideo.name}" 영상이 삭제되었습니다.`,
+            message: `"${video.name}" 영상이 삭제되었습니다.`,
+            autoClose: true,
+            autoCloseDelay: 1800,
         });
-        setShowSuccessModal(true);
     };
 
     const handleEditClick = (video: Video) => {
         setSelectedVideo(video);
-        setShowEditConfirm(true);
         setShowEditModal(true);
     };
 
@@ -136,12 +132,13 @@ const MyVideoSection: React.FC = () => {
             prev.map((v) => (v.id === data.id ? { ...v, ...data } : v))
         );
 
-        setSuccessMessage({
+        openModal({
+            type: "success",
             title: "수정 완료",
             message: "영상 정보가 성공적으로 수정되었습니다.",
+            autoClose: true,
+            autoCloseDelay: 1800,
         });
-
-        setShowSuccessModal(true);
     };
 
     const handleStatsClick = async (video: Video) => {
@@ -429,20 +426,7 @@ const MyVideoSection: React.FC = () => {
                 </div>
             )}
 
-
-            {/* ===== 모달 ===== */}
-            {showDeleteConfirm && selectedVideo && (
-                <ConfirmActionModal
-                    title="동영상 삭제"
-                    message={`"${selectedVideo.name}"를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`}
-                    keyword="삭제"
-                    confirmText="삭제"
-                    color="red"
-                    onConfirm={handleDeleteConfirm}
-                    onClose={() => setShowDeleteConfirm(false)}
-                />
-            )}
-
+            {/* 모달  */}
             {showStatsModal && selectedVideo && (
                 <VideoStatsModal
                     video={selectedVideo}
@@ -459,16 +443,6 @@ const MyVideoSection: React.FC = () => {
                         setSelectedVideo(null);
                     }}
                     onSubmit={handleEditSubmit}
-                />
-            )}
-
-            {showSuccessModal && (
-                <SuccessModal
-                    title={successMessage.title}
-                    message={successMessage.message}
-                    autoClose={true}
-                    autoCloseDelay={1800}
-                    onClose={() => setShowSuccessModal(false)}
                 />
             )}
         </div>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, FileText } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 
 interface NoticeFormData {
   title: string;
@@ -34,9 +34,16 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
     linkedVideo: "",
   });
 
-  // 에러 및 확인 모달 상태
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const { openModal } = useModal();
+  /** 에러 모달(공통모달) 호출 */
+  const showError = (msg: string) => {
+    openModal({
+      type: "error",
+      title: "공지 입력 오류",
+      message: msg,
+      confirmText: "확인",
+    });
+  };
 
   const handleGroupToggle = (group: string) => {
     setForm((prev) => ({
@@ -48,25 +55,11 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
   };
 
   const handleSubmit = () => {
-    // 제목 검증
-    if (!form.title.trim()) {
-      setErrorMessage("제목을 입력해주세요.");
-      setShowErrorModal(true);
-      return;
-    }
+    if (!form.title.trim()) return showError("제목을 입력해주세요.");
+    if (!form.content.trim()) return showError("내용을 입력해주세요.");
 
-    // 내용 검증
-    if (!form.content.trim()) {
-      setErrorMessage("내용을 입력해주세요.");
-      setShowErrorModal(true);
-      return;
-    }
-
-    // 특정 그룹 공개 시 그룹 선택 검증
     if (form.visibility === "특정그룹공개" && form.selectedGroups.length === 0) {
-      setErrorMessage("공개할 그룹을 최소 1개 이상 선택해주세요.");
-      setShowErrorModal(true);
-      return;
+      return showError("공개할 그룹을 최소 1개 이상 선택해주세요.");
     }
 
     const newNotice = {
@@ -217,18 +210,6 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 에러 모달 */}
-      {showErrorModal && (
-        <ConfirmActionModal
-          title="공지 입력 오류"
-          message={errorMessage}
-          confirmText="확인"
-          color="red"
-          onConfirm={() => setShowErrorModal(false)}
-          onClose={() => setShowErrorModal(false)}
-        />
-      )}
     </>
   );
 };

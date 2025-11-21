@@ -10,7 +10,7 @@ import {
   FileText,
   MessageCircle,
 } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 import { useAuth } from "@/context/AuthContext";
 import { fetchOrgMyActivityGroup } from "@/api/myactivity/info";
 import { requestVideoUpload, uploadVideoToS3 } from "@/api/video/video";
@@ -44,6 +44,7 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
   onSubmit,
 }) => {
   const { orgId } = useAuth();
+  const { openModal, closeModal } = useModal();
 
   // 그룹 + 카테고리 API 데이터
   const [groups, setGroups] = useState<Group[]>([]);
@@ -67,47 +68,53 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
 
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
 
-  // 에러 모달
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
   // 영상 업로드
   const handleSubmit = async () => {
-  if (!formData.title.trim()) return showError("제목을 입력해주세요.");
-  if (!formData.description.trim()) return showError("설명을 입력해주세요.");
-  if (!formData.videoFile) return showError("동영상 파일을 업로드해주세요.");
-  if (!formData.thumbnail) return showError("썸네일 PNG 이미지를 업로드해주세요.");
+    if (!formData.title.trim()) return showError("제목을 입력해주세요.");
+    if (!formData.description.trim()) return showError("설명을 입력해주세요.");
+    if (!formData.videoFile) return showError("동영상 파일을 업로드해주세요.");
+    if (!formData.thumbnail) return showError("썸네일 PNG 이미지를 업로드해주세요.");
 
-  if (formData.videoFile.type !== "video/mp4")
-    return showError("동영상은 MP4 형식만 업로드할 수 있습니다.");
-  if (formData.thumbnail.type !== "image/png")
-    return showError("썸네일은 PNG 파일만 가능합니다.");
+    if (formData.videoFile.type !== "video/mp4")
+      return showError("동영상은 MP4 형식만 업로드할 수 있습니다.");
+    if (formData.thumbnail.type !== "image/png")
+      return showError("썸네일은 PNG 파일만 가능합니다.");
 
-  if (!orgId) return showError("조직 정보가 없습니다.");
+    if (!orgId) return showError("조직 정보가 없습니다.");
 
-  try {
+    try {
 
-    // Step 1: 서버에 메타데이터 전달 → presigned URL 받기
-    const { presigned_url } = await requestVideoUpload(orgId!, {
-      title: formData.title,
-      description: formData.description,
-      whole_time: formData.videoInfo!.durationSec,
-      is_comment: formData.allowComments,
-      ai_function: formData.aiType,
-      expired_at:
-        formData.expiration === "none" ? null : formData.customDate,
-      thumbnail_img: formData.thumbnail
-    });
+      // Step 1: 서버에 메타데이터 전달 → presigned URL 받기
+      const { presigned_url } = await requestVideoUpload(orgId!, {
+        title: formData.title,
+        description: formData.description,
+        whole_time: formData.videoInfo!.durationSec,
+        is_comment: formData.allowComments,
+        ai_function: formData.aiType,
+        expired_at:
+          formData.expiration === "none" ? null : formData.customDate,
+        thumbnail_img: formData.thumbnail
+      });
 
-    // Step 2: presigned URL로 영상 업로드(PUT)
-    await uploadVideoToS3(presigned_url, formData.videoFile);
+      // Step 2: presigned URL로 영상 업로드(PUT)
+      await uploadVideoToS3(presigned_url, formData.videoFile);
 
-    alert("업로드가 완료되었습니다!");
-    onSubmit(formData);
-  } catch (err: any) {
-    showError(err.message || "업로드 중 오류가 발생했습니다.");
-  }
-};
+      openModal({
+        type: "success",
+        title: "업로드 완료!",
+        message: "영상이 정상적으로 업로드되었습니다.",
+        autoClose: true,
+        autoCloseDelay: 2000,
+      });
+      onSubmit(formData);
+    } catch (err: any) {
+      openModal({
+        type: "error",
+        title: "오류 발생",
+        message: err.message || "업로드 중 오류가 발생했습니다."
+      });
+    }
+  };
 
   // 🔹 그룹 가져오기
   useEffect(() => {
@@ -154,7 +161,7 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
     videoEl.src = objectUrl;
 
     videoEl.onloadedmetadata = () => {
-      const durationSec = Math.floor(videoEl.duration || 0); 
+      const durationSec = Math.floor(videoEl.duration || 0);
       const durationText = formatDuration(durationSec);
 
       handleChange("videoFile", file);
@@ -252,8 +259,11 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
 
   // 에러 핸들링
   const showError = (msg: string) => {
-    setErrorMessage(msg);
-    setShowErrorModal(true);
+    openModal({
+      type: "error",
+      title: "오류 발생",
+      message: msg || "처리 중 오류가 발생했습니다.",
+    });
   };
 
 
@@ -263,9 +273,9 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
       { key: "NONE", label: "사용 안 함", icon: <X size={16} /> },
       { key: "QUIZ", label: "퀴즈", icon: <Brain size={16} /> },
       { key: "SUMMARY", label: "요약", icon: <FileText size={16} /> },
-      { key: "FEEDBACK", label: "피드백", icon: <MessageCircle size={16} /> }, 
+      { key: "FEEDBACK", label: "피드백", icon: <MessageCircle size={16} /> },
     ];
-    
+
   return (
     <>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -430,8 +440,8 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                           handleVisibilityChange(opt.value as string)
                         }
                         className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${formData.visibility === opt.value
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                          ? "bg-blue-500 text-white border-blue-500"
+                          : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
                           }`}
                       >
                         {opt.label}
@@ -457,8 +467,8 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                               type="button"
                               onClick={() => handleGroupToggle(g.id)}
                               className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${active
-                                  ? "bg-blue-500 text-white border-blue-500"
-                                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                ? "bg-blue-500 text-white border-blue-500"
+                                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                                 }`}
                             >
                               <Users size={14} />
@@ -513,8 +523,8 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                                 type="button"
                                 onClick={() => toggleCategory(c.id)}
                                 className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${active
-                                    ? "bg-indigo-500 text-white border-indigo-500"
-                                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                  ? "bg-indigo-500 text-white border-indigo-500"
+                                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                                   }`}
                               >
                                 {c.title}
@@ -582,8 +592,8 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                           type="button"
                           onClick={() => handleChange("aiType", opt.key)}
                           className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-2 transition ${active
-                              ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                              : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                            ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                            : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
                             }`}
                         >
                           {opt.icon}
@@ -620,8 +630,8 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                         type="button"
                         onClick={() => handleExpirationSelect(opt.value)}
                         className={`px-3 py-1.5 rounded-full border text-xs font-medium transition ${formData.expiration === opt.value
-                            ? "bg-emerald-500 text-white border-emerald-500"
-                            : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                          ? "bg-emerald-500 text-white border-emerald-500"
+                          : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
                           }`}
                       >
                         {opt.label}
@@ -665,17 +675,6 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
           </div>
         </div>
       </div>
-
-      {showErrorModal && (
-        <ConfirmActionModal
-          title="업로드 오류"
-          message={errorMessage}
-          confirmText="확인"
-          color="red"
-          onConfirm={() => setShowErrorModal(false)}
-          onClose={() => setShowErrorModal(false)}
-        />
-      )}
     </>
   );
 };

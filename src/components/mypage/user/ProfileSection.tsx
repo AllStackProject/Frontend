@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Edit2, Lock, AlertCircle, Eye, EyeOff, UserX } from "lucide-react";
 import { getUserInfo, updateUserInfo, deleteUser } from "@/api/user/userInfo";
 import type { UserInfoResponse } from "@/types/user";
-import ConfirmDeleteModal from "@/components/common/modals/ConfirmDeleteModal";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 
 // 전화번호 정규식
 const phoneRe = /^[0-9]{10,11}$/;
@@ -41,6 +40,8 @@ interface UserInfo {
 }
 
 const ProfileSection: React.FC = () => {
+  const { openModal } = useModal();
+
   const [user, setUser] = useState<UserInfo>({
     name: "",
     email: "",
@@ -55,34 +56,6 @@ const ProfileSection: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
-  // 공통 알림 모달
-  const [alertModal, setAlertModal] = useState<{
-    show: boolean;
-    title: string;
-    message: string;
-    color: "blue" | "red" | "green" | "yellow";
-  }>({
-    show: false,
-    title: "",
-    message: "",
-    color: "blue",
-  });
-
-  // 알림 모달 표시 헬퍼
-  const showAlert = (
-    title: string,
-    message: string,
-    color: "blue" | "red" | "green" | "yellow" = "blue"
-  ) => {
-    setAlertModal({ show: true, title, message, color });
-  };
-
-  const closeAlert = () => {
-    setAlertModal({ show: false, title: "", message: "", color: "blue" });
-  };
 
   const [formData, setFormData] = useState({
     gender: "",
@@ -94,7 +67,7 @@ const ProfileSection: React.FC = () => {
 
   // 사용자 정보 불러오기
   useEffect(() => {
-    const fetchUserInfo = async () => {
+    const fetchUserInfoData = async () => {
       try {
         const data: UserInfoResponse = await getUserInfo();
 
@@ -128,16 +101,15 @@ const ProfileSection: React.FC = () => {
           passwordConfirm: "",
         });
       } catch (err: any) {
-        console.error("🚨 사용자 정보 로드 실패:", err);
-        showAlert(
-          "정보 로드 실패",
-          err.message || "사용자 정보를 불러오지 못했습니다.",
-          "red"
-        );
+        openModal({
+          type: "error",
+          title: "정보 로드 실패",
+          message: err.message || "사용자 정보를 불러오지 못했습니다.",
+        });
       }
     };
 
-    fetchUserInfo();
+    fetchUserInfoData();
   }, []);
 
   // 입력 변경 핸들러
@@ -145,15 +117,15 @@ const ProfileSection: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // 폼 검증
-  const validateForm = (): boolean => {
+  // 폼 검증 (에러 필드 이름까지 반환)
+  const validateForm = (): { isValid: boolean; firstErrorField?: string } => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.gender) newErrors.gender = "성별을 선택해 주세요.";
@@ -179,59 +151,77 @@ const ProfileSection: React.FC = () => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+
+    const firstErrorField = Object.keys(newErrors)[0];
+    return { isValid: Object.keys(newErrors).length === 0, firstErrorField };
   };
 
-  // 수정 API
+  // 수정 저장
   const handleSave = async () => {
-  if (!validateForm()) {
-    const firstErrorField = Object.keys(errors)[0];
-    const element = document.querySelector(`[name="${firstErrorField}"]`);
-    if (element)
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
-  }
+    const { isValid, firstErrorField } = validateForm();
 
-  try {
-    const body: Record<string, any> = {
-      changed_age: parseInt(formData.ageGroup.replace("대", "").trim(), 10),
-      changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
-      changed_phone_num: formData.phone,
-    };
-
-    if (formData.password && formData.passwordConfirm) {
-      body.new_password = formData.password;
-      body.confirm_password = formData.passwordConfirm;
+    if (!isValid) {
+      if (firstErrorField) {
+        const element = document.querySelector(
+          `[name="${firstErrorField}"]`
+        ) as HTMLElement | null;
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      return;
     }
 
-    const isSuccess = await updateUserInfo(body);
+    try {
+      const body: Record<string, any> = {
+        changed_age: parseInt(formData.ageGroup.replace("대", "").trim(), 10),
+        changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
+        changed_phone_num: formData.phone,
+      };
 
-    if (isSuccess) {
-      setUser({
-        ...user,
-        gender: formData.gender,
-        ageGroup: formData.ageGroup,
-        phone: formData.phone,
+      if (formData.password && formData.passwordConfirm) {
+        body.new_password = formData.password;
+        body.confirm_password = formData.passwordConfirm;
+      }
+
+      const isSuccess = await updateUserInfo(body);
+
+      if (isSuccess) {
+        setUser((prev) => ({
+          ...prev,
+          gender: formData.gender,
+          ageGroup: formData.ageGroup,
+          phone: formData.phone,
+        }));
+        setIsEditing(false);
+        setFormData((prev) => ({
+          ...prev,
+          password: "",
+          passwordConfirm: "",
+        }));
+        openModal({
+          type: "success",
+          title: "수정 완료",
+          message: "사용자 정보가 성공적으로 수정되었습니다.",
+          autoClose: true,
+          autoCloseDelay: 2000,
+        });
+      } else {
+        openModal({
+          type: "error",
+          title: "수정 실패",
+          message: "사용자 정보 수정에 실패했습니다.",
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+      openModal({
+        type: "error",
+        title: "오류 발생",
+        message: err.message || "처리 중 오류가 발생했습니다.",
       });
-      setIsEditing(false);
-      setFormData({
-        ...formData,
-        password: "",
-        passwordConfirm: "",
-      });
-      showAlert("수정 완료", "사용자 정보가 성공적으로 수정되었습니다.", "green");
-    } else {
-      showAlert("수정 실패", "사용자 정보 수정에 실패했습니다.", "red");
     }
-  } catch (err: any) {
-    console.error(err);
-    showAlert(
-      "오류 발생",
-      err.message || "정보 수정 중 오류가 발생했습니다.",
-      "red"
-    );
-  }
-};
+  };
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -245,34 +235,40 @@ const ProfileSection: React.FC = () => {
     });
   };
 
-  // 회원 탈퇴 핸들러
-  const handleDeleteAccount = async () => {
-    try {
-      const success = await deleteUser();
-      if (success) {
-        setShowDeleteModal(false);
-        setShowSuccessModal(true);
-      } else {
-        showAlert(
-          "탈퇴 실패",
-          "회원 탈퇴에 실패했습니다.\n잠시 후 다시 시도해주세요.",
-          "red"
-        );
-      }
-    } catch (err: any) {
-      showAlert(
-        "오류 발생",
-        err.message || "회원 탈퇴 중 오류가 발생했습니다.",
-        "red"
-      );
-    }
-  };
-
   // 탈퇴 성공 후 로그인 페이지로 이동
   const handleSuccessConfirm = () => {
     localStorage.clear();
     window.location.href = "/login";
   };
+
+  // 회원 탈퇴 실행 (확인 모달에서 호출)
+  const handleDeleteAccount = async () => {
+    try {
+      const success = await deleteUser();
+      if (success) {
+        openModal({
+          type: "success",
+          title: "회원 탈퇴 완료",
+          message: "탈퇴가 성공적으로 처리되었습니다.\n로그인 페이지로 이동합니다.",
+          confirmText: "확인",
+          onConfirm: handleSuccessConfirm,
+        });
+      } else {
+        openModal({
+          type: "error",
+          title: "오류 발생",
+          message: "회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.",
+        });
+      }
+    } catch (err: any) {
+      openModal({
+        type: "error",
+        title: "오류 발생",
+        message: err.message || "회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.",
+      });
+    }
+  };
+
 
   return (
     <>
@@ -348,7 +344,7 @@ const ProfileSection: React.FC = () => {
                       탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
                     </p>
                     <button
-                      onClick={() => setShowDeleteModal(true)}
+                      onClick={() => handleDeleteAccount()}
                       className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200"
                     >
                       회원 탈퇴하기
@@ -435,11 +431,10 @@ const ProfileSection: React.FC = () => {
                         setErrors({ ...errors, gender: "" });
                       }
                     }}
-                    className={`flex-1 py-2 border rounded-lg transition ${
-                      formData.gender === g
-                        ? "bg-primary text-white border-primary"
-                        : "bg-white text-text-primary border-border-light hover:bg-gray-50"
-                    }`}
+                    className={`flex-1 py-2 border rounded-lg transition ${formData.gender === g
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white text-text-primary border-border-light hover:bg-gray-50"
+                      }`}
                   >
                     {g}
                   </button>
@@ -462,9 +457,8 @@ const ProfileSection: React.FC = () => {
                 name="ageGroup"
                 value={formData.ageGroup}
                 onChange={handleChange}
-                className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
-                  errors.ageGroup ? "border-red-500" : "border-border-light"
-                }`}
+                className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${errors.ageGroup ? "border-red-500" : "border-border-light"
+                  }`}
               >
                 <option value="10대">10대</option>
                 <option value="20대">20대</option>
@@ -529,38 +523,6 @@ const ProfileSection: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* 회원 탈퇴 확인 모달 */}
-      {showDeleteModal && (
-        <ConfirmDeleteModal
-          onConfirm={handleDeleteAccount}
-          onClose={() => setShowDeleteModal(false)}
-        />
-      )}
-
-      {/* 탈퇴 성공 모달 */}
-      {showSuccessModal && (
-        <ConfirmActionModal
-          title="회원 탈퇴 완료"
-          message="탈퇴가 성공적으로 처리되었습니다.&#10;로그인 페이지로 이동합니다."
-          confirmText="확인"
-          color="green"
-          onConfirm={handleSuccessConfirm}
-          onClose={handleSuccessConfirm}
-        />
-      )}
-
-      {/* 공통 알림 모달 */}
-      {alertModal.show && (
-        <ConfirmActionModal
-          title={alertModal.title}
-          message={alertModal.message}
-          confirmText="확인"
-          color={alertModal.color}
-          onConfirm={closeAlert}
-          onClose={closeAlert}
-        />
-      )}
     </>
   );
 };
@@ -596,9 +558,8 @@ const InputField = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder || ""}
-      className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${
-        error ? "border-red-500" : "border-border-light"
-      }`}
+      className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none ${error ? "border-red-500" : "border-border-light"
+        }`}
     />
     {error && (
       <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
@@ -639,9 +600,8 @@ const PasswordField = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder || ""}
-        className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-primary focus:outline-none ${
-          error ? "border-red-500" : "border-border-light"
-        }`}
+        className={`w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-primary focus:outline-none ${error ? "border-red-500" : "border-border-light"
+          }`}
       />
       <button
         type="button"
@@ -669,9 +629,8 @@ const PasswordCheckItem = ({
   label: string;
 }) => (
   <div
-    className={`flex items-center gap-1.5 ${
-      checked ? "text-green-600" : "text-text-secondary"
-    }`}
+    className={`flex items-center gap-1.5 ${checked ? "text-green-600" : "text-text-secondary"
+      }`}
   >
     <span className="font-medium">{checked ? "✓" : "○"}</span>
     <span>{label}</span>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Layers } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 import { updateMemberGroups } from "@/api/adminSuper/members";
 import { useAuth } from "@/context/AuthContext";
 
@@ -28,14 +28,12 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
   onSubmit,
 }) => {
   const { orgId } = useAuth();
-
+  const { openModal } = useModal();
+  const [saving, setSaving] = useState(false);
   // 사용자 현재 그룹 → ID 배열로 저장
   const [selectedGroups, setSelectedGroups] = useState<number[]>(
     user.groups.map((g) => g.id)
   );
-
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   /* ---------------------------------------------------------
       그룹 토글
@@ -48,7 +46,16 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
     );
   };
 
-  const handleSaveClick = () => setShowConfirmModal(true);
+  const handleSaveClick = () => {
+    openModal({
+      type: "confirm",
+      title: "그룹 변경",
+      message: `"${user.name}"님의 그룹을 변경하시겠습니까?\n선택된 그룹 ${selectedGroups.length}개`,
+      requiredKeyword: "저장",
+      confirmText: "저장",
+      onConfirm: handleConfirmSave,
+    });
+  };
 
   /* ---------------------------------------------------------
       그룹 저장 실행 → API 호출
@@ -69,7 +76,11 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
         onClose();
       }
     } catch (err: any) {
-      alert(err.message);
+      openModal({
+        type: "error",
+        title: "그룹 저장 실패",
+        message: err.message || "알 수 없는 오류가 발생했습니다.",
+      });
     } finally {
       setSaving(false);
     }
@@ -173,19 +184,6 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 저장 확인 모달 */}
-      {showConfirmModal && (
-        <ConfirmActionModal
-          title="그룹 변경"
-          message={`"${user.name}"님의 그룹을 변경하시겠습니까?\n선택된 그룹 ${selectedGroups.length}개`}
-          keyword="저장"
-          confirmText="저장"
-          color="green"
-          onConfirm={handleConfirmSave}
-          onClose={() => setShowConfirmModal(false)}
-        />
-      )}
     </>
   );
 };

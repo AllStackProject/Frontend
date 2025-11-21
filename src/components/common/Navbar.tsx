@@ -22,7 +22,7 @@ const Navbar = () => {
   const [userName, setUserName] = useState("사용자");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const { openLogoutModal, LogoutModal } = useLogout(navigate);
+  const { openLogoutModal } = useLogout(navigate);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -341,9 +341,6 @@ const Navbar = () => {
           </div>
         </div>
       )}
-
-      {/* 로그아웃 모달 추가 */}
-      <LogoutModal />
 
       {/* 조직 선택 모달 */}
       <OrganizationSelectModal

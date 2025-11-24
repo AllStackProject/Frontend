@@ -8,8 +8,15 @@ export async function fetchOrgInfo(orgId: number) {
       `/admin/org/${orgId}/orgs/info`,
       { tokenType: "org" } as CustomAxiosRequestConfig
     );
+    
+    const result = response.data.result;
+    if (result?.img_url) {
+      result.img_url = result.img_url.startsWith("http")
+        ? result.img_url
+        : `https://${result.img_url}`;
+    }
 
-    return response.data.result;
+    return result;
   } catch (error: any) {
     console.error("❌ 조직 정보 조회 실패:", error);
     throw new Error(

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { X, ImagePlus } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 import { createOrganization, checkOrgNameAvailability } from "@/api/organization/orgs";
@@ -15,6 +16,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
   onSuccess,
 }) => {
   const { openModal } = useModal();
+  const navigate = useNavigate();
   const [orgName, setOrgName] = useState("");
   const [orgDesc, setOrgDesc] = useState("");
   const [nickname, setNickname] = useState("");
@@ -117,7 +119,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
         message: "조직이 성공적으로 생성되었습니다!",
         confirmText: "홈으로 이동",
         onConfirm: () => {
-          onSuccess?.({ id: res.id, name: orgName });
+          navigate("/home");
         },
       });
     } catch (error: any) {
@@ -152,6 +154,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
             <div className="flex flex-col items-center mb-6">
               <div className="relative w-28 h-28">
                 <img
+                  src={imagePreview || ""}
                   className="w-full h-full rounded-full object-cover border"
                 />
 

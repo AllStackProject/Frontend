@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 const Navbar = () => {
   const navigate = useNavigate();
   const { nickname, orgName, orgId } = useAuth();
+  const [orgImage, setOrgImage] = useState<string | null>(null);
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,6 +66,29 @@ const Navbar = () => {
     };
 
     checkAdminStatus();
+  }, [orgId]);
+
+  useEffect(() => {
+    const fetchOrgImage = async () => {
+      try {
+        const orgs = await getOrganizations();
+
+        const selected = orgs.find(org => org.id === orgId);
+
+        if (selected?.img_url) {
+          const fixedUrl = selected.img_url.startsWith("http")
+            ? selected.img_url
+            : `https://${selected.img_url}`;
+
+          setOrgImage(fixedUrl);
+        }
+      } catch (e) {
+        console.error("🚨 조직 이미지 로드 실패:", e);
+        setOrgImage(null);
+      }
+    };
+
+    if (orgId) fetchOrgImage();
   }, [orgId]);
 
   // 외부 클릭 시 닫기
@@ -128,7 +152,11 @@ const Navbar = () => {
               className="flex items-center gap-2 pr-3 border-r border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => setIsModalOpen(true)}
             >
-              <img src="/dummy/woori-logo.png" alt="org" className="w-6 h-6 rounded-full" />
+              <img
+                src={orgImage || "/dummy/woori-logo.png"}
+                alt="org"
+                className="w-6 h-6 rounded-full object-cover"
+              />
               <span className="font-medium text-gray-700 text-sm whitespace-nowrap">{orgName}</span>
               <span className="text-gray-400 text-xs">▼</span>
             </div>

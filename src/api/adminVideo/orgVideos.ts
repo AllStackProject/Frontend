@@ -10,8 +10,6 @@ export const getAdminOrgVideos = async (orgId: number) => {
     } as CustomAxiosRequestConfig);
 
     const list = response.data?.result?.vidoes ?? [];
-
-    // 🔥 thumbnail_url http 자동 보정
     const mapped = list.map((v: any) => ({
       ...v,
       thumbnail_url: v.thumbnail_url?.startsWith("http")

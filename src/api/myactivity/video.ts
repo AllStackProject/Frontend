@@ -11,11 +11,20 @@ export const fetchMyUploadedVideos = async (
       tokenType: "org",
     } as CustomAxiosRequestConfig);
 
-    return res.data?.result?.vidoes || [];
+    const videos = res.data?.result?.vidoes || [];
+    const mapped = videos.map((v: any) => ({
+      ...v,
+      thumbnail_url: v.thumbnail_url?.startsWith("http")
+        ? v.thumbnail_url
+        : `https://${v.thumbnail_url}`,
+    }));
+
+    return mapped;
   } catch (err: any) {
     console.error("❌ 내 영상 목록 조회 실패:", err);
     throw new Error(
-      err.response?.data?.message || "내가 업로드한 영상 목록을 불러오지 못했습니다."
+      err.response?.data?.message ||
+        "내가 업로드한 영상 목록을 불러오지 못했습니다."
     );
   }
 };

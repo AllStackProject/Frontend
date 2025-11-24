@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2, X, MessageSquare } from "lucide-react";
-import { getMyComments } from "@/api/myactivity/getComment";
-import { deleteComment } from "@/api/myactivity/deleteComment";
+import { getMyComments, deleteComment } from "@/api/myactivity/comment";
 import type { Comment } from "@/types/comment";
 import { useAuth } from "@/context/AuthContext";
 

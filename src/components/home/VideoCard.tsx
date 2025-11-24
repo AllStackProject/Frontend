@@ -133,16 +133,18 @@ const VideoCard = ({
           type="button"
           onClick={handleFavoriteClick}
           disabled={loading}
-          className={`absolute top-2 right-2  p-2 rounded-full transition-all duration-200 backdrop-blur-sm ${
-            loading
-              ? "bg-black/30 cursor-not-allowed"
-              : "bg-black/50 hover:bg-black/70"
-          }`}
+          className={`
+            absolute top-3 right-3 
+            bg-white/90 backdrop-blur-sm hover:bg-white 
+            rounded-full p-2 shadow-lg 
+            transition-all duration-200 z-10
+            ${loading ? "opacity-50 cursor-not-allowed" : "hover:scale-110"}
+          `}
         >
           {isFavorite ? (
-            <HiHeart className="w-5 h-5 text-red-500 transition-transform duration-200 scale-110" />
+            <HiHeart className="w-5 h-5 text-rose-500 transition-all duration-200" />
           ) : (
-            <HiOutlineHeart className="w-5 h-5 text-white hover:scale-110 transition-transform duration-200" />
+            <HiOutlineHeart className="w-5 h-5 text-gray-400 hover:text-rose-500 transition-all duration-200" />
           )}
         </button>
 

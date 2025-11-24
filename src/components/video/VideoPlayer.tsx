@@ -155,28 +155,45 @@ const analytics = useVideoAnalytics({
   }, [isPlaying]);
 
   // ---- HLS.js 초기화
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+  // HLS.js 초기화
+useEffect(() => {
+  let hls: Hls | null = null;
+  const video = videoRef.current;
+  if (!video) return;
 
-    let hls: Hls | null = null;
-
+  // JOIN 이후 딜레이를 두고 HLS attach
+  const delay = setTimeout(() => {
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = videoUrl;
     } else if (Hls.isSupported()) {
-      hls = new Hls({ enableWorker: true });
+      hls = new Hls({
+        enableWorker: true,
+        xhrSetup: (xhr) => {
+          xhr.withCredentials = true; 
+        },
+      });
+
+      console.log("🎬 HLS 시작됨 (딜레이 적용)");
       hls.loadSource(videoUrl);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => setQuality("자동"));
-      hls.on(Hls.Events.ERROR, (_, data) => console.error("[HLS] Error:", data));
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setQuality("자동");
+      });
+
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        console.error("[HLS] Error:", data);
+      });
     } else {
       video.src = videoUrl;
     }
+  }, 1500);
 
-    return () => {
-      if (hls) hls.destroy();
-    };
-  }, [videoUrl]);
+  return () => {
+    clearTimeout(delay);
+    if (hls) hls.destroy();
+  };
+}, [videoUrl]);
 
   // ---- 비디오 기본 상태
   useEffect(() => {

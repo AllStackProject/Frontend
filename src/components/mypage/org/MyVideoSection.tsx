@@ -166,6 +166,21 @@ const MyVideoSection: React.FC = () => {
         return new Date(dateString).toLocaleDateString("ko-KR");
     };
 
+    const formatExpireDate = (dateString?: string | null) => {
+        if (!dateString) return "-";
+        
+        const expireDate = new Date(dateString);
+        const now = new Date();
+        const yearsDiff = (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
+        
+        // 100년 이상이면 만료 없음으로 처리
+        if (yearsDiff >= 100) {
+            return "만료 없음";
+        }
+        
+        return expireDate.toLocaleDateString("ko-KR");
+    };
+
     /* ============================================================
         검색 + 필터 + 정렬
     ============================================================ */
@@ -231,7 +246,9 @@ const MyVideoSection: React.FC = () => {
             {/* 헤더 */}
             <div className="flex items-center gap-3">
                 <h2 className="text-xl font-semibold text-text-primary">업로드한 영상</h2>
-                <span className="text-sm text-text-muted">({videos.length}개)</span>
+                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-sm font-semibold rounded-full">
+                    {videos.length}개
+                </span>
             </div>
 
             {/* 필터 UI */}
@@ -289,7 +306,7 @@ const MyVideoSection: React.FC = () => {
                         <tr className="text-left text-gray-600">
                             <th className="p-3">썸네일</th>
                             <th className="p-3">제목</th>
-                            <th className="p-3">등록일</th>
+                            <th className="p-3">업로드일</th>
                             <th className="p-3">만료일</th>
                             <th className="p-3">공개범위</th>
                             <th className="p-3">조회수</th>
@@ -310,7 +327,7 @@ const MyVideoSection: React.FC = () => {
                                 <td className="p-3">{video.name}</td>
                                 <td className="p-3">{formatDate(video.created_at)}</td>
                                 <td className="p-3">
-                                    {video.expire_at ? formatDate(video.expire_at) : "-"}
+                                    {formatExpireDate(video.expire_at)}
                                 </td>
                                 <td className="p-3">
                                     <span

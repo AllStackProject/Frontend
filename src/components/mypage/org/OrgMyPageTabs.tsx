@@ -16,49 +16,75 @@ const MyPageTabs: React.FC<MyPageTabsProps> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-border-light">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id;
+    <div className="top-0 z-10 border-b">
+      <div className="flex items-center gap-2 px-4 overflow-x-auto scrollbar-hide">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
 
-        return (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={cn(
-              "relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200",
-              isActive
-                ? "text-primary"
-                : "text-text-secondary hover:text-text-primary"
-            )}
-          >
-            {/* 아이콘 */}
-            <img
-              src={tab.icon}
-              alt={tab.label}
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
               className={cn(
-                "w-7 h-7 object-contain transition-all duration-200",
-                isActive ? "opacity-100 scale-110" : "opacity-60"
+                "relative flex items-center gap-2.5 px-5 py-4 text-sm font-medium transition-all duration-300 whitespace-nowrap group",
+                isActive
+                  ? "text-blue-600"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               )}
-            />
-            
-            {/* 텍스트 */}
-            <span className={cn(
-              "transition-all duration-200",
-              isActive && "font-semibold"
-            )}>
-              {tab.label}
-            </span>
+            >
+              {/* 아이콘 컨테이너 */}
+              <div className={cn(
+                "relative p-1.5 rounded-lg transition-all duration-300",
+                isActive 
+                  ? "bg-blue-50" 
+                  : "bg-gray-50 group-hover:bg-gray-100"
+              )}>
+                <img
+                  src={tab.icon}
+                  alt={tab.label}
+                  className={cn(
+                    "w-5 h-5 object-contain transition-all duration-300",
+                    isActive ? "opacity-100 scale-110" : "opacity-70 group-hover:opacity-90 group-hover:scale-105"
+                  )}
+                />
+              </div>
+              
+              {/* 텍스트 */}
+              <span className={cn(
+                "transition-all duration-300",
+                isActive && "font-bold"
+              )}>
+                {tab.label}
+              </span>
 
-            {/* 하단 밑줄 */}
-            <span
-              className={cn(
-                "absolute bottom-0 left-0 w-full h-[3px] transition-all duration-300",
-                isActive ? "bg-primary scale-x-100" : "bg-transparent scale-x-0"
+              {/* 하단 밑줄 - 그라데이션 */}
+              <span
+                className={cn(
+                  "absolute bottom-0 left-0 w-full h-1 rounded-t-full transition-all duration-300",
+                  isActive 
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 scale-x-100" 
+                    : "bg-transparent scale-x-0 group-hover:scale-x-50 group-hover:bg-gray-300"
+                )}
+              ></span>
+
+              {/* 활성 배경 효과 */}
+              {isActive && (
+                <span className="absolute inset-0 bg-blue-50/50 rounded-t-lg -z-10"></span>
               )}
-            ></span>
-          </button>
-        );
-      })}
+            </button>
+          );
+        })}
+      </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

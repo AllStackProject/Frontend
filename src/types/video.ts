@@ -70,6 +70,7 @@ export interface AdminVideoWatchItem {
   id: number;
   title: string;
   creator: string;
+  created_at: string,
   expired_at: string;
   open_scope: "PUBLIC" | "PRIVATE" | "GROUP";
   watch_complete_rate: number;

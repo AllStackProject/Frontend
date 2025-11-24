@@ -6,14 +6,13 @@ const AdBanner = ({ image = "/dummy/AD.png" }: AdBannerProps) => {
   return (
     <div
       className="relative w-full h-60 rounded-2xl overflow-hidden shadow-xl 
-                 group perspective-1000 mb-6 cursor-pointer"
+                 group perspective-1000 mb-6"
     >
       {/* 배경 이미지 */}
       <img
         src={image}
         alt="광고 배너"
-        className="w-full h-full object-cover transition-transform duration-700 
-                   group-hover:scale-[1.03]"
+        className="w-full h-full object-cover transition-transform duration-700"
       />
 
       {/* 오버레이 */}

@@ -51,6 +51,21 @@ const VideoSection: React.FC = () => {
     });
   };
 
+  const formatExpireDate = (dateString?: string) => {
+    if (!dateString) return "만료 없음";
+    
+    const expireDate = new Date(dateString);
+    const now = new Date();
+    const yearsDiff = (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    
+    // 100년 이상이면 만료 없음으로 처리
+    if (yearsDiff >= 100) {
+      return "만료 없음";
+    }
+    
+    return formatDate(dateString);
+  };
+
   const loadVideos = async () => {
     try {
       setLoading(true);
@@ -282,7 +297,7 @@ const VideoSection: React.FC = () => {
                 </td>
 
                 <td className="p-3">
-                  {video.expireAt ? formatDate(video.expireAt) : "만료 없음"}
+                  {formatExpireDate(video.expireAt)}
                 </td>
 
                 <td className="p-3">

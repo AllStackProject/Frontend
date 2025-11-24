@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { getWatchedVideos } from "@/api/myactivity/getWatchedVideos"
 import type { WatchedVideo } from "@/types/video"
-import { PlayCircle, MessageCircleMore, Settings, Heart, ChevronLeft, ChevronRight } from "lucide-react"
+import { PlayCircle, MessageCircleMore, Settings, Heart, ChevronLeft, ChevronRight, Clock } from "lucide-react"
 
 const ContinueWatching = () => {
   const { orgId, nickname } = useAuth()
@@ -12,6 +12,30 @@ const ContinueWatching = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
+
+  // 상대적 날짜 표시 함수
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) {
+      return "오늘"
+    } else if (diffDays === 1) {
+      return "어제"
+    } else if (diffDays < 7) {
+      return `${diffDays}일 전`
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7)
+      return `${weeks}주 전`
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30)
+      return `${months}개월 전`
+    } else {
+      return date.toLocaleDateString("ko-KR")
+    }
+  }
 
   useEffect(() => {
     if (!orgId) return
@@ -71,7 +95,7 @@ const ContinueWatching = () => {
 
   return (
     <div className="w-full bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-gray-900">{nickname}님의 시청 중인 영상</h2>
         <button
           onClick={() => navigate("/orgmypage/learning")}
@@ -136,11 +160,11 @@ const ContinueWatching = () => {
                 border border-gray-200 rounded-xl 
                 hover:shadow-lg hover:border-blue-300 
                 hover:-translate-y-1
-                transition-all duration-300 p-3
+                transition-all duration-300 p-5
               "
             >
               <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 min-h-[40px]">
+                <p className="text-sm font-semibold text-gray-900  line-clamp-2 min-h-[20px]">
                   {v.name}
                 </p>
 
@@ -152,13 +176,18 @@ const ContinueWatching = () => {
                       background: `linear-gradient(90deg, #8b5cf6, #6366f1)`,
                     }}
                   />
-                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white mix-blend-difference">
+                  <span
+                    className={`absolute inset-0 flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
+                      v.watch_rate >= 50 ? "text-white" : "text-gray-800"
+                    }`}
+                  >
                     {v.watch_rate}%
                   </span>
                 </div>
 
                 <p className="text-xs text-gray-500 flex items-center gap-1">
-                  {new Date(v.recent_watch).toLocaleDateString("ko-KR")}
+                  <Clock size={12}/>
+                  <span className="font-medium">{getRelativeTime(v.recent_watch)}</span>
                 </p>
               </div>
             </div>

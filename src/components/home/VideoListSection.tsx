@@ -2,8 +2,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import VideoCard from "@/components/home/VideoCard";
 import CategorySection from "@/components/home/CategorySection";
-import { HiOutlineFire, HiOutlineClock, HiOutlineStar, HiChevronDown } from "react-icons/hi";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { HiOutlineFire, HiOutlineClock, HiOutlineStar } from "react-icons/hi";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { fetchHomeVideos } from "@/api/home/home";
 
@@ -28,7 +28,6 @@ type SortType = "latest" | "popular" | "recommended";
 
 const VideoListSection: React.FC<VideoListSectionProps> = ({
     selectedTag,
-    onFavoriteToggle,
 }) => {
     const [searchParams] = useSearchParams();
     const { orgId } = useAuth();
@@ -172,67 +171,83 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
     return (
         <div className="w-full">
             {/* 상단 필터 헤더 */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-10 mt-10">
-                <div className="flex items-center gap-3">
-                    <CategorySection onCategoryChange={setSelectedCategory} />
-                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                        {finalVideos.length}개
-                    </span>
-                </div>
+            <div className="rounded-xl mb-8 mt-3">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    {/* 왼쪽: 카테고리 + 결과 개수 */}
+                    <div className="flex items-center gap-3">
+                        <CategorySection onCategoryChange={setSelectedCategory} />
+                        <span className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-sm font-semibold rounded-full border border-blue-100">
+                            {finalVideos.length}개
+                        </span>
+                    </div>
 
-                {/* 정렬 드롭다운 */}
-                <div className="relative">
-                    <button
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-white border rounded-lg hover:bg-gray-50"
-                    >
-                        {sortOptions[sortType].icon}
-                        <span>{sortOptions[sortType].label}</span>
-                        <HiChevronDown
-                            className={`transition ml-auto ${isDropdownOpen ? "rotate-180" : ""}`}
-                        />
-                    </button>
+                    {/* 오른쪽: 정렬 드롭다운 */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="flex items-center gap-3 px-5 py-2.5 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all duration-200 min-w-[140px]"
+                        >
+                            <span className="text-blue-600">{sortOptions[sortType].icon}</span>
+                            <span className="font-medium text-gray-700">{sortOptions[sortType].label}</span>
+                            <ChevronDown
+                                size={18}
+                                className={`ml-auto text-gray-400 transition-transform duration-200 ${
+                                    isDropdownOpen ? "rotate-180" : ""
+                                }`}
+                            />
+                        </button>
 
-                    {isDropdownOpen && (
-                        <>
-                            <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
-                            <div className="absolute right-0 mt-2 w-[180px] bg-white border rounded-xl shadow-lg z-20 py-2">
-                                {Object.entries(sortOptions).map(([key, option]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => handleSortChange(key as SortType)}
-                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
-                                    >
-                                        <div
-                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${sortType === key
-                                                    ? "border-primary"
-                                                    : "border-gray-300"
-                                                }`}
+                        {isDropdownOpen && (
+                            <>
+                                <div 
+                                    className="fixed inset-0 z-10" 
+                                    onClick={() => setIsDropdownOpen(false)} 
+                                />
+                                <div className="absolute right-0 mt-2 w-[200px] bg-white border-2 border-gray-100 rounded-xl shadow-xl z-20 py-2 overflow-hidden">
+                                    {Object.entries(sortOptions).map(([key, option]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => handleSortChange(key as SortType)}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${
+                                                sortType === key
+                                                    ? "bg-blue-50 text-blue-700"
+                                                    : "hover:bg-gray-50 text-gray-700"
+                                            }`}
                                         >
-                                            {sortType === key && (
-                                                <div className="w-3 h-3 rounded-full bg-primary" />
-                                            )}
-                                        </div>
-                                        {option.icon}
-                                        <span>{option.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </>
-                    )}
+                                            <div
+                                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                                    sortType === key
+                                                        ? "border-blue-500"
+                                                        : "border-gray-300"
+                                                }`}
+                                            >
+                                                {sortType === key && (
+                                                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                                                )}
+                                            </div>
+                                            <span className={sortType === key ? "text-blue-600" : "text-gray-500"}>
+                                                {option.icon}
+                                            </span>
+                                            <span className="font-medium">{option.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* 비디오 그리드 */}
             {finalVideos.length === 0 ? (
-                <div className="text-center py-32 text-gray-500">
-                    해당 조건의 영상이 없습니다.
+                <div className="text-center py-32 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
+                    <div className="text-gray-400 mb-2 text-lg">📭</div>
+                    <p className="text-gray-500 font-medium">해당 조건의 영상이 없습니다.</p>
                 </div>
             ) : (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                         {currentVideos.map((video) => (
-
                             <VideoCard
                                 key={video.id}
                                 thumbnail={video.thumbnail}
@@ -254,23 +269,24 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage((p) => p - 1)}
-                                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+                                className="p-2.5 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                <ChevronLeft size={18} />
+                                <ChevronLeft size={18} className="text-gray-600" />
                             </button>
 
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                                 {getPageNumbers().map((page, index) => (
                                     <React.Fragment key={index}>
                                         {page === "..." ? (
-                                            <span className="px-3 py-2 text-gray-400">...</span>
+                                            <span className="px-3 py-2 text-gray-400 font-medium">...</span>
                                         ) : (
                                             <button
                                                 onClick={() => setCurrentPage(page as number)}
-                                                className={`px-3 py-2 rounded-lg text-sm transition ${currentPage === page
-                                                        ? "bg-primary text-white"
-                                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                                    }`}
+                                                className={`min-w-[40px] px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                                                    currentPage === page
+                                                        ? "bg-blue-600 text-white shadow-md scale-105"
+                                                        : "bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm"
+                                                }`}
                                             >
                                                 {page}
                                             </button>
@@ -282,9 +298,9 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({
                             <button
                                 disabled={currentPage === totalPages}
                                 onClick={() => setCurrentPage((p) => p + 1)}
-                                className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+                                className="p-2.5 rounded-lg bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                <ChevronRight size={18} />
+                                <ChevronRight size={18} className="text-gray-600" />
                             </button>
                         </div>
                     )}

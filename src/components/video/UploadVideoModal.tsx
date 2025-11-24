@@ -13,7 +13,7 @@ import {
 import { useModal } from "@/context/ModalContext";
 import { useAuth } from "@/context/AuthContext";
 import { fetchOrgMyActivityGroup } from "@/api/myactivity/info";
-import { requestVideoUpload, uploadVideoToS3 } from "@/api/video/video";
+import { requestVideoUpload, uploadVideoToS3, notifyUploadStatus} from "@/api/video/video";
 
 interface UploadVideoModalProps {
   onClose: () => void;
@@ -69,52 +69,70 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
 
   // 영상 업로드
-  const handleSubmit = async () => {
-    if (!formData.title.trim()) return showError("제목을 입력해주세요.");
-    if (!formData.description.trim()) return showError("설명을 입력해주세요.");
-    if (!formData.videoFile) return showError("동영상 파일을 업로드해주세요.");
-    if (!formData.thumbnail) return showError("썸네일 PNG 이미지를 업로드해주세요.");
+  // 영상 업로드
+const handleSubmit = async () => {
+  if (!formData.title.trim()) return showError("제목을 입력해주세요.");
+  if (!formData.description.trim()) return showError("설명을 입력해주세요.");
+  if (!formData.videoFile) return showError("동영상 파일을 업로드해주세요.");
+  if (!formData.thumbnail) return showError("썸네일 PNG 이미지를 업로드해주세요.");
 
-    if (formData.videoFile.type !== "video/mp4")
-      return showError("동영상은 MP4 형식만 업로드할 수 있습니다.");
-    if (formData.thumbnail.type !== "image/png")
-      return showError("썸네일은 PNG 파일만 가능합니다.");
+  if (formData.videoFile.type !== "video/mp4")
+    return showError("동영상은 MP4 형식만 업로드할 수 있습니다.");
+  if (formData.thumbnail.type !== "image/png")
+    return showError("썸네일은 PNG 파일만 가능합니다.");
 
-    if (!orgId) return showError("조직 정보가 없습니다.");
+  if (!orgId) return showError("조직 정보가 없습니다.");
 
-    try {
+  let videoId = null;
 
-      // Step 1: 서버에 메타데이터 전달 → presigned URL 받기
-      const { presigned_url } = await requestVideoUpload(orgId!, {
-        title: formData.title,
-        description: formData.description,
-        whole_time: formData.videoInfo!.durationSec,
-        is_comment: formData.allowComments,
-        ai_function: formData.aiType,
-        expired_at:
-          formData.expiration === "none" ? null : formData.customDate,
-        thumbnail_img: formData.thumbnail
-      });
+  try {
+    // 🔵 STEP 1: 메타데이터 업로드 → presigned URL + videoId 받기
+    const { presigned_url, video_id } = await requestVideoUpload(orgId!, {
+      title: formData.title,
+      description: formData.description,
+      whole_time: formData.videoInfo!.durationSec,
+      is_comment: formData.allowComments,
+      ai_function: formData.aiType,
+      expired_at: formData.expiration === "none" ? null : formData.customDate,
+      thumbnail_img: formData.thumbnail
+    });
 
-      // Step 2: presigned URL로 영상 업로드(PUT)
-      await uploadVideoToS3(presigned_url, formData.videoFile);
+    videoId = video_id; // 서버에서 반환한 videoId 저장
 
-      openModal({
-        type: "success",
-        title: "업로드 완료!",
-        message: "영상이 정상적으로 업로드되었습니다.",
-        autoClose: true,
-        autoCloseDelay: 2000,
-      });
-      onSubmit(formData);
-    } catch (err: any) {
-      openModal({
-        type: "error",
-        title: "오류 발생",
-        message: err.message || "업로드 중 오류가 발생했습니다."
-      });
+    // 🔵 STEP 2: presigned URL로 영상 PUT 업로드
+    await uploadVideoToS3(presigned_url, formData.videoFile);
+
+    // 🔵 STEP 3: 업로드 성공 여부 전달 → true
+    await notifyUploadStatus(orgId!, videoId, true);
+
+    openModal({
+      type: "success",
+      title: "업로드 완료!",
+      message: "영상이 정상적으로 업로드되었습니다.",
+      autoClose: true,
+      autoCloseDelay: 2000,
+    });
+
+    onSubmit(formData);
+  } catch (err: any) {
+    console.error("❌ Upload failed:", err);
+
+    // 요청 실패 시, videoId가 있으면 실패 여부 전달
+    if (videoId) {
+      try {
+        await notifyUploadStatus(orgId!, videoId, false);
+      } catch (e) {
+        console.error("❌ 업로드 실패 여부 전달 실패", e);
+      }
     }
-  };
+
+    openModal({
+      type: "error",
+      title: "업로드 실패",
+      message: err.message || "업로드 중 오류가 발생했습니다."
+    });
+  }
+};
 
   // 🔹 그룹 가져오기
   useEffect(() => {

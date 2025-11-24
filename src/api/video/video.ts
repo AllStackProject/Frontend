@@ -83,7 +83,7 @@ export const requestVideoUpload = async (
     expired_at: string | null;
     thumbnail_img: File;
   }
-): Promise<{ presigned_url: string }> => {
+): Promise<{ presigned_url: string, video_id: number }> => {
   try {
     const formData = new FormData();
     formData.append("title", payload.title);
@@ -134,5 +134,28 @@ export const uploadVideoToS3 = async (presignedUrl: string, file: File) => {
   } catch (error) {
     console.error("❌ S3 업로드 실패:", error);
     throw error;
+  }
+};
+
+/** Step 3. 업로드 성공 여부 서버 전달 */
+export const notifyUploadStatus = async (
+  orgId: number,
+  videoId: number,
+  isSuccess: boolean
+) => {
+  try {
+    const response = await api.put(
+      `/${orgId}/video/${videoId}`,
+      {},
+      {
+        params: { is_success: isSuccess },
+        tokenType: "org",
+      } as CustomAxiosRequestConfig
+    );
+
+    return response.data.result;
+  } catch (err: any) {
+    console.error("🚨 업로드 성공 여부 전달 실패", err);
+    throw new Error(err.response?.data?.message || "업로드 여부 전달 실패");
   }
 };

@@ -72,6 +72,11 @@ const VideoDetailPage: React.FC = () => {
     );
 
   // ====== API 데이터 구조 분리 ======
+  const playbackUrl =
+  sessionData.playback_url.startsWith("http")
+    ? sessionData.playback_url
+    : `https://${sessionData.playback_url}`;
+
   const video = sessionData.video;
   const comments = sessionData.comments || [];
   const categories = sessionData.categories || [];
@@ -89,7 +94,7 @@ const VideoDetailPage: React.FC = () => {
         {/* 왼쪽 영역: 플레이어 + 댓글 */}
         <div className="flex flex-col gap-6">
           <VideoPlayer
-            videoUrl={video.url || video.video_url || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"}
+            videoUrl={playbackUrl}
             videoId={video.id}
             orgId={orgId || 0}
             sessionId={sessionData.session_id}

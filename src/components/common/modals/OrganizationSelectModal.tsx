@@ -122,7 +122,7 @@ const OrganizationSelectModal = ({
     <>
       {/* 모달 시작 */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-20"
         onClick={onClose}
       >
         <div

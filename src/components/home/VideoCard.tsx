@@ -156,7 +156,7 @@ const VideoCard = ({
           className="
             text-base font-semibold text-text-primary leading-snug 
             group-hover:text-primary transition-colors
-            line-clamp-2 h-[48px]
+            line-clamp-2 h-[30px]
           "
         >
           {title}

@@ -1,6 +1,6 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
-import type { StartVideoSessionResponse, UploadVideoRequest, UploadVideoResponse } from "@/types/video";
+import type { StartVideoSessionResponse } from "@/types/video";
 import axios from "axios";
 
 /**

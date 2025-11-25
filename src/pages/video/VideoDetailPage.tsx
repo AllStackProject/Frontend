@@ -99,6 +99,7 @@ const VideoDetailPage: React.FC = () => {
             orgId={orgId || 0}
             sessionId={sessionData.session_id}
             wholeTime={video.whole_time}
+            heatmapCounts={sessionData.seg_view_cnts}
           />
 
           {showComments && (

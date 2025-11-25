@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Send, MessageCircle, CornerDownRight, ChevronDown, ChevronUp } from "lucide-react";
 import type { CommentWithReplies } from "@/types/comment";
 import { getVideoComments, postVideoComment } from "@/api/video/comment";
-import { getUserInfo } from "@/api/user/userInfo";
+import { useAuth } from "@/context/AuthContext";
 
 interface CommentSectionProps {
   orgId: number;
@@ -15,6 +15,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   videoId,
   initialComments = [],
 }) => {
+  const { nickname } = useAuth();
   const [comments, setComments] = useState<CommentWithReplies[]>(initialComments);
   const [loading, setLoading] = useState(initialComments.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -24,9 +25,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const [sortOrder, setSortOrder] = useState<"latest" | "oldest">("latest");
   const [submitting, setSubmitting] = useState(false);
   const [expandedComments, setExpandedComments] = useState<Record<number, boolean>>({});
-  const [currentUser, setCurrentUser] = useState<{ name: string; avatar?: string }>({
-    name: "사용자",
-  });
+  
 
   /* 대댓글 토글 */
   const toggleReplies = (commentId: number) => {
@@ -62,21 +61,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     return `/user-icon/user${avatarNumber}.png`;
   };
 
-  /* 사용자 정보 불러오기 */
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await getUserInfo();
-        setCurrentUser({
-          name: user.name || "사용자",
-        });
-      } catch (err) {
-        console.warn("⚠️ 사용자 정보 불러오기 실패:", err);
-      }
-    };
-    loadUser();
-  }, []);
-
   /* 댓글 목록 불러오기 */
   useEffect(() => {
     const loadComments = async () => {
@@ -108,15 +92,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           ...prev,
           {
             id: Date.now(),
-            video_id: videoId,
-            video_name: "",
-            video_img: "",
             text: newComment,
-            user_name: currentUser.name,
-            user_avatar: currentUser.avatar,
-            created_at: new Date().toISOString(),
+            creator: nickname,
             replies: [],
-          } as CommentWithReplies,
+          } as unknown as CommentWithReplies,
         ]);
         setNewComment("");
       }
@@ -135,29 +114,28 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       const res = await postVideoComment(orgId, videoId, replyContent, parentId);
 
       if (res.is_success) {
-        setComments((prev) =>
-          prev.map((comment) =>
-            comment.id === parentId
-              ? {
-                  ...comment,
-                  replies: [
-                    ...(comment.replies ?? []),
-                    {
-                      id: Date.now(),
-                      parent_comment_id: parentId,
-                      text: replyContent,
-                      user_name: currentUser.name,
-                      user_avatar: currentUser.avatar,
-                      created_at: new Date().toISOString(),
-                    },
-                  ],
-                }
-              : comment
-          )
-        );
-        setReplyContent("");
-        setReplyingTo(null);
-      }
+  setComments((prev) =>
+    prev.map((comment) =>
+      comment.id === parentId
+        ? {
+            ...comment,
+            replies: [
+              ...(comment.replies ?? []),
+              {
+                id: Date.now(),
+                parent_comment_id: parentId,
+                text: replyContent,
+                creator: nickname ?? "사용자",
+                created_at: new Date().toISOString(),
+              },
+            ],
+          }
+        : comment
+    )
+  );
+  setReplyContent("");
+  setReplyingTo(null);
+}
     } catch (err: any) {
       alert(err.message || "답글 작성에 실패했습니다.");
     } finally {
@@ -228,8 +206,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       <div className="p-6 border-b border-gray-200">
         <div className="flex gap-3">
           <img
-            src={currentUser.avatar || getRandomAvatar(0)}
-            alt={currentUser.name}
+            src={getRandomAvatar(0)}
             className="w-10 h-10 rounded-full object-cover"
           />
           <div className="flex-1 flex gap-2">
@@ -274,14 +251,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               <div className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex gap-4">
                   <img
-                    src={comment.user_avatar || getRandomAvatar(comment.id)}
-                    alt={comment.user_name || "사용자"}
+                    src={getRandomAvatar(comment.id)}
+                    alt={comment.creator}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-gray-900 text-sm">
-                        {comment.user_name || "사용자"}
+                        {comment.creator}
                       </span>
                       <span className="text-xs text-gray-500">
                         {formatDate(comment.created_at)}
@@ -322,8 +299,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                 {replyingTo === comment.id && (
                   <div className="mt-4 ml-14 flex gap-3">
                     <img
-                      src={currentUser.avatar || getRandomAvatar(0)}
-                      alt={currentUser.name}
+                      src={getRandomAvatar(0)}
                       className="w-9 h-9 rounded-full object-cover"
                     />
                     <div className="flex-1 flex gap-2">
@@ -333,7 +309,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                         onKeyPress={(e) =>
                           handleKeyPress(e, () => handleAddReply(comment.id))
                         }
-                        placeholder={`${comment.user_name || "사용자"}님에게 답글 작성...`}
+                        placeholder={`${comment.creator || "사용자"}님에게 답글 작성...`}
                         disabled={submitting}
                         className="flex-1 px-3 py-2 border-b-2 border-gray-300 focus:border-blue-600 focus:outline-none resize-none text-sm disabled:bg-gray-100 bg-transparent"
                         rows={2}
@@ -362,14 +338,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                       <div className="flex gap-3">
                         <CornerDownRight size={16} className="text-gray-400 mt-1 flex-shrink-0" />
                         <img
-                          src={reply.user_avatar || getRandomAvatar(reply.id)}
-                          alt={reply.user_name || "사용자"}
+                          src={getRandomAvatar(reply.id)}
+                          alt={reply.creator}
                           className="w-9 h-9 rounded-full object-cover"
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-semibold text-gray-900 text-sm">
-                              {reply.user_name || "사용자"}
+                              {reply.creator}
                             </span>
                             <span className="text-xs text-gray-500">
                               {formatDate(reply.created_at)}

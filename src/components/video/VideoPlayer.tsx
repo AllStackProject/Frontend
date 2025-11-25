@@ -3,7 +3,7 @@ import Hls from "hls.js";
 import { Play, Pause, Settings, Maximize, Volume2, Volume1, VolumeX } from "lucide-react";
 import { useVideoAnalytics } from "@/hooks/video/useVideoAnalytics";
 import VideoHeatMap from "@/components/video/VideoHeatMap";
-import { fetchVideoHeatMap, convertToSegments, normalizeHeatMapData } from "@/api/video/videoHeatmap";
+import { convertToSegments, normalizeHeatMapData } from "@/api/video/videoHeatmap";
 import type { NormalizedSegment } from "@/types/videoHeatmap";
 
 interface VideoPlayerProps {
@@ -12,14 +12,16 @@ interface VideoPlayerProps {
   videoId: number;
   orgId: number;
   wholeTime: number;
+  heatmapCounts: number[];
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
- videoUrl,
+  videoUrl,
   sessionId,
   videoId,
   orgId,
   wholeTime,
+  heatmapCounts,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -45,37 +47,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [heatMapData, setHeatMapData] = useState<NormalizedSegment[]>([]);
   const [showHeatMap, setShowHeatMap] = useState(false);
 
-const analytics = useVideoAnalytics({
-  sessionId,
-  videoId,
-  orgId,
-  wholeTime,
-  getVideoEl: () => videoRef.current,
-});
+  const analytics = useVideoAnalytics({
+    sessionId,
+    videoId,
+    orgId,
+    wholeTime,
+    getVideoEl: () => videoRef.current,
+  });
 
   // ---- Heat Map 데이터 로드
   useEffect(() => {
-    const loadHeatMap = async () => {
-      try {
-        // 서버에서 배열 형식으로 받아옴: [12, 23, 56, 48, ...]
-        const viewCounts = await fetchVideoHeatMap(videoId);
+    if (!heatmapCounts || heatmapCounts.length === 0) return;
 
-        // 배열을 VideoSegment 형식으로 변환 (10초 단위)
-        const segments = convertToSegments(viewCounts, 10);
+    const segments = convertToSegments(heatmapCounts, 10);
+    const normalized = normalizeHeatMapData(segments);
 
-        // 정규화 (0~1 사이 값으로)
-        const normalized = normalizeHeatMapData(segments);
-
-        setHeatMapData(normalized);
-      } catch (error) {
-        console.error("Failed to load heat map data:", error);
-      }
-    };
-
-    if (videoId) {
-      loadHeatMap();
-    }
-  }, [videoId]);
+    setHeatMapData(normalized);
+  }, [heatmapCounts]);
 
   // ---- 썸네일 생성
   useEffect(() => {
@@ -155,25 +143,22 @@ const analytics = useVideoAnalytics({
   }, [isPlaying]);
 
   // ---- HLS.js 초기화
-  // HLS.js 초기화
-useEffect(() => {
-  let hls: Hls | null = null;
-  const video = videoRef.current;
-  if (!video) return;
+  useEffect(() => {
+    let hls: Hls | null = null;
+    const video = videoRef.current;
+    if (!video) return;
 
-  // JOIN 이후 딜레이를 두고 HLS attach
-  const delay = setTimeout(() => {
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = videoUrl;
     } else if (Hls.isSupported()) {
       hls = new Hls({
         enableWorker: true,
         xhrSetup: (xhr) => {
-          xhr.withCredentials = true; 
+          xhr.withCredentials = true;
         },
       });
 
-      console.log("🎬 HLS 시작됨 (딜레이 적용)");
+      console.log("🎬 HLS 초기화됨");
       hls.loadSource(videoUrl);
       hls.attachMedia(video);
 
@@ -187,13 +172,11 @@ useEffect(() => {
     } else {
       video.src = videoUrl;
     }
-  }, 1500);
 
-  return () => {
-    clearTimeout(delay);
-    if (hls) hls.destroy();
-  };
-}, [videoUrl]);
+    return () => {
+      if (hls) hls.destroy();
+    };
+  }, [videoUrl]);
 
   // ---- 비디오 기본 상태
   useEffect(() => {

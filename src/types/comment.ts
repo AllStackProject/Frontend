@@ -12,14 +12,10 @@ export interface ApiResponse<T> {
  * 댓글 (부모)
  */
 export interface Comment {
-  user_avatar: string;
-  user_name: string;
   id: number;
   text: string;
+  creator: string;
   created_at?: string;
-  video_id: number;
-  video_name?: string;
-  video_img?: string;
 }
 
 /**
@@ -28,11 +24,9 @@ export interface Comment {
 export interface ChildComment {
   id: number;
   text: string;
+  creator: string;
+  created_at: string;
   parent_comment_id: number;
-  created_at?: string;
-  user_id?: number;
-  user_name?: string;
-  user_avatar?: string;
 }
 
 /**

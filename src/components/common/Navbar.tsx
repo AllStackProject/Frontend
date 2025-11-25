@@ -291,7 +291,7 @@ const Navbar = () => {
       {/* 모바일 메뉴 */}
       {isMobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 top-[57px] bg-black bg-opacity-50 z-40"
+          className="md:hidden fixed inset-0 top-[70px] bg-black bg-opacity-50 z-30"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <div
@@ -300,7 +300,7 @@ const Navbar = () => {
           >
             {/* 프로필 정보 */}
             <div className="flex items-center gap-3 pb-4 border-b border-gray-200 mb-4">
-              <img src="/user9.png" alt="user" className="w-12 h-12 rounded-full" />
+              <img src="/user-icon/user9.png" alt="user" className="w-12 h-12 rounded-full" />
               <div>
                 <p className="font-semibold text-gray-800">{nickname}</p>
                 <p className="text-xs text-gray-500">{orgName}</p>

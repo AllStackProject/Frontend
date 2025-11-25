@@ -272,14 +272,13 @@ const ProfileSection: React.FC = () => {
 
   return (
     <>
-      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-base border border-border-light p-6">
+        <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-base border border-border-light p-4 sm:p-6 w-full">
         {/* 상단 프로필 */}
-        <div className="flex items-center justify-between border-b border-border-light pb-5 mb-5">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 border-b pb-5 mb-5">
+          <div className="flex items-center gap-4 sm:gap-6">
             <img
               src={user.avatar}
-              alt="프로필 이미지"
-              className="w-20 h-20 rounded-full object-cover shadow-sm"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover shadow-sm"
             />
             <div className="flex flex-col space-y-2">
               <div className="flex items-center gap-2">

@@ -11,7 +11,26 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
 
-  const MAX_VISIBLE = 9;
+  /** 반응형 - 화면 크기별 최대 노출 개수 결정 */
+  const [maxVisible, setMaxVisible] = useState(9);
+
+  useEffect(() => {
+    const updateVisible = () => {
+      const width = window.innerWidth;
+
+      if (width < 500) {
+        setMaxVisible(4);
+      } else if (width < 768) {
+        setMaxVisible(5);
+      } else {
+        setMaxVisible(9);
+      }
+    };
+
+    updateVisible();
+    window.addEventListener("resize", updateVisible);
+    return () => window.removeEventListener("resize", updateVisible);
+  }, []);
 
   /** API 로딩 */
   useEffect(() => {
@@ -40,12 +59,14 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
     load();
   }, [orgId]);
 
+  /** 숨겨진 개수 계산 */
   const hiddenCount =
-    categories.length > MAX_VISIBLE ? categories.length - MAX_VISIBLE : 0;
+    categories.length > maxVisible ? categories.length - maxVisible : 0;
 
+  /** 보여줄 카테고리 */
   const displayCategories = showAll
     ? categories
-    : categories.slice(0, MAX_VISIBLE);
+    : categories.slice(0, maxVisible);
 
   const handleCategoryClick = (cat: string) => {
     setSelected(cat);
@@ -61,51 +82,53 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
   }
 
   return (
-      <div className="flex flex-wrap justify-center items-center gap-3">
+    <div className="flex flex-wrap justify-center items-center gap-3">
 
-        {/* 카테고리 버튼 */}
-        {displayCategories.map((category) => {
-          const isSelected = selected === category;
-          return (
-            <button
-              key={category}
-              onClick={() => handleCategoryClick(category)}
-              className={`
-                rounded-full px-4 py-2 text-sm font-semibold transition
-                ${
-                  isSelected
-                    ? "bg-primary text-white"
-                    : "bg-white text-gray-700 border border-gray-300 hover:border-primary"
-                }
-              `}
-            >
-              {category}
-            </button>
-          );
-        })}
-        {/* 더보기 버튼 */}
-        {hiddenCount > 0 && (
+      {/* 카테고리 버튼 */}
+      {displayCategories.map((category) => {
+        const isSelected = selected === category;
+        return (
           <button
-            onClick={() => setShowAll(!showAll)}
-            className="
-              flex items-center gap-1 rounded-full px-3 py-1 text-xs
-              text-gray-500 bg-gray-100 border border-gray-300 hover:border-primary transition
-            "
+            key={category}
+            onClick={() => handleCategoryClick(category)}
+            className={`
+              rounded-full px-4 py-2 text-sm font-semibold transition
+              ${
+                isSelected
+                  ? "bg-primary text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:border-primary"
+              }
+            `}
           >
-            {showAll ? (
-              <>
-                접기
-                <ChevronDown className="h-4 w-4 rotate-180 transition-transform" />
-              </>
-            ) : (
-              <>
-                더보기
-                <ChevronDown className="h-4 w-4 transition-transform" />
-              </>
-            )}
+            {category}
           </button>
-        )}
-      </div>
+        );
+      })}
+
+      {/* 더보기 버튼 */}
+      {hiddenCount > 0 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="
+            flex items-center gap-1 rounded-full px-3 py-1 text-xs
+            text-gray-500 bg-gray-100 border border-gray-300 hover:border-primary transition
+          "
+        >
+          {showAll ? (
+            <>
+              접기
+              <ChevronDown className="h-4 w-4 rotate-180 transition-transform" />
+            </>
+          ) : (
+            <>
+              더보기
+              <ChevronDown className="h-4 w-4 transition-transform" />
+            </>
+          )}
+        </button>
+      )}
+
+    </div>
   );
 };
 

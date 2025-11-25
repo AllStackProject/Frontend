@@ -8,7 +8,7 @@ interface VideoInfoProps {
   videoId: number;
   title: string;
   views: number;
-  description?: string;         
+  description?: string;
   uploadDate?: string;
   duration?: string;
   categories?: string[];
@@ -21,9 +21,9 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
   title,
   views,
   uploadDate = "",
-  description = "",    
+  description = "",
   duration,
-  categories = [],     
+  categories = [],
   initialFavorite = false,
 }) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
@@ -99,10 +99,10 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
 
       {/* 메타데이터 영역 */}
       <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-sm">
 
           {/* 조회수 */}
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-1 text-gray-600">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
               <Eye size={16} className="text-blue-600" />
             </div>
@@ -115,51 +115,34 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
           </div>
 
           {/* 업로드일 */}
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-1 text-gray-600">
             <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
               <Calendar size={16} className="text-green-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500 font-medium">업로드</p>
-              <p className="font-semibold text-gray-900">
-                {uploadDate || "-"}
-              </p>
+              <p className="font-semibold text-gray-900">{uploadDate || "-"}</p>
             </div>
           </div>
-
-          {/* 재생시간 */}
-          {duration && (
-            <div className="flex items-center gap-2 text-gray-600">
-              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                <Clock size={16} className="text-purple-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 font-medium">재생시간</p>
-                <p className="font-semibold text-gray-900">
-                  {duration}
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* 스크랩 버튼 */}
           <div className="ml-auto">
             <button
               onClick={handleFavoriteClick}
               disabled={loading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold transition-all ${
-                isFavorite
-                  ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
-                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-              } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition ${isFavorite
+                  ? "bg-red-50 border-red-200"
+                  : "bg-white border-gray-300"
+                }`}
             >
               {isFavorite ? (
                 <HiHeart className="w-5 h-5 text-red-500" />
               ) : (
-                <HiOutlineHeart className="w-5 h-5" />
+                <HiOutlineHeart className="w-5 h-5 text-gray-600" />
               )}
             </button>
           </div>
+
         </div>
       </div>
 

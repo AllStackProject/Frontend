@@ -19,20 +19,25 @@ const Dashboard = () => {
 
   return (
     <OrgMainLayout>
-      <div className="px-8 py-6 w-full h-full">
-       {/* ====== 상단 Apple TV 스타일 헤더 ====== */}
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+      <div className="px-4 md:px-6 lg:px-8 py-4 md:py-6 w-full h-full">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
+
           {/* 좌측 30%: 배너 */}
           <div className="lg:col-span-4 w-full">
             <AdBanner />
           </div>
 
-          {/* 우측 70%: 빠른 메뉴 + 시청중 영상 */}
+          {/* 우측 70%: 빠른 메뉴 + 시청중 */}
           <div className="lg:col-span-6 flex flex-col gap-6 w-full">
             <ContinueWatching />
           </div>
         </div>
-        <VideoList selectedTag="전체" />
+
+        {/* ====== 기본 영상 목록 ====== */}
+        <div className="mt-6">
+          <VideoList selectedTag="전체" />
+        </div>
+
       </div>
     </OrgMainLayout>
   );

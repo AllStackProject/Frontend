@@ -1,9 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
-import { Play, Pause, Settings, Maximize, Volume2, Volume1, VolumeX } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Settings,
+  Maximize,
+  Volume2,
+  Volume1,
+  VolumeX,
+  SkipForward,
+  SkipBack,
+  Minimize,
+} from "lucide-react";
 import { useVideoAnalytics } from "@/hooks/video/useVideoAnalytics";
 import VideoHeatMap from "@/components/video/VideoHeatMap";
-import { convertToSegments, normalizeHeatMapData } from "@/api/video/videoHeatmap";
+import {
+  convertToSegments,
+  normalizeHeatMapData,
+} from "@/api/video/videoHeatmap";
 import type { NormalizedSegment } from "@/types/videoHeatmap";
 
 interface VideoPlayerProps {
@@ -25,28 +39,42 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showSubMenu, setShowSubMenu] = useState<string | null>(null);
-  const [subtitle, setSubtitle] = useState(true);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [quality, setQuality] = useState("자동");
   const [playbackRate, setPlaybackRate] = useState(1);
+
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showControls, setShowControls] = useState(true);
+
   const [thumbnail, setThumbnail] = useState<string>("");
-  const settingsRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
+  const [showControls, setShowControls] = useState(true);
+  const [skipFeedback, setSkipFeedback] = useState<{ type: "forward" | "backward" | null; show: boolean }>({ 
+    type: null, 
+    show: false 
+  });
+  const [playPauseFeedback, setPlayPauseFeedback] = useState<"play" | "pause" | null>(null);
   const hideControlsTimeout = useRef<number | null>(null);
 
-  // ---- Heat Map 관련 state
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const speedRef = useRef<HTMLDivElement>(null);
+  const volumeRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  // Heatmap
   const [heatMapData, setHeatMapData] = useState<NormalizedSegment[]>([]);
   const [showHeatMap, setShowHeatMap] = useState(false);
 
+  // Analytics hook
   const analytics = useVideoAnalytics({
     sessionId,
     videoId,
@@ -55,94 +83,61 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     getVideoEl: () => videoRef.current,
   });
 
-  // ---- Heat Map 데이터 로드
+  /* ---------------------------- Skip Functions ---------------------------- */
+  const skipForward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.min(
+        videoRef.current.currentTime + 5,
+        videoRef.current.duration
+      );
+      // 피드백 표시
+      setSkipFeedback({ type: "forward", show: true });
+      setTimeout(() => setSkipFeedback({ type: null, show: false }), 500);
+    }
+  };
+
+  const skipBackward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(
+        videoRef.current.currentTime - 5,
+        0
+      );
+      // 피드백 표시
+      setSkipFeedback({ type: "backward", show: true });
+      setTimeout(() => setSkipFeedback({ type: null, show: false }), 500);
+    }
+  };
+
+  /* ---------------------------- Heatmap Load ----------------------------- */
   useEffect(() => {
-    if (!heatmapCounts || heatmapCounts.length === 0) return;
-
-    const segments = convertToSegments(heatmapCounts, 10);
-    const normalized = normalizeHeatMapData(segments);
-
-    setHeatMapData(normalized);
+    if (heatmapCounts?.length > 0) {
+      const segments = convertToSegments(heatmapCounts, 10);
+      const normalized = normalizeHeatMapData(segments);
+      setHeatMapData(normalized);
+    }
   }, [heatmapCounts]);
 
-  // ---- 썸네일 생성
+  /* ---------------------------- Thumbnail ---------------------------- */
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const v = videoRef.current;
+    if (!v) return;
 
-    const generateThumbnail = () => {
+    const handleThumb = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      canvas.width = v.videoWidth;
+      canvas.height = v.videoHeight;
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
         setThumbnail(canvas.toDataURL("image/jpeg"));
       }
     };
 
-    video.addEventListener("loadeddata", generateThumbnail);
-    return () => video.removeEventListener("loadeddata", generateThumbnail);
+    v.addEventListener("loadeddata", handleThumb);
+    return () => v.removeEventListener("loadeddata", handleThumb);
   }, []);
 
-  // ---- 컨트롤러 자동 숨김/표시
-  useEffect(() => {
-    const handleMouseMove = () => {
-      setShowControls(true);
-
-      // 기존 타이머 제거
-      if (hideControlsTimeout.current) {
-        clearTimeout(hideControlsTimeout.current);
-      }
-
-      // 재생 중일 때만 자동 숨김 (3초 후)
-      if (isPlaying) {
-        hideControlsTimeout.current = window.setTimeout(() => {
-          setShowControls(false);
-        }, 3000);
-      }
-    };
-
-    const handleMouseLeave = () => {
-      // 재생 중일 때만 즉시 숨김
-      if (isPlaying) {
-        if (hideControlsTimeout.current) {
-          clearTimeout(hideControlsTimeout.current);
-        }
-        hideControlsTimeout.current = window.setTimeout(() => {
-          setShowControls(false);
-        }, 1000);
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener("mousemove", handleMouseMove);
-      container.addEventListener("mouseleave", handleMouseLeave);
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("mousemove", handleMouseMove);
-        container.removeEventListener("mouseleave", handleMouseLeave);
-      }
-      if (hideControlsTimeout.current) {
-        clearTimeout(hideControlsTimeout.current);
-      }
-    };
-  }, [isPlaying]);
-
-  // ---- 재생 상태 변경 시 컨트롤러 표시
-  useEffect(() => {
-    if (!isPlaying) {
-      setShowControls(true);
-      if (hideControlsTimeout.current) {
-        clearTimeout(hideControlsTimeout.current);
-      }
-    }
-  }, [isPlaying]);
-
-  // ---- HLS.js 초기화
+  /* ---------------------------- HLS Setup ---------------------------- */
   useEffect(() => {
     let hls: Hls | null = null;
     const video = videoRef.current;
@@ -158,16 +153,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         },
       });
 
-      console.log("🎬 HLS 초기화됨");
+      hlsRef.current = hls;
       hls.loadSource(videoUrl);
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setQuality("자동");
+        const instance = hlsRef.current;
+        if (!instance) return;
+
+        const levels = instance.levels;
+        if (!levels || levels.length === 0) return;
+
+        const highest = levels.length - 1;
+        instance.currentLevel = highest;
+
+        setQuality(`${levels[highest].height}p`);
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
-        console.error("[HLS] Error:", data);
+        console.error("[HLS ERROR]", data);
       });
     } else {
       video.src = videoUrl;
@@ -178,46 +182,43 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, [videoUrl]);
 
-  // ---- 비디오 기본 상태
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.volume = volume;
-    v.muted = isMuted;
-  }, [volume, isMuted]);
-
-  // ---- 메타데이터 / 타임 업데이트
+  /* ---------------------------- Video Events ---------------------------- */
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
-    const handleLoaded = () => setDuration(v.duration || 0);
-    const handleTimeUpdate = () => {
+    const onLoaded = () => setDuration(v.duration || 0);
+    const onTime = () => {
       if (!isDragging && v.duration > 0) {
         setCurrentTime(v.currentTime);
         setProgress((v.currentTime / v.duration) * 100);
       }
     };
 
-    v.addEventListener("loadedmetadata", handleLoaded);
-    v.addEventListener("timeupdate", handleTimeUpdate);
+    v.addEventListener("loadedmetadata", onLoaded);
+    v.addEventListener("timeupdate", onTime);
+
     return () => {
-      v.removeEventListener("loadedmetadata", handleLoaded);
-      v.removeEventListener("timeupdate", handleTimeUpdate);
+      v.removeEventListener("loadedmetadata", onLoaded);
+      v.removeEventListener("timeupdate", onTime);
     };
   }, [isDragging]);
 
-  // ---- Analytics 이벤트 연결
+  /* ---------------------------- Analytics events ---------------------------- */
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
     const handlePlay = () => {
       setIsPlaying(true);
+      setPlayPauseFeedback("pause");
+      setTimeout(() => setPlayPauseFeedback(null), 500);
       analytics.onPlay();
     };
     const handlePause = () => {
       setIsPlaying(false);
+      setPlayPauseFeedback("play");
+      setTimeout(() => setPlayPauseFeedback(null), 500);
       if (!isDragging) analytics.onPause();
     };
     const handleSeeking = () => analytics.onSeeking();
@@ -242,63 +243,92 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, [analytics, isDragging]);
 
-  // ---- 외부 클릭 시 설정 닫기
+  /* ---------------------------- Autohide Controls ---------------------------- */
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setShowSettings(false);
-        setShowSubMenu(null);
-      }
-    };
-    if (showSettings) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showSettings]);
+    const container = containerRef.current;
+    if (!container) return;
 
-  // ---- 진행바 드래그
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !progressRef.current || !videoRef.current) return;
-      const rect = progressRef.current.getBoundingClientRect();
-      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-      const pct = (x / rect.width) * 100;
-      const newTime = (pct / 100) * (videoRef.current.duration || 0);
-      setProgress(pct);
-      setCurrentTime(newTime);
-    };
-    const handleMouseUp = () => {
-      if (isDragging && videoRef.current) {
-        videoRef.current.currentTime = currentTime;
-        setIsDragging(false);
+    const show = () => {
+      setShowControls(true);
+
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+
+      if (isPlaying) {
+        hideControlsTimeout.current = window.setTimeout(
+          () => setShowControls(false),
+          3000
+        );
       }
     };
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    }
+
+    const leave = () => {
+      if (isPlaying) {
+        hideControlsTimeout.current = window.setTimeout(
+          () => setShowControls(false),
+          1000
+        );
+      }
+    };
+
+    container.addEventListener("mousemove", show);
+    container.addEventListener("mouseleave", leave);
+
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("mousemove", show);
+      container.removeEventListener("mouseleave", leave);
     };
-  }, [isDragging, currentTime]);
+  }, [isPlaying]);
 
-  // ---- 재생/정지/전체화면
-  const togglePlay = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    isPlaying ? v.pause() : v.play();
-  };
+  /* ---------------------------- Keyboard Shortcuts ---------------------------- */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 입력 필드에서는 동작하지 않도록
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
 
+      switch (e.code) {
+        case "Space":
+          e.preventDefault();
+          if (videoRef.current) {
+            if (isPlaying) {
+              videoRef.current.pause();
+            } else {
+              videoRef.current.play();
+            }
+          }
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          skipBackward();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          skipForward();
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isPlaying]);
+
+  /* ---------------------------- Fullscreen ---------------------------- */
   const toggleFullscreen = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (document.fullscreenElement) document.exitFullscreen();
-    else v.requestFullscreen();
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      container.requestFullscreen();
+    }
   };
 
-  // ---- 볼륨 관련
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
+  /* ---------------------------- Volume ---------------------------- */
+  const toggleMute = () => setIsMuted(!isMuted);
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const vol = Number(e.target.value);
@@ -312,242 +342,364 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return <Volume2 size={20} />;
   };
 
+  /* ---------------------------- Quality Change ---------------------------- */
+  const changeQuality = (value: string) => {
+    const hls = hlsRef.current;
+    if (!hls) return;
+
+    if (value === "auto") {
+      hls.currentLevel = -1;
+      setQuality("자동");
+      setShowSettings(false);
+      return;
+    }
+
+    const target = Number(value);
+    const levelIndex = hls.levels.findIndex((lvl) => lvl.height === target);
+
+    if (levelIndex !== -1) {
+      hls.currentLevel = levelIndex;
+      setQuality(`${target}p`);
+      setShowSettings(false);
+    }
+  };
+
+  /* ---------------------------- Progress Bar ---------------------------- */
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current || !videoRef.current) return;
+
     const rect = progressRef.current.getBoundingClientRect();
     const pct = ((e.clientX - rect.left) / rect.width) * 100;
     const newTime = (pct / 100) * (videoRef.current.duration || 0);
+
     videoRef.current.currentTime = newTime;
     setProgress(pct);
     setCurrentTime(newTime);
   };
 
-  const formatTime = (s: number) => {
-    if (!s || isNaN(s)) return "0:00";
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, "0")}`;
+  const formatTime = (sec: number) => {
+    if (!sec || isNaN(sec)) return "0:00";
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+    
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    }
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  // ---- 설정 메뉴
-  const settingsMenu = [
-    { id: "quality", label: "화질", value: quality },
-    { id: "speed", label: "재생 속도", value: `${playbackRate}x` },
-    { id: "volume", label: "볼륨", value: isMuted ? "음소거" : `${Math.round(volume * 100)}%` },
+  /* ---------------------------- Settings ---------------------------- */
+  const qualityOptions = [
+    { label: "자동", value: "auto" },
+    { label: "720p", value: "720" },
+    { label: "540p", value: "540" },
+    { label: "360p", value: "360" },
   ];
 
-  const subMenus: Record<string, { label: string; value: any }[]> = {
-    quality: [
-      { label: "자동", value: "auto" },
-      { label: "720p", value: "720" },
-      { label: "480p", value: "480" },
-      { label: "360p", value: "360" },
-    ],
-    speed: [
-      { label: "2.0x", value: 2 },
-      { label: "1.5x", value: 1.5 },
-      { label: "1.25x", value: 1.25 },
-      { label: "1.0x (기본)", value: 1 },
-      { label: "0.75x", value: 0.75 },
-      { label: "0.5x", value: 0.5 },
-    ],
-    volume: [],
-  };
+  const speedOptions = [
+    { label: "2.0x", value: 2 },
+    { label: "1.5x", value: 1.5 },
+    { label: "1.25x", value: 1.25 },
+    { label: "1.0x", value: 1 },
+    { label: "0.75x", value: 0.75 },
+    { label: "0.5x", value: 0.5 },
+  ];
 
-  const handleSubMenuClick = (menuId: string, value: any) => {
-    if (menuId === "subtitle") setSubtitle(value);
-    if (menuId === "speed" && videoRef.current) {
-      videoRef.current.playbackRate = value;
-      setPlaybackRate(value);
-    }
-    if (menuId !== "volume") {
-      setShowSubMenu(null);
-      setShowSettings(false);
-    }
-  };
+  /* --------------------------------------------------------------------- */
+
   return (
     <div
       ref={containerRef}
-      className="relative w-full bg-black rounded-xl overflow-hidden shadow-md group"
-      style={{ cursor: showControls ? 'default' : 'none' }}
+      className="relative w-full bg-black rounded-xl overflow-hidden shadow-lg group"
+      style={{ cursor: showControls ? "default" : "none" }}
     >
-      {/* 비디오 */}
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+      `}</style>
+      {/* ---------------------------- VIDEO ---------------------------- */}
       <video
         ref={videoRef}
         className="w-full aspect-video cursor-pointer bg-black"
-        onClick={togglePlay}
+        onClick={() =>
+          isPlaying ? videoRef.current?.pause() : videoRef.current?.play()
+        }
         playsInline
         preload="metadata"
         poster={thumbnail || undefined}
       />
 
-      {/* 중앙 재생 버튼 (일시정지 시만 표시) */}
-      {!isPlaying && showControls && (
+      {/* ---------------------------- Play Button (Center - when stopped) ---------------------------- */}
+      {!isPlaying && showControls && !playPauseFeedback && (
         <div
-          className="absolute inset-0 flex items-center justify-center cursor-pointer"
-          onClick={togglePlay}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
         >
-          <div className="bg-black/50 rounded-full p-6 hover:bg-black/70 transition-all hover:scale-110">
-            <Play size={48} strokeWidth={2} fill="white" className="text-white" />
+          <div 
+            className="bg-black/30 backdrop-blur-sm rounded-full p-5 pointer-events-auto cursor-pointer hover:bg-black/50 hover:scale-110 transition-all"
+            onClick={() => videoRef.current?.play()}
+          >
+            <Play size={48} fill="white" className="text-white" />
           </div>
         </div>
       )}
 
-      {/* 컨트롤러 */}
+      {/* ---------------------------- Play/Pause Feedback (Center) ---------------------------- */}
+      {playPauseFeedback === "play" && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-black/30 backdrop-blur-sm rounded-full p-5 animate-fade-in">
+            <Play size={48} fill="white" className="text-white" />
+          </div>
+        </div>
+      )}
+
+      {playPauseFeedback === "pause" && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-black/30 backdrop-blur-sm rounded-full p-5 animate-fade-in">
+            <Pause size={48} className="text-white" />
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------- Skip Backward Feedback (Left) ---------------------------- */}
+      {skipFeedback.show && skipFeedback.type === "backward" && (
+        <div className="absolute left-16 top-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="bg-black/50 backdrop-blur-sm rounded-2xl px-6 py-4 animate-fade-in">
+            <div className="flex items-center gap-3 text-white">
+              <SkipBack size={28} />
+              <span className="text-2xl font-bold">5초</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------- Skip Forward Feedback (Right) ---------------------------- */}
+      {skipFeedback.show && skipFeedback.type === "forward" && (
+        <div className="absolute right-16 top-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="bg-black/50 backdrop-blur-sm rounded-2xl px-6 py-4 animate-fade-in">
+            <div className="flex items-center gap-3 text-white">
+              <span className="text-2xl font-bold">5초</span>
+              <SkipForward size={28} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------- Controls ---------------------------- */}
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
-          }`}
+        className={`absolute bottom-0 left-0 right-0 transition-opacity duration-300 ${
+          showControls ? "opacity-100" : "opacity-0"
+        }`}
       >
-        {/* 재생바 + Heat Map (상단) */}
-        <div className="px-4 pb-2">
+        {/* Progress Bar */}
+        <div className="px-3 pb-1">
           <div
             ref={progressRef}
-            className="h-[4px] bg-white/30 rounded cursor-pointer relative group/progress"
+            className="h-1 bg-white/30 rounded-full cursor-pointer relative hover:h-1.5 transition-all group/progress"
             onClick={handleProgressClick}
             onMouseEnter={() => setShowHeatMap(true)}
             onMouseLeave={() => setShowHeatMap(false)}
           >
-            {/* Heat Map 그래프 (hover 시 표시) */}
             {showHeatMap && heatMapData.length > 0 && duration > 0 && (
-              <div className="absolute bottom-5 left-0 w-full h-[40px] -translate-y-ful ">
+              <div className="absolute bottom-3 left-0 w-full h-[40px]">
                 <VideoHeatMap
                   segments={heatMapData}
                   duration={duration}
-                  height={50}
-                  color="#3674B5"
-                  opacity={0.7}
+                  height={40}
+                  color="#3B82F6"
+                  opacity={0.6}
                 />
               </div>
             )}
 
-            {/* 진행바 */}
             <div
-              className="h-full bg-blue-500 rounded relative"
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full relative shadow-sm"
               style={{ width: `${progress}%` }}
             >
-              <div
-                className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-yellow-400 rounded-full shadow cursor-grab group-hover/progress:scale-110 transition-transform"
-                onMouseDown={() => setIsDragging(true)}
-              />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-blue-500 rounded-full opacity-0 group-hover/progress:opacity-100 transition-opacity shadow-lg" />
             </div>
           </div>
         </div>
 
-        {/* 컨트롤 버튼들 (하단) */}
-        <div className="px-4 pb-4 flex items-center gap-3">
-          {/* ▶ 재생 버튼 */}
-          <button
-            onClick={togglePlay}
-            className="text-white hover:text-yellow-400 p-2 rounded transition"
-          >
-            {isPlaying ? (
-              <Pause size={20} strokeWidth={2.5} />
-            ) : (
-              <Play size={20} strokeWidth={2.5} fill="white" />
-            )}
-          </button>
+        {/* Bottom Controls */}
+        <div className="px-3 pb-2 flex items-center gap-2 bg-gradient-to-t from-black to-transparent">
+          {/* Left Side */}
+          <div className="flex items-center gap-1">
+            {/* Play/Pause */}
+            <button
+              onClick={() =>
+                isPlaying ? videoRef.current?.pause() : videoRef.current?.play()
+              }
+              className="text-white p-2 hover:bg-white/20 rounded transition-colors"
+            >
+              {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+            </button>
 
-          {/* 시간 표시 */}
-          <div className="text-white text-xs font-medium min-w-[90px] flex items-center gap-1 select-none">
-            <span>{formatTime(currentTime)}</span>
-            <span className="text-gray-400">/</span>
-            <span>{formatTime(duration)}</span>
+            {/* Skip Back */}
+            <button
+              onClick={skipBackward}
+              className="text-white p-2 hover:bg-white/20 rounded transition-colors"
+              title="5초 뒤로"
+            >
+              <SkipBack size={18} />
+            </button>
+
+            {/* Skip Forward */}
+            <button
+              onClick={skipForward}
+              className="text-white p-2 hover:bg-white/20 rounded transition-colors"
+              title="5초 앞으로"
+            >
+              <SkipForward size={18} />
+            </button>
+
+            {/* Time */}
+            <div className="text-white text-xs font-medium ml-2 whitespace-nowrap">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </div>
           </div>
 
-          {/* 가운데 빈 공간 (flex-1로 차지) */}
           <div className="flex-1"></div>
 
-          {/* 설정 / 전체화면 */}
-          <div className="flex items-center gap-2 ml-2">
+          {/* Right Side */}
+          <div className="flex items-center gap-1">
+            {/* Settings - Quality */}
             <div className="relative" ref={settingsRef}>
               <button
-                onClick={() => {
-                  setShowSettings(!showSettings);
-                  setShowSubMenu(null);
-                }}
-                className="text-white hover:text-yellow-400 p-2 rounded transition"
+                onClick={() => setShowSettings(!showSettings)}
+                className="text-white px-2 py-1.5 hover:bg-white/20 rounded transition-colors text-xs font-medium"
               >
-                <Settings size={20} />
+                {quality}
               </button>
 
               {showSettings && (
-                <div className="absolute bottom-full right-0 mb-3 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-[260px] overflow-y-auto z-10">
-                  {showSubMenu ? (
-                    <>
-                      <div
-                        className="flex items-center gap-2 p-3 border-b text-blue-600 font-semibold cursor-pointer hover:bg-gray-50"
-                        onClick={() => setShowSubMenu(null)}
-                      >
-                        ← {settingsMenu.find((m) => m.id === showSubMenu)?.label}
-                      </div>
-
-                      {/* 볼륨 서브메뉴 (슬라이더) */}
-                      {showSubMenu === "volume" ? (
-                        <div className="px-4 py-6">
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={toggleMute}
-                              className="text-gray-700 hover:text-blue-600 transition p-1"
-                            >
-                              <VolumeIcon />
-                            </button>
-                            <input
-                              type="range"
-                              min="0"
-                              max="1"
-                              step="0.05"
-                              value={isMuted ? 0 : volume}
-                              onChange={handleVolumeChange}
-                              className="flex-1 h-2 cursor-pointer accent-blue-500 appearance-none bg-gray-200 rounded-full"
-                              style={{
-                                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(isMuted ? 0 : volume) * 100}%, #e5e7eb ${(isMuted ? 0 : volume) * 100}%, #e5e7eb 100%)`
-                              }}
-                            />
-                            <span className="text-sm text-gray-600 font-medium min-w-[40px] text-right">
-                              {isMuted ? "0%" : `${Math.round(volume * 100)}%`}
-                            </span>
-                          </div>
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setShowSettings(false)}
+                  />
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-md rounded-lg overflow-hidden min-w-[120px] z-20">
+                    <div className="py-1">
+                      {qualityOptions.map((opt) => (
+                        <div
+                          key={opt.value}
+                          onClick={() => changeQuality(opt.value)}
+                          className={`px-4 py-2 text-sm cursor-pointer hover:bg-white/20 transition-colors ${
+                            (quality === opt.label || (quality === "자동" && opt.value === "auto"))
+                              ? "text-white font-semibold"
+                              : "text-white/80"
+                          }`}
+                        >
+                          {opt.label}
+                          {(quality === opt.label || (quality === "자동" && opt.value === "auto")) && (
+                            <span className="ml-2">✓</span>
+                          )}
                         </div>
-                      ) : (
-                        /* 다른 서브메뉴 (재생속도 등) */
-                        subMenus[showSubMenu]?.map((item, i) => (
-                          <div
-                            key={i}
-                            onClick={() => handleSubMenuClick(showSubMenu, item.value)}
-                            className={`px-4 py-2 text-sm cursor-pointer flex justify-between hover:bg-gray-100 ${(showSubMenu === "subtitle" && item.value === subtitle) ||
-                              (showSubMenu === "speed" && item.value === playbackRate)
-                              ? "bg-blue-50 text-blue-600 font-semibold"
-                              : "text-gray-700"
-                              }`}
-                          >
-                            {item.label}
-                          </div>
-                        ))
-                      )}
-                    </>
-                  ) : (
-                    settingsMenu.map((option) => (
-                      <div
-                        key={option.id}
-                        className="flex justify-between items-center px-4 py-2 text-sm cursor-pointer hover:bg-gray-50"
-                        onClick={() => setShowSubMenu(option.id)}
-                      >
-                        <span>{option.label}</span>
-                        <span className="text-gray-500 text-xs">
-                          {option.value} ›
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
 
+            {/* Speed */}
+            <div className="relative" ref={speedRef}>
+              <button
+                onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                className="text-white px-2 py-1.5 hover:bg-white/20 rounded transition-colors text-xs font-medium"
+              >
+                {playbackRate === 1 ? "보통" : `${playbackRate}x`}
+              </button>
+
+              {showSpeedMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setShowSpeedMenu(false)}
+                  />
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-md rounded-lg overflow-hidden min-w-[120px] z-20">
+                    <div className="py-1">
+                      {speedOptions.map((opt) => (
+                        <div
+                          key={opt.value}
+                          onClick={() => {
+                            if (videoRef.current) {
+                              videoRef.current.playbackRate = opt.value;
+                              setPlaybackRate(opt.value);
+                              setShowSpeedMenu(false);
+                            }
+                          }}
+                          className={`px-4 py-2 text-sm cursor-pointer hover:bg-white/20 transition-colors ${
+                            playbackRate === opt.value
+                              ? "text-white font-semibold"
+                              : "text-white/80"
+                          }`}
+                        >
+                          {opt.label}
+                          {playbackRate === opt.value && (
+                            <span className="ml-2">✓</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Volume */}
+            <div 
+              className="relative flex items-center group/volume"
+              ref={volumeRef}
+              onMouseEnter={() => setShowVolumeSlider(true)}
+              onMouseLeave={() => setShowVolumeSlider(false)}
+            >
+              <button
+                onClick={toggleMute}
+                className="text-white p-2 hover:bg-white/20 rounded transition-colors"
+              >
+                <VolumeIcon />
+              </button>
+
+              {/* Volume Slider */}
+              <div className={`flex items-center overflow-hidden transition-all duration-200 ${
+                showVolumeSlider ? "w-24 ml-1 opacity-100" : "w-0 opacity-0"
+              }`}>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-3
+                    [&::-webkit-slider-thumb]:h-3
+                    [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-white
+                    [&::-webkit-slider-thumb]:cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className="text-white hover:text-yellow-400 p-2 rounded transition"
+              className="text-white p-2 hover:bg-white/20 rounded transition-colors"
             >
-              <Maximize size={20} />
+              {document.fullscreenElement ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
           </div>
         </div>

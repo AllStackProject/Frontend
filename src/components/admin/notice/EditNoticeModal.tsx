@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Edit3 } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 
 interface Notice {
   id: number;
@@ -24,33 +24,18 @@ interface EditNoticeModalProps {
 // 조직의 그룹 목록
 const ORGANIZATION_GROUPS = ["HR팀", "IT팀", "R&D팀", "기획팀", "마케팅팀"];
 
-// 조직의 동영상 목록
-const ORGANIZATION_VIDEOS = [
-  { id: 1, title: "AI 트렌드 2025", uploader: "홍길동", uploadDate: "2025-10-10" },
-  { id: 2, title: "딥러닝 기초 강의", uploader: "이영희", uploadDate: "2025-09-15" },
-  { id: 3, title: "AI 윤리와 프라이버시", uploader: "박철수", uploadDate: "2025-08-21" },
-  { id: 4, title: "R&D 워크샵", uploader: "이수현", uploadDate: "2025-10-01" },
-  { id: 5, title: "AI 데이터 동의 안내", uploader: "최지훈", uploadDate: "2025-07-19" },
-  { id: 6, title: "신규 서비스 소개", uploader: "관리자", uploadDate: "2025-10-20" },
-  { id: 7, title: "직무 교육 1차", uploader: "박민지", uploadDate: "2025-09-28" },
-];
 
 const EditNoticeModal: React.FC<EditNoticeModalProps> = ({
   notice,
   onClose,
   onSubmit,
 }) => {
+  const { openModal } = useModal();
+
   const [form, setForm] = useState({
     ...notice,
     selectedGroups: notice.selectedGroups || [],
   });
-
-  const [videoSearchQuery, setVideoSearchQuery] = useState("");
-
-  // 모달 상태
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const handleGroupToggle = (group: string) => {
     setForm((prev) => ({
@@ -62,26 +47,45 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({
   };
 
   const handleSave = () => {
-    // 제목 검증
     if (!form.title.trim()) {
-      setErrorMessage("제목을 입력해주세요.");
-      setShowErrorModal(true);
-      return;
+      return openModal({
+        type: "error",
+        title: "입력 오류",
+        message: "제목을 입력해주세요.",
+        confirmText: "확인",
+      });
     }
 
-    // 특정 그룹 공개 시 그룹 선택 검증
     if (form.visibility === "특정그룹공개" && form.selectedGroups.length === 0) {
-      setErrorMessage("공개할 그룹을 최소 1개 이상 선택해주세요.");
-      setShowErrorModal(true);
-      return;
+      return openModal({
+        type: "error",
+        title: "입력 오류",
+        message: "공개할 그룹을 최소 1개 이상 선택해주세요.",
+        confirmText: "확인",
+      });
     }
 
-    setShowConfirmModal(true);
+    // 확인 모달 (입력 키워드 필요)
+    openModal({
+      type: "edit",
+      title: "공지 수정",
+      message: `"${form.title}" 공지를 수정하시겠습니까?\n수정한 내용은 되돌릴 수 없습니다.`,
+      requiredKeyword: "수정",
+      confirmText: "수정",
+      cancelText: "취소",
+      onConfirm: confirmSave,
+    });
   };
 
   const confirmSave = () => {
     onSubmit(form);
-    setShowConfirmModal(false);
+    openModal({
+      type: "success",
+      title: "수정 완료",
+      message: "공지 수정이 성공적으로 완료되었습니다.",
+      autoClose: true,
+      autoCloseDelay: 1500,
+    });
     onClose();
   };
 
@@ -216,31 +220,6 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 에러 모달 */}
-      {showErrorModal && (
-        <ConfirmActionModal
-          title="입력 오류"
-          message={errorMessage}
-          confirmText="확인"
-          color="red"
-          onConfirm={() => setShowErrorModal(false)}
-          onClose={() => setShowErrorModal(false)}
-        />
-      )}
-
-      {/* 수정 확인 모달 */}
-      {showConfirmModal && (
-        <ConfirmActionModal
-          title="공지 수정"
-          message={`"${form.title}" 공지를 수정하시겠습니까?\n수정한 내용은 되돌릴 수 없습니다.`}
-          keyword="수정"
-          confirmText="수정"
-          color="yellow"
-          onConfirm={confirmSave}
-          onClose={() => setShowConfirmModal(false)}
-        />
-      )}
     </>
   );
 };

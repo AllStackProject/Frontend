@@ -8,8 +8,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import SuccessModal from "@/components/common/modals/SuccessModal";
+import { useModal } from "@/context/ModalContext";
+import { useAuth } from "@/context/AuthContext";
 import { getAdminOrgVideos, deleteAdminOrgVideo } from "@/api/adminVideo/orgVideos";
 
 interface Video {
@@ -23,8 +23,8 @@ interface Video {
 }
 
 const VideoSection: React.FC = () => {
-  const orgId = Number(localStorage.getItem("org_id"));
-
+  const { openModal, closeModal } = useModal();
+  const { orgId } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,11 +39,6 @@ const VideoSection: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // 삭제 모달 상태
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-
   const formatDate = (isoString: string) => {
     if (!isoString) return "-";
     const date = new Date(isoString);
@@ -56,10 +51,25 @@ const VideoSection: React.FC = () => {
     });
   };
 
+  const formatExpireDate = (dateString?: string) => {
+    if (!dateString) return "만료 없음";
+    
+    const expireDate = new Date(dateString);
+    const now = new Date();
+    const yearsDiff = (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    
+    // 100년 이상이면 만료 없음으로 처리
+    if (yearsDiff >= 100) {
+      return "만료 없음";
+    }
+    
+    return formatDate(dateString);
+  };
+
   const loadVideos = async () => {
     try {
       setLoading(true);
-      const res = await getAdminOrgVideos(orgId);
+      const res = await getAdminOrgVideos(orgId || 0);
 
       const mapped: Video[] = res.map((v: any) => ({
         id: v.id,
@@ -69,8 +79,8 @@ const VideoSection: React.FC = () => {
           v.open_scope === "PUBLIC"
             ? "organization"
             : v.open_scope === "PRIVATE"
-            ? "private"
-            : "group",
+              ? "private"
+              : "group",
         createdAt: v.created_at,
         expireAt: v.expired_at,
         views: v.view_cnt,
@@ -89,21 +99,39 @@ const VideoSection: React.FC = () => {
   }, []);
 
   const handleDeleteClick = (video: Video) => {
-    setSelectedVideo(video);
-    setShowDeleteConfirm(true);
+    openModal({
+      type: "confirm",
+      title: "동영상 삭제",
+      message: `"${video.title}"을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+      requiredKeyword: "삭제",
+      confirmText: "삭제",
+      onConfirm: () => handleDeleteConfirm(video),
+    });
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!selectedVideo) return;
+  const handleDeleteConfirm = async (video: Video) => {
     try {
-      const res = await deleteAdminOrgVideo(orgId, selectedVideo.id);
+      const res = await deleteAdminOrgVideo(orgId || 0, video.id);
+
       if (res.success) {
-        setShowDeleteConfirm(false);
-        setShowSuccessModal(true);
+        closeModal();
+
+        openModal({
+          type: "success",
+          title: "삭제 완료",
+          message: "영상이 삭제되었습니다.",
+          autoClose: true,
+          autoCloseDelay: 1800,
+        });
+
         await loadVideos();
       }
-    } catch (error) {
-      console.error("❌ 삭제 실패", error);
+    } catch (err: any) {
+      openModal({
+        type: "error",
+        title: "삭제 실패",
+        message: err.message || "영상 삭제 중 오류가 발생했습니다.",
+      });
     }
   };
 
@@ -176,7 +204,7 @@ const VideoSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 🔍 필터 영역 */}
+      {/* 필터 영역 */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
         <div className="flex flex-col md:flex-row justify-between gap-4">
           {/* 검색 */}
@@ -236,7 +264,7 @@ const VideoSection: React.FC = () => {
         </div>
       </div>
 
-      {/* 📄 테이블 */}
+      {/* 테이블 */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50 border-b">
@@ -269,24 +297,23 @@ const VideoSection: React.FC = () => {
                 </td>
 
                 <td className="p-3">
-                  {video.expireAt ? formatDate(video.expireAt) : "만료 없음"}
+                  {formatExpireDate(video.expireAt)}
                 </td>
 
                 <td className="p-3">
                   <span
-                    className={`px-3 py-1 text-xs rounded-full ${
-                      video.visibility === "organization"
-                        ? "bg-green-100 text-green-700"
-                        : video.visibility === "group"
+                    className={`px-3 py-1 text-xs rounded-full ${video.visibility === "organization"
+                      ? "bg-green-100 text-green-700"
+                      : video.visibility === "group"
                         ? "bg-blue-100 text-blue-700"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                   >
                     {video.visibility === "organization"
                       ? "조직 전체"
                       : video.visibility === "group"
-                      ? "그룹 공개"
-                      : "비공개"}
+                        ? "그룹 공개"
+                        : "비공개"}
                   </span>
                 </td>
 
@@ -321,10 +348,10 @@ const VideoSection: React.FC = () => {
         )}
       </div>
 
-      {/* 📌 페이지네이션 */}
+      {/* 페이지네이션 */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          
+
           {/* 페이지당 표시 개수 */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <span>페이지당 표시:</span>
@@ -362,11 +389,10 @@ const VideoSection: React.FC = () => {
                 <button
                   key={index}
                   onClick={() => setCurrentPage(page as number)}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === page
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                  className={`px-3 py-1 rounded ${currentPage === page
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   {page}
                 </button>
@@ -382,30 +408,6 @@ const VideoSection: React.FC = () => {
             </button>
           </div>
         </div>
-      )}
-
-      {/* 삭제 확인 모달 */}
-      {showDeleteConfirm && selectedVideo && (
-        <ConfirmActionModal
-          title="동영상 삭제"
-          message={`"${selectedVideo.title}" 을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`}
-          keyword="삭제"
-          color="red"
-          confirmText="삭제"
-          onConfirm={handleDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-        />
-      )}
-
-      {/* 삭제 완료 모달 */}
-      {showSuccessModal && (
-        <SuccessModal
-          title="삭제 완료"
-          message="영상이 삭제되었습니다."
-          autoClose={true}
-          autoCloseDelay={1800}
-          onClose={() => setShowSuccessModal(false)}
-        />
       )}
     </div>
   );

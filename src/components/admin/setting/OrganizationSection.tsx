@@ -11,7 +11,7 @@ import {
   Settings,
   Save,
 } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 import GroupCategoryModal from "@/components/admin/setting/GroupCategoryModal";
 import { patchOrgImage, regenerateOrgCode } from "@/api/adminOrg/info";
 import { useAuth } from "@/context/AuthContext";
@@ -34,6 +34,7 @@ interface OrganizationInfo {
 
 const OrganizationSection: React.FC = () => {
   const { orgId } = useAuth();
+  const { openModal } = useModal();
 
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: orgId || 0,
@@ -46,10 +47,7 @@ const OrganizationSection: React.FC = () => {
 
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   /* ---------------------------------------------------------
   조직 정보 + 그룹 조회
@@ -90,8 +88,11 @@ const OrganizationSection: React.FC = () => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage("이미지 파일 크기는 5MB 이하여야 합니다.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "이미지 오류",
+        message: "이미지 파일 크기는 5MB 이하여야 합니다.",
+      });
       return;
     }
 
@@ -106,8 +107,11 @@ const OrganizationSection: React.FC = () => {
   --------------------------------------------------------- */
   const handleSaveImage = async () => {
     if (!selectedImageFile) {
-      setErrorMessage("변경할 이미지가 없습니다. 먼저 이미지를 선택해주세요.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "변경할 이미지 선택",
+        message: "변경할 이미지가 없습니다. 먼저 이미지를 선택해주세요.",
+      });
       return;
     }
 
@@ -118,10 +122,18 @@ const OrganizationSection: React.FC = () => {
         // 서버에서 최종 이미지 URL을 내려준다면 여기서 적용 가능
         // setOrganization(prev => ({ ...prev, image: res.image_url }));
         alert("이미지 변경이 저장되었습니다.");
+        openModal({
+          type: "confirm",
+          title: "이미지 저장 성공",
+          message: "이미지 저장에 성공했습니다.",
+        });
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "이미지 저장 중 오류가 발생했습니다.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "이미지 저장 실패",
+        message: err.message || "이미지 저장 중 오류가 발생했습니다.",
+      });
     }
   };
 
@@ -142,16 +154,27 @@ const OrganizationSection: React.FC = () => {
   /* ---------------------------------------------------------
     조직 코드 재발급
   --------------------------------------------------------- */
-  const handleRegenerateClick = () => setShowRegenerateConfirm(true);
 
   const generateNewCode = async () => {
     try {
       const newCode = await regenerateOrgCode(orgId || 0);
       setOrganization((prev) => ({ ...prev, inviteCode: newCode }));
-      setShowRegenerateConfirm(false);
+
+      openModal({
+        type: "confirm",
+        title: "초대 코드 재생성",
+        message:
+          "조직 코드를 재생성하시겠습니까?\n기존 코드는 즉시 무효화됩니다.",
+        requiredKeyword: "재생성",
+        confirmText: "재생성",
+        onConfirm: generateNewCode,
+      });
     } catch (err: any) {
-      setErrorMessage(err.message || "조직 코드 재생성 중 오류가 발생했습니다.");
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "재생성 실패",
+        message: err.message || "조직 코드 재생성 중 오류가 발생했습니다.",
+      });
     }
   };
   /* ---------------------------------------------------------
@@ -236,8 +259,8 @@ const OrganizationSection: React.FC = () => {
                   <button
                     onClick={copyInviteMessage}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${copied
-                        ? "bg-green-600 text-white"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
+                      ? "bg-green-600 text-white"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
                       }`}
                   >
                     {copied ? <Check size={12} /> : <Copy size={12} />}
@@ -245,7 +268,7 @@ const OrganizationSection: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={handleRegenerateClick}
+                    onClick={generateNewCode}
                     className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                   >
                     <RefreshCcw size={12} />
@@ -318,31 +341,6 @@ const OrganizationSection: React.FC = () => {
           onSubmit={(updated) =>
             setOrganization((prev) => ({ ...prev, groups: updated }))
           }
-        />
-      )}
-
-      {/* 초대코드 재생성 확인 */}
-      {showRegenerateConfirm && (
-        <ConfirmActionModal
-          title="초대 코드 재생성"
-          message="조직 코드를 재생성하시겠습니까? 기존 코드는 즉시 무효화됩니다."
-          keyword="재생성"
-          confirmText="재생성"
-          color="blue"
-          onConfirm={generateNewCode}
-          onClose={() => setShowRegenerateConfirm(false)}
-        />
-      )}
-
-      {/* 이미지 / 기타 오류 모달 */}
-      {showErrorModal && (
-        <ConfirmActionModal
-          title="오류"
-          message={errorMessage}
-          confirmText="확인"
-          color="red"
-          onConfirm={() => setShowErrorModal(false)}
-          onClose={() => setShowErrorModal(false)}
         />
       )}
     </div>

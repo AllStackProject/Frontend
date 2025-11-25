@@ -117,8 +117,17 @@ export const checkNicknameAvailability = async (code: string, nickname: string) 
 export const getOrganizations = async (): Promise<OrganizationResponse[]> => {
   try {
     const res = await api.get(`/orgs`);
+    const orgs = res.data?.result?.organizations || [];
 
-    return res.data?.result?.organizations || [];
+    // ⭐ img_url이 있다면 https:// 붙여서 반환하도록 가공
+    return orgs.map((org: any) => ({
+      ...org,
+      img_url: org.img_url
+        ? org.img_url.startsWith("http")
+          ? org.img_url
+          : `https://${org.img_url}`
+        : null,
+    }));
 
   } catch (err: any) {
     console.error("❌ 조직 목록 불러오기 실패:", err);

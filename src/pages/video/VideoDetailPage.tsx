@@ -72,6 +72,11 @@ const VideoDetailPage: React.FC = () => {
     );
 
   // ====== API 데이터 구조 분리 ======
+  const playbackUrl =
+    sessionData.playback_url.startsWith("http")
+      ? sessionData.playback_url
+      : `https://${sessionData.playback_url}`;
+
   const video = sessionData.video;
   const comments = sessionData.comments || [];
   const categories = sessionData.categories || [];
@@ -83,19 +88,46 @@ const VideoDetailPage: React.FC = () => {
   const ai_type = sessionData.ai_type; // QUIZ | FEEDBACK | SUMMARY
 
   return (
-    <div className="w-full min-h-screen bg-page px-5 md:px-8 py-10">
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
-
-        {/* 왼쪽 영역: 플레이어 + 댓글 */}
+    <div className="w-full min-h-screen bg-page px-4 sm:px-5 py-3">
+      <div
+        className="
+      max-w-[1400px] mx-auto 
+      grid grid-cols-1 
+      lg:grid-cols-[1fr_340px] 
+      gap-6
+    "
+      >
+        {/* ===========================
+        1) LEFT SECTION
+        Video + Comments
+        ============================ */}
         <div className="flex flex-col gap-6">
+
+          {/* Video Player */}
           <VideoPlayer
-            videoUrl={video.url || video.video_url || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"}
+            videoUrl={playbackUrl}
             videoId={video.id}
             orgId={orgId || 0}
             sessionId={sessionData.session_id}
             wholeTime={video.whole_time}
+            heatmapCounts={sessionData.seg_view_cnts}
           />
 
+          {/* (모바일 전용) VideoInfo */}
+          <div className="lg:hidden">
+            <VideoInfo
+              orgId={orgId || 0}
+              videoId={video.id}
+              title={video.title}
+              description={video.description}
+              views={video.watch_cnt}
+              uploadDate={new Date(video.created_at).toLocaleDateString("ko-KR")}
+              categories={categories}
+              initialFavorite={sessionData.is_scrapped}
+            />
+          </div>
+
+          {/* Comments */}
           {showComments && (
             <CommentSection
               orgId={orgId || 0}
@@ -103,12 +135,39 @@ const VideoDetailPage: React.FC = () => {
               initialComments={comments}
             />
           )}
+
+          {/* (모바일 전용) AI Section */}
+          <div className="lg:hidden flex flex-col gap-4">
+            {ai_type === "QUIZ" && (
+              <AIQuizSection
+                quiz={{ questions: quizzes }}
+                isOpen={isQuizOpen}
+                onToggle={() => setIsQuizOpen(!isQuizOpen)}
+              />
+            )}
+
+            {ai_type === "FEEDBACK" && (
+              <AIFeedbackSection
+                feedback={feedbackText}
+                isOpen={isFeedbackOpen}
+                onToggle={() => setIsFeedbackOpen(!isFeedbackOpen)}
+              />
+            )}
+
+            {ai_type === "SUMMARY" && (
+              <AISummarySection
+                summary={summaryText}
+                isOpen={isSummaryOpen}
+                onToggle={() => setIsSummaryOpen(!isSummaryOpen)}
+              />
+            )}
+          </div>
         </div>
 
-        {/* 오른쪽 영역 */}
-        <div className="flex flex-col gap-6">
-
-          {/* 영상 기본 정보 */}
+        {/* ===========================
+        2) RIGHT SECTION (DESKTOP ONLY)
+        ============================ */}
+        <div className="hidden lg:flex flex-col gap-4">
           <VideoInfo
             orgId={orgId || 0}
             videoId={video.id}
@@ -120,7 +179,6 @@ const VideoDetailPage: React.FC = () => {
             initialFavorite={sessionData.is_scrapped}
           />
 
-          {/* AI QUIZ */}
           {ai_type === "QUIZ" && (
             <AIQuizSection
               quiz={{ questions: quizzes }}
@@ -129,7 +187,6 @@ const VideoDetailPage: React.FC = () => {
             />
           )}
 
-          {/* AI FEEDBACK */}
           {ai_type === "FEEDBACK" && (
             <AIFeedbackSection
               feedback={feedbackText}
@@ -138,7 +195,6 @@ const VideoDetailPage: React.FC = () => {
             />
           )}
 
-          {/* AI SUMMARY */}
           {ai_type === "SUMMARY" && (
             <AISummarySection
               summary={summaryText}
@@ -147,6 +203,7 @@ const VideoDetailPage: React.FC = () => {
             />
           )}
         </div>
+
       </div>
     </div>
   );

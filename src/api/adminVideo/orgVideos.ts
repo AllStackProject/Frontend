@@ -10,10 +10,20 @@ export const getAdminOrgVideos = async (orgId: number) => {
     } as CustomAxiosRequestConfig);
 
     const list = response.data?.result?.vidoes ?? [];
-    return list as AdminOrgVideoWatchResponse[];
+    const mapped = list.map((v: any) => ({
+      ...v,
+      thumbnail_url: v.thumbnail_url?.startsWith("http")
+        ? v.thumbnail_url
+        : `https://${v.thumbnail_url}`,
+    }));
+
+    return mapped as AdminOrgVideoWatchResponse[];
   } catch (err: any) {
     console.error("🚨 조직 영상 조회 실패:", err);
-    throw new Error(err.response?.data?.message || "조직 영상 조회에 실패했습니다.");
+    throw new Error(
+      err.response?.data?.message ||
+        "조직 영상 조회에 실패했습니다."
+    );
   }
 };
 

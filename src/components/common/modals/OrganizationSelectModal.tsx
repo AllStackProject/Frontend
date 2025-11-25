@@ -4,7 +4,7 @@ import { getOrganizations } from "@/api/organization/orgs";
 import { useSelectOrganization } from "@/api/organization/orgs";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 import { useNavigate } from "react-router-dom";
 
 interface OrganizationSelectModalProps {
@@ -18,6 +18,7 @@ const OrganizationSelectModal = ({
   onClose,
   onSelect,
 }: OrganizationSelectModalProps) => {
+  const { openModal } = useModal();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [organizations, setOrganizations] = useState<
@@ -25,11 +26,6 @@ const OrganizationSelectModal = ({
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [alertModal, setAlertModal] = useState<{
-    title: string;
-    message: string;
-    color: "red" | "blue" | "green" | "yellow";
-  } | null>(null);
 
   const { selectOrganization } = useSelectOrganization();
   const navigate = useNavigate();
@@ -61,10 +57,10 @@ const OrganizationSelectModal = ({
   // 조직 선택
   const handleSelectOrg = async (orgId: number, orgName: string, status: string) => {
     if (status === "PENDING") {
-      setAlertModal({
+      openModal({
+        type: "error",
         title: "승인 대기 중",
-        message: "⏳ 승인 대기 중인 조직입니다.",
-        color: "yellow",
+        message: " 승인 대기 중인 조직입니다.",
       });
       return;
     }
@@ -72,10 +68,10 @@ const OrganizationSelectModal = ({
     try {
       const isSuccess = await selectOrganization(orgId, orgName);
       if (!isSuccess) {
-        setAlertModal({
-          title: "선택 실패",
-          message: "조직 토큰 발급에 실패했습니다.",
-          color: "red",
+        openModal({
+          type: "confirm",
+          title: "가입 요청 완료",
+          message: `"${orgName}" 조직에 가입 요청이 접수되었습니다.`,
         });
         return;
       }
@@ -83,10 +79,10 @@ const OrganizationSelectModal = ({
       onClose();
       window.location.reload();
     } catch (error: any) {
-      setAlertModal({
+      openModal({
+        type: "error",
         title: "오류 발생",
         message: error.message || "조직 전환 중 오류가 발생했습니다.",
-        color: "red",
       });
     }
   };
@@ -126,7 +122,7 @@ const OrganizationSelectModal = ({
     <>
       {/* 모달 시작 */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-20"
         onClick={onClose}
       >
         <div
@@ -229,12 +225,11 @@ const OrganizationSelectModal = ({
                 }))
               );
 
-              setAlertModal({
+              openModal({
+                type: "success",
                 title: "가입 요청 완료",
-                message: createdOrg?.name
-                  ? `"${createdOrg.name}" 조직에 가입 요청이 접수되었습니다.`
-                  : "조직 가입 요청이 접수되었습니다.",
-                color: "green",
+                message: `"${createdOrg?.name}" 조직에 가입 요청이 접수되었습니다.`,
+                confirmText: "확인",
               });
             } finally {
               setShowJoinModal(false);
@@ -264,10 +259,10 @@ const OrganizationSelectModal = ({
               const isSuccess = await selectOrganization(org.id, org.name);
 
               if (!isSuccess) {
-                setAlertModal({
+                openModal({
+                  type: "error",
                   title: "선택 실패",
-                  message: "조직 선택(Token 발급)에 실패했습니다.",
-                  color: "red",
+                  message: "조직 토큰 발급에 실패했습니다.",
                 });
                 return;
               }
@@ -277,26 +272,15 @@ const OrganizationSelectModal = ({
               // 2) 홈 이동
               navigate("/home");
             } catch (error: any) {
-              setAlertModal({
+              openModal({
+                type: "error",
                 title: "오류 발생",
                 message: error.message,
-                color: "red",
               });
             } finally {
               setShowCreateModal(false);
             }
           }}
-        />
-      )}
-
-      {/* 공통 알림 모달 */}
-      {alertModal && (
-        <ConfirmActionModal
-          title={alertModal.title}
-          message={alertModal.message}
-          color={alertModal.color}
-          onConfirm={() => setAlertModal(null)}
-          onClose={() => setAlertModal(null)}
         />
       )}
     </>

@@ -3,8 +3,7 @@ import { Plus, Edit, Trash2, Eye, Filter, RotateCcw, ChevronLeft, ChevronRight }
 import CreateNoticeModal from "@/components/admin/notice/CreateNoticeModal";
 import EditNoticeModal from "@/components/admin/notice/EditNoticeModal";
 import ViewNoticeModal from "@/components/admin/notice/ViewNoticeModal";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import SuccessModal from "@/components/common/modals/SuccessModal";
+import { useModal } from "@/context/ModalContext";
 
 interface Notice {
   id: number;
@@ -121,14 +120,10 @@ const NoticeSection: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // 모달 상태
+  const { openModal } = useModal();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [viewingNotice, setViewingNotice] = useState<Notice | null>(null);
-  
-  // 삭제 모달 상태
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deletingNotice, setDeletingNotice] = useState<Notice | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // 검색 + 필터
   const filteredNotices = useMemo(() => {
@@ -155,20 +150,27 @@ const NoticeSection: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // 삭제 확인 열기
-  const handleDeleteClick = (notice: Notice) => {
-    setDeletingNotice(notice);
-    setShowDeleteConfirm(true);
-  };
+  // 공통 모달로 삭제 처리
+  const handleDelete = (notice: Notice) => {
+    openModal({
+      type: "delete",
+      title: "공지사항 삭제",
+      message: `"${notice.title}" 공지를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+      requiredKeyword: "삭제",
+      confirmText: "삭제",
+      cancelText: "취소",
+      onConfirm: () => {
+        setNotices((prev) => prev.filter((n) => n.id !== notice.id));
 
-  // 삭제 실행
-  const handleDeleteConfirm = () => {
-    if (deletingNotice) {
-      setNotices(notices.filter((n) => n.id !== deletingNotice.id));
-      setShowDeleteConfirm(false);
-      setShowSuccessModal(true);
-      setDeletingNotice(null);
-    }
+        openModal({
+          type: "success",
+          title: "삭제 완료",
+          message: "공지사항이 성공적으로 삭제되었습니다.",
+          autoClose: true,
+          autoCloseDelay: 2000,
+        });
+      },
+    });
   };
 
   return (
@@ -275,7 +277,7 @@ const NoticeSection: React.FC = () => {
                       <Edit size={16} />
                     </button>
                     <button
-                      onClick={() => handleDeleteClick(n)}
+                      onClick={() => handleDelete(n)}
                       className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                       title="삭제"
                     >
@@ -368,33 +370,6 @@ const NoticeSection: React.FC = () => {
       )}
       {viewingNotice && (
         <ViewNoticeModal notice={viewingNotice} onClose={() => setViewingNotice(null)} />
-      )}
-
-      {/* 삭제 확인 모달 */}
-      {showDeleteConfirm && deletingNotice && (
-        <ConfirmActionModal
-          title="공지사항 삭제"
-          message={`"${deletingNotice.title}"를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`}
-          keyword="삭제"
-          confirmText="삭제"
-          color="red"
-          onConfirm={handleDeleteConfirm}
-          onClose={() => {
-            setShowDeleteConfirm(false);
-            setDeletingNotice(null);
-          }}
-        />
-      )}
-
-      {/* 성공 모달 */}
-      {showSuccessModal && (
-        <SuccessModal
-          title="삭제 완료"
-          message="공지사항이 삭제되었습니다."
-          autoClose={true}
-          autoCloseDelay={2000}
-          onClose={() => setShowSuccessModal(false)}
-        />
       )}
     </div>
   );

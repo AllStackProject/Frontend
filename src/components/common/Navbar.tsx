@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 const Navbar = () => {
   const navigate = useNavigate();
   const { nickname, orgName, orgId } = useAuth();
+  const [orgImage, setOrgImage] = useState<string | null>(null);
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +23,7 @@ const Navbar = () => {
   const [userName, setUserName] = useState("사용자");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const { openLogoutModal, LogoutModal } = useLogout(navigate);
+  const { openLogoutModal } = useLogout(navigate);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +66,29 @@ const Navbar = () => {
     };
 
     checkAdminStatus();
+  }, [orgId]);
+
+  useEffect(() => {
+    const fetchOrgImage = async () => {
+      try {
+        const orgs = await getOrganizations();
+
+        const selected = orgs.find(org => org.id === orgId);
+
+        if (selected?.img_url) {
+          const fixedUrl = selected.img_url.startsWith("http")
+            ? selected.img_url
+            : `https://${selected.img_url}`;
+
+          setOrgImage(fixedUrl);
+        }
+      } catch (e) {
+        console.error("🚨 조직 이미지 로드 실패:", e);
+        setOrgImage(null);
+      }
+    };
+
+    if (orgId) fetchOrgImage();
   }, [orgId]);
 
   // 외부 클릭 시 닫기
@@ -121,23 +145,29 @@ const Navbar = () => {
 
         {/* 중앙: 검색창 (데스크톱만 표시) */}
         <div className="hidden lg:flex flex-1 justify-center px-4">
-          <div className="flex items-center bg-white rounded-full px-4 py-2.5 w-full max-w-2xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+          <div className="flex items-center bg-gradient-to-r from-gray-50 to-white rounded-full px-4 py-2 w-full max-w-2xl shadow-sm hover:shadow-md transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 focus-within:border-blue-400 focus-within:shadow-lg">
 
             {/* 조직 선택 */}
             <div
-              className="flex items-center gap-2 pr-3 border-r border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 pr-3 border-r-2 border-gray-300 cursor-pointer hover:opacity-70 transition-opacity group"
               onClick={() => setIsModalOpen(true)}
             >
-              <img src="/dummy/woori-logo.png" alt="org" className="w-6 h-6 rounded-full" />
-              <span className="font-medium text-gray-700 text-sm whitespace-nowrap">{orgName}</span>
-              <span className="text-gray-400 text-xs">▼</span>
+              <div className="relative">
+                <img
+                  src={orgImage || "/dummy/woori-logo.png"}
+                  alt="org"
+                  className="w-6 h-6 rounded-full object-cover transition-all"
+                />
+              </div>
+              <span className="font-semibold text-gray-800 text-sm whitespace-nowrap">{orgName}</span>
+              <ChevronDown size={14} className="text-gray-500 group-hover:text-blue-500 transition-colors" />
             </div>
 
             {/* 입력창 */}
             <input
               type="text"
-              placeholder="원하는 영상을 검색해 보세요.."
-              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 px-3 text-sm"
+              placeholder="원하는 영상을 검색해 보세요..."
+              className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400 px-3 text-sm font-medium"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               onKeyDown={(e) => {
@@ -147,10 +177,10 @@ const Navbar = () => {
 
             {/* 검색 버튼 */}
             <button
-              className="flex items-center justify-center bg-primary-light hover:bg-primary text-white rounded-full w-9 h-9 transition-all duration-300 shadow-md hover:shadow-lg"
+              className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full w-8 h-8 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
               onClick={handleSearch}
             >
-              <Search className="w-4 h-4" strokeWidth={2} />
+              <Search className="w-4 h-4" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -261,7 +291,7 @@ const Navbar = () => {
       {/* 모바일 메뉴 */}
       {isMobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 top-[57px] bg-black bg-opacity-50 z-40"
+          className="md:hidden fixed inset-0 top-[70px] bg-black bg-opacity-50 z-30"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <div
@@ -270,7 +300,7 @@ const Navbar = () => {
           >
             {/* 프로필 정보 */}
             <div className="flex items-center gap-3 pb-4 border-b border-gray-200 mb-4">
-              <img src="/user9.png" alt="user" className="w-12 h-12 rounded-full" />
+              <img src="/user-icon/user9.png" alt="user" className="w-12 h-12 rounded-full" />
               <div>
                 <p className="font-semibold text-gray-800">{nickname}</p>
                 <p className="text-xs text-gray-500">{orgName}</p>
@@ -341,9 +371,6 @@ const Navbar = () => {
           </div>
         </div>
       )}
-
-      {/* 로그아웃 모달 추가 */}
-      <LogoutModal />
 
       {/* 조직 선택 모달 */}
       <OrganizationSelectModal

@@ -21,6 +21,29 @@ const VideoWatchSection: React.FC = () => {
 
   const [selectedVideo, setSelectedVideo] = useState<AdminVideoWatchItem | null>(null);
 
+  /** 날짜 포맷 */
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("ko-KR");
+  };
+
+  /** 만료일 포맷 (100년 이상이면 "만료 없음") */
+  const formatExpireDate = (dateString?: string) => {
+    if (!dateString) return "만료 없음";
+    
+    const expireDate = new Date(dateString);
+    const now = new Date();
+    const yearsDiff = (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    
+    // 100년 이상이면 만료 없음으로 처리
+    if (yearsDiff >= 100) {
+      return "만료 없음";
+    }
+    
+    return formatDate(dateString);
+  };
+
   /** ⭐ 전체 영상 시청 목록 API 호출 */
   useEffect(() => {
     const load = async () => {
@@ -150,12 +173,6 @@ const VideoWatchSection: React.FC = () => {
           </thead>
           <tbody>
             {currentRecords.map((r, index) => {
-              const visibilityMap = {
-                PUBLIC: "organization",
-                GROUP: "group",
-                PRIVATE: "private",
-              } as const;
-
               const openLabel =
                 r.open_scope === "PUBLIC"
                   ? "조직 전체"
@@ -179,24 +196,26 @@ const VideoWatchSection: React.FC = () => {
                 >
                   <td className="px-4 py-3 font-medium text-gray-800">{r.title}</td>
                   <td className="px-4 py-3 text-gray-600">{r.creator}</td>
-                  <td className="px-4 py-3 text-gray-600">{r.expired_at}</td>
-                  <td className="px-4 py-3 text-gray-600">{r.expired_at}</td>
+                  <td className="px-4 py-3 text-gray-600">{formatDate(r.created_at)}</td>
+                  <td className="px-4 py-3 text-gray-600">{formatExpireDate(r.expired_at)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block px-3 py-1 text-xs rounded-full ${openColor}`}>
                       {openLabel}
                     </span>
                   </td>
 
-                  {/* 시청률 */}
+                  {/* 시청률 - 프로그레스 바 안에 퍼센트 표시 */}
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-blue-500"
-                          style={{ width: `${r.watch_complete_rate}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-semibold min-w-[45px]">
+                    <div className="relative w-full bg-gray-200 rounded-full h-6 overflow-hidden shadow-inner">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
+                        style={{ width: `${r.watch_complete_rate}%` }}
+                      />
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
+                          r.watch_complete_rate >= 50 ? "text-white" : "text-gray-800"
+                        }`}
+                      >
                         {r.watch_complete_rate}%
                       </span>
                     </div>
@@ -204,11 +223,13 @@ const VideoWatchSection: React.FC = () => {
 
                   {/* 시청자 수 (모달 열기) */}
                   <td
-                    className="px-4 py-3 text-center cursor-pointer hover:bg-blue-50 text-gray-700"
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-blue-50 text-gray-700 transition-colors"
                     onClick={() => setSelectedVideo(r)}
                   >
-                    <Eye size={15} className="inline-block mr-1" />
-                    {r.watch_member_cnt}명
+                    <div className="flex items-center justify-center gap-1">
+                      <Eye size={15} />
+                      <span className="font-medium">{r.watch_member_cnt}명</span>
+                    </div>
                   </td>
                 </tr>
               );

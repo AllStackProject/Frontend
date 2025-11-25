@@ -31,13 +31,13 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                 setIsExpanded(false);
                 onUploadClick();
               }}
-              className="flex items-center gap-3 px-4 py-3 bg-white text-text-primary rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 group border border-border-light"
+              className="flex items-center gap-3 px-5 py-3 bg-white text-gray-800 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 group border-2 border-gray-100 hover:border-blue-200"
             >
-              <span className="text-sm font-medium whitespace-nowrap">
+              <span className="text-sm font-semibold whitespace-nowrap group-hover:text-blue-600 transition-colors">
                 동영상 업로드
               </span>
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center group-hover:bg-primary-light transition-colors">
-                <Upload size={20} className="text-white" />
+              <div className="w-11 h-11 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 group-hover:from-blue-600 group-hover:to-blue-700 flex items-center justify-center transition-all duration-300 shadow-md group-hover:shadow-lg group-hover:scale-110">
+                <Upload size={20} className="text-white" strokeWidth={2.5} />
               </div>
             </button>
           </div>
@@ -46,16 +46,22 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         {/* 메인 FAB 버튼 */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
-            isExpanded
-              ? "bg-error hover:bg-red-600 rotate-45"
-              : "bg-primary hover:bg-primary-light hover:scale-110"
-          }`}
+          className={`
+            w-16 h-16 rounded-full shadow-2xl 
+            flex items-center justify-center 
+            transition-all duration-300 
+            hover:scale-110 active:scale-95
+            ${
+              isExpanded
+                ? "bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 rotate-45"
+                : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+            }
+          `}
         >
           {isExpanded ? (
-            <X size={24} className="text-white" />
+            <X size={28} className="text-white" strokeWidth={2.5} />
           ) : (
-            <Plus size={28} className="text-white" />
+            <Plus size={32} className="text-white" strokeWidth={2.5} />
           )}
         </button>
       </div>

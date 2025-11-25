@@ -31,8 +31,8 @@ const formatTimeToMinutes = (seconds: number) => {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-        <p className="text-sm font-semibold text-gray-800 mb-2">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm">
+        <p className="font-semibold text-gray-800 mb-2">
           {formatTimeToMinutes(label)} ~ {formatTimeToMinutes(label + 10)}
         </p>
         {payload.map((entry: any, idx: number) => (
@@ -112,19 +112,22 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
       className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-6xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-full md:max-w-4xl lg:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
 
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-100">
+        <div className="flex justify-between items-center px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg bg-blue-100">
               <LineChart size={20} className="text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-800">구간별 시청 분석</h2>
-              <p className="text-sm text-gray-600">{video.name}</p>
+              <h2 className="text-base md:text-lg font-bold text-gray-800">
+                구간별 시청 분석
+              </h2>
+              <p className="text-xs md:text-sm text-gray-600">{video.name}</p>
             </div>
           </div>
+
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition"
@@ -134,16 +137,16 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-4 md:p-6 overflow-y-auto flex-1 space-y-6">
 
-          {/* 요약 카드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* 요약 카드 2개 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp size={18} className="text-blue-600" />
                 <p className="text-sm font-medium text-blue-900">평균 시청률</p>
               </div>
-              <p className="text-2xl font-bold text-blue-700">
+              <p className="text-2xl md:text-3xl font-bold text-blue-700">
                 {avgViewRate.toFixed(1)}%
               </p>
             </div>
@@ -153,15 +156,15 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
                 <TrendingDown size={18} className="text-red-600" />
                 <p className="text-sm font-medium text-red-900">평균 이탈률</p>
               </div>
-              <p className="text-2xl font-bold text-red-700">
+              <p className="text-2xl md:text-3xl font-bold text-red-700">
                 {avgDropOff.toFixed(1)}%
               </p>
             </div>
           </div>
 
-          {/* Top 3 구간 */}
+          {/* Top3 구간 */}
           {top3Watched.length > 0 && (
-            <div className="bg-yellow-50 border border-amber-200 rounded-lg p-5 mb-6">
+            <div className="bg-yellow-50 border border-amber-200 rounded-lg p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Award size={20} className="text-amber-600" />
                 <h3 className="text-base font-semibold text-amber-900">
@@ -169,7 +172,7 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {top3Watched.map((seg, idx) => (
                   <div
                     key={seg.time}
@@ -205,58 +208,62 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
           )}
 
           {/* 시청률 Line Chart */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
             <h3 className="text-base font-semibold flex items-center gap-2 mb-4">
               <TrendingUp size={18} className="text-blue-600" />
               구간별 시청률
             </h3>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <ReLineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="time" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="viewRate"
-                  name="시청률"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                />
-              </ReLineChart>
-            </ResponsiveContainer>
+            <div className="w-full h-64 md:h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <ReLineChart data={data}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="time" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="viewRate"
+                    name="시청률"
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                  />
+                </ReLineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* 이탈률 Line Chart */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
             <h3 className="text-base font-semibold flex items-center gap-2 mb-4">
               <TrendingDown size={18} className="text-red-600" />
               구간별 이탈률
             </h3>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <ReLineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="time" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="dropOff"
-                  name="이탈률"
-                  stroke="#ef4444"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                />
-              </ReLineChart>
-            </ResponsiveContainer>
+            <div className="w-full h-64 md:h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <ReLineChart data={data}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="time" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="dropOff"
+                    name="이탈률"
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                  />
+                </ReLineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          {/* 분석 인사이트 */}
+          {/* 인사이트 */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <Info size={18} className="text-blue-600" />
@@ -291,13 +298,14 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
               </div>
             </div>
           </div>
+
         </div>
 
-        {/* 하단 */}
-        <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end">
+        {/* Footer */}
+        <div className="border-t border-gray-200 px-4 md:px-6 py-3 bg-gray-50 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-white transition text-sm font-medium"
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition text-sm font-medium"
           >
             닫기
           </button>

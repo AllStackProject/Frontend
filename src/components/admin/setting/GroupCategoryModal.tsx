@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Plus, Trash2, Users, Settings, Check, Edit2 } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 
 import {
   getCategories,
@@ -37,12 +37,8 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
   onSubmit,
 }) => {
   const { orgId } = useAuth();
+  const { openModal } = useModal();
   const [groupList, setGroupList] = useState<GroupCategory[]>(groups);
-
-  // 삭제 모달
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<GroupCategory | null>(null);
-
   const [newGroup, setNewGroup] = useState("");
 
   /* ---------------------------------------------------------
@@ -88,21 +84,33 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
      그룹 삭제
   --------------------------------------------------------- */
   const openDeleteConfirm = (group: GroupCategory) => {
-    setDeleteTarget(group);
-    setShowConfirm(true);
-  };
+    openModal({
+      type: "delete",
+      title: "그룹 삭제",
+      message: `"${group.name}" 그룹을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+      requiredKeyword: "삭제",
+      confirmText: "삭제",
+      onConfirm: async () => {
+        try {
+          await deleteGroupApi(orgId || 0, group.id);
+          await refreshGroups();
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
-
-    try {
-      await deleteGroupApi(orgId || 0, deleteTarget.id);
-
-      await refreshGroups(); // 🔥 서버 최신 목록 반영
-      setShowConfirm(false);
-    } catch (err: any) {
-      alert(err.message || "그룹 삭제 실패");
-    }
+          openModal({
+            type: "success",
+            title: "삭제 완료",
+            message: `"${group.name}" 그룹이 삭제되었습니다.`,
+            autoClose: true,
+            autoCloseDelay: 1800,
+          });
+        } catch (err: any) {
+          openModal({
+            type: "error",
+            title: "삭제 실패",
+            message: err.message || "그룹 삭제 중 오류가 발생했습니다.",
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -193,19 +201,6 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 삭제 모달 */}
-      {showConfirm && deleteTarget && (
-        <ConfirmActionModal
-          title="그룹 삭제"
-          message={`"${deleteTarget.name}" 그룹을 삭제하시겠습니까?\n해당 그룹의 카테고리도 함께 삭제됩니다.`}
-          keyword="삭제"
-          confirmText="삭제"
-          color="red"
-          onConfirm={confirmDelete}
-          onClose={() => setShowConfirm(false)}
-        />
-      )}
     </>
   );
 };
@@ -217,6 +212,8 @@ export default GroupCategoryModal;
 --------------------------------------------------------- */
 const CategoryManager = ({ group }: { group: GroupCategory }) => {
   const { orgId } = useAuth();
+  const { openModal } = useModal();
+
   const [categories, setCategories] = useState(group.categories);
   const [newCat, setNewCat] = useState("");
 
@@ -243,9 +240,33 @@ const CategoryManager = ({ group }: { group: GroupCategory }) => {
     load();
   };
 
-  const remove = async (catId: number) => {
-    await deleteCategory(orgId || 0, group.id, catId);
-    load();
+  const remove = (catId: number) => {
+    openModal({
+      type: "delete",
+      title: "카테고리 삭제",
+      message: `이 카테고리를 삭제하시겠습니까?`,
+      requiredKeyword: "삭제",
+      confirmText: "삭제",
+      onConfirm: async () => {
+        try {
+          await deleteCategory(orgId || 0, group.id, catId);
+          await load();
+
+          openModal({
+            type: "success",
+            title: "삭제 완료",
+            message: "카테고리가 삭제되었습니다.",
+            autoClose: true,
+          });
+        } catch (err: any) {
+          openModal({
+            type: "error",
+            title: "삭제 실패",
+            message: err.message || "카테고리 삭제 실패",
+          });
+        }
+      },
+    });
   };
 
   const startEdit = (cat: { id: number; title: string }) => {
@@ -253,11 +274,34 @@ const CategoryManager = ({ group }: { group: GroupCategory }) => {
     setEditingTitle(cat.title);
   };
 
-  const confirmEdit = async (catId: number) => {
-    if (!editingTitle.trim()) return;
-    await updateCategory(orgId || 0, group.id, catId, editingTitle.trim());
-    setEditingCatId(null);
-    load();
+  const confirmEdit = (catId: number) => {
+    openModal({
+      type: "edit",
+      title: "카테고리 수정",
+      message: `이 카테고리를 "${editingTitle}"로 수정하시겠습니까?`,
+      requiredKeyword: "수정",
+      confirmText: "수정",
+      onConfirm: async () => {
+        try {
+          await updateCategory(orgId || 0, group.id, catId, editingTitle.trim());
+          setEditingCatId(null);
+          await load();
+
+          openModal({
+            type: "success",
+            title: "수정 완료",
+            message: "카테고리가 수정되었습니다.",
+            autoClose: true,
+          });
+        } catch (err: any) {
+          openModal({
+            type: "error",
+            title: "수정 실패",
+            message: err.message || "카테고리 수정 실패",
+          });
+        }
+      },
+    });
   };
 
   return (

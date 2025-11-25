@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Home, X, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { fetchOrgInfo } from "@/api/adminOrg/info";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
 
 type UserRole = "admin" | "manager";
@@ -14,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
   const navigate = useNavigate();
   const { nickname, orgName, orgId } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [orgImage, setOrgImage] = useState<string>("/dummy/woori-logo.png");
 
   // 권한별 역할 표시 텍스트
   const getRoleText = () => {
@@ -28,6 +29,33 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
     }
   };
 
+  /** -----------------------------
+   *  조직 이미지 로드
+   --------------------------------*/
+  useEffect(() => {
+    const loadOrgInfo = async () => {
+      if (!orgId) return;
+
+      try {
+        const info = await fetchOrgInfo(orgId);
+
+        let url = info.img_url;
+
+        // http/https 없으면 자동 보정
+        if (url && !url.startsWith("http")) {
+          url = "https://" + url;
+        }
+
+        setOrgImage(url || "/dummy/woori-logo.png");
+      } catch (error) {
+        console.error("❌ 조직 정보 불러오기 실패:", error);
+        setOrgImage("/dummy/woori-logo.png");
+      }
+    };
+
+    loadOrgInfo();
+  }, [orgId]);
+
   return (
     <>
       {/* 헤더 */}
@@ -38,8 +66,9 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
           onClick={() => setIsModalOpen(true)}
         >
           <img
-            src='/dummy/woori-logo.png'
+            src={orgImage}
             className="w-10 h-10 rounded-md object-cover border border-gray-300"
+            alt="org logo"
           />
           <div>
             <h2 className="font-semibold text-gray-800 group-hover:text-blue-600 transition">

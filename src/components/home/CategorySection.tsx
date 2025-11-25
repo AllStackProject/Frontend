@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchOrgMyActivityGroup } from "@/api/myactivity/info";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) => void }) => {
@@ -8,8 +9,30 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
   const [categories, setCategories] = useState<string[]>(["전체"]);
   const [selected, setSelected] = useState("전체");
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
-  /** API 로 카테고리 로딩 */
+  /** 반응형 - 화면 크기별 최대 노출 개수 결정 */
+  const [maxVisible, setMaxVisible] = useState(9);
+
+  useEffect(() => {
+    const updateVisible = () => {
+      const width = window.innerWidth;
+
+      if (width < 500) {
+        setMaxVisible(4);
+      } else if (width < 768) {
+        setMaxVisible(5);
+      } else {
+        setMaxVisible(9);
+      }
+    };
+
+    updateVisible();
+    window.addEventListener("resize", updateVisible);
+    return () => window.removeEventListener("resize", updateVisible);
+  }, []);
+
+  /** API 로딩 */
   useEffect(() => {
     const load = async () => {
       if (!orgId) return;
@@ -17,14 +40,11 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
       try {
         const res = await fetchOrgMyActivityGroup(orgId);
 
-        /** member_groups → categories → title 추출 */
         const merged = Array.from(
           new Set(
-            res.member_groups
-              .flatMap((group) =>
-                group.categories?.map((c) => c.title) ?? []
-              )
-              .filter((c): c is string => typeof c === "string")
+            res.member_groups.flatMap((g) =>
+              g.categories?.map((c) => c.title) ?? []
+            )
           )
         );
 
@@ -39,9 +59,18 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
     load();
   }, [orgId]);
 
-  const handleCategoryClick = (category: string) => {
-    setSelected(category);
-    onCategoryChange?.(category);
+  /** 숨겨진 개수 계산 */
+  const hiddenCount =
+    categories.length > maxVisible ? categories.length - maxVisible : 0;
+
+  /** 보여줄 카테고리 */
+  const displayCategories = showAll
+    ? categories
+    : categories.slice(0, maxVisible);
+
+  const handleCategoryClick = (cat: string) => {
+    setSelected(cat);
+    onCategoryChange?.(cat);
   };
 
   if (loading) {
@@ -53,28 +82,52 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-3 py-2">
-      {categories.map((category) => {
-        const isSelected = selected === category;
+    <div className="flex flex-wrap justify-center items-center gap-3">
 
+      {/* 카테고리 버튼 */}
+      {displayCategories.map((category) => {
+        const isSelected = selected === category;
         return (
           <button
             key={category}
             onClick={() => handleCategoryClick(category)}
             className={`
-              relative px-5 py-2 rounded-full text-sm font-semibold
-              transform transition-all duration-200 ease-out
+              rounded-full px-4 py-2 text-sm font-semibold transition
               ${
                 isSelected
-                  ? "bg-primary text-white shadow-md scale-105"
-                  : "bg-white text-text-primary border border-border-light shadow-sm hover:shadow-md hover:scale-105 hover:border-primary"
+                  ? "bg-primary text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:border-primary"
               }
             `}
           >
-            <span className="relative z-10">{category}</span>
+            {category}
           </button>
         );
       })}
+
+      {/* 더보기 버튼 */}
+      {hiddenCount > 0 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="
+            flex items-center gap-1 rounded-full px-3 py-1 text-xs
+            text-gray-500 bg-gray-100 border border-gray-300 hover:border-primary transition
+          "
+        >
+          {showAll ? (
+            <>
+              접기
+              <ChevronDown className="h-4 w-4 rotate-180 transition-transform" />
+            </>
+          ) : (
+            <>
+              더보기
+              <ChevronDown className="h-4 w-4 transition-transform" />
+            </>
+          )}
+        </button>
+      )}
+
     </div>
   );
 };

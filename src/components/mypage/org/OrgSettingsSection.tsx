@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-
 import { exitOrganization } from "@/api/organization/orgs";
 import { fetchOrgMyActivityInfo, updateMyOrgNickname } from "@/api/myactivity/info";
+import { getOrganizations } from "@/api/organization/orgs";
 import EditNicknameModal from "@/components/mypage/org/EditNicknameModal";
 
 type JoinStatus = "APPROVED" | "PENDING" | "REJECTED";
@@ -43,6 +43,7 @@ const CurrentOrganizationSettings: React.FC = () => {
   const navigate = useNavigate();
   const { orgId } = useAuth();
   const { setNickname: setGlobalNickname } = useAuth();
+  const [orgImage, setOrgImage] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [org, setOrg] = useState<OrganizationItem | null>(null);
@@ -68,7 +69,6 @@ const CurrentOrganizationSettings: React.FC = () => {
           id: orgId,
           name: res.org_name,
           code: res.org_code,
-          img_url: "/dummy/woori-logo.png",
           is_admin: res.is_admin,
           join_at: res.joined_at,
           join_status: "APPROVED",
@@ -88,7 +88,29 @@ const CurrentOrganizationSettings: React.FC = () => {
     load();
   }, [orgId]);
 
-  const logo = org?.img_url || "/dummy/woori-logo.png";
+  useEffect(() => {
+      const fetchOrgImage = async () => {
+        try {
+          const orgs = await getOrganizations();
+  
+          const selected = orgs.find(org => org.id === orgId);
+  
+          if (selected?.img_url) {
+            const fixedUrl = selected.img_url.startsWith("http")
+              ? selected.img_url
+              : `https://${selected.img_url}`;
+  
+            setOrgImage(fixedUrl);
+          }
+        } catch (e) {
+          console.error("🚨 조직 이미지 로드 실패:", e);
+          setOrgImage(null);
+        }
+      };
+  
+      if (orgId) fetchOrgImage();
+    }, [orgId]);
+
   const joinedDate = org?.join_at
     ? org.join_at.split("T")[0].replace(/-/g, ".")
     : "-";
@@ -188,7 +210,7 @@ const CurrentOrganizationSettings: React.FC = () => {
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img src={logo} className="w-20 h-20 rounded-xl border-2 border-white shadow-md" />
+              <img src={orgImage || ""} className="w-20 h-20 rounded-xl border-2 border-white shadow-md" />
               {org.is_admin && (
                 <div className="absolute -bottom-2 -right-2 p-1.5 bg-primary text-white rounded-full shadow">
                   <Shield size={16} />

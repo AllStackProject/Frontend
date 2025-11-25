@@ -11,22 +11,27 @@ export const getWatchedVideos = async (orgId: number): Promise<WatchedVideo[]> =
     const orgToken = localStorage.getItem("org_token");
     const storedOrgId = localStorage.getItem("org_id");
 
-    // org_token 또는 org_id 누락 시 오류 처리
     if (!orgToken || !storedOrgId) {
       throw new Error("조직 정보가 유효하지 않습니다. 다시 선택해주세요.");
     }
 
-    // 현재 로그인 중인 조직과 전달받은 orgId 일치 검증
     if (Number(storedOrgId) !== orgId) {
       console.warn("⚠️ 전달된 orgId와 현재 저장된 org_id가 일치하지 않습니다.");
     }
 
-    // API 호출 (org_token 인증)
     const response = await api.get(`/${orgId}/myactivity/video`, {
-      tokenType: "org", // org_token을 사용하도록 명시
+      tokenType: "org",
     } as CustomAxiosRequestConfig);
 
-    return response.data?.result?.videos || [];
+    const videos = response.data?.result?.videos || [];
+    const mapped = videos.map((v: any) => ({
+      ...v,
+      img: v.img?.startsWith("http")
+        ? v.img
+        : `https://${v.img}`,
+    }));
+
+    return mapped;
   } catch (error: any) {
     console.error("🚨 영상 시청 기록 조회 중 오류:", error);
     const message =

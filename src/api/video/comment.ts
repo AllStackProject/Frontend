@@ -17,7 +17,6 @@ export const getVideoComments = async (
     const orgToken = localStorage.getItem("org_token");
     if (!orgToken) throw new Error("조직 토큰이 없습니다. 다시 로그인해주세요.");
 
-    // GET 요청
     const response = await api.get<CommentsResponse>(
       `/${orgId}/video/${videoId}/comments`,
       { tokenType: "org" } as CustomAxiosRequestConfig
@@ -35,17 +34,15 @@ export const getVideoComments = async (
       if (!childMap[parentId]) childMap[parentId] = [];
       childMap[parentId].push({
         ...child,
-        user_name: child.user_name || "사용자",
-        user_avatar: child.user_avatar || "",
+        creator: (child as any).creator ?? child.creator ?? "사용자",
         created_at: child.created_at || new Date().toISOString(),
-      });
+      } as any);
     });
 
     // 부모 댓글 + 대댓글 합치기
     const merged: CommentWithReplies[] = comments.map((c) => ({
       ...c,
-      user_name: c.user_name || "사용자",
-      user_avatar: c.user_avatar || "",
+      creator: (c as any).creator ?? c.creator ?? "사용자",
       created_at: c.created_at || new Date().toISOString(),
       replies: childMap[c.id] || [],
     }));
@@ -62,8 +59,8 @@ export const getVideoComments = async (
 
 /**
  * 댓글 작성 (POST /{orgId}/video/{videoId}/comment)
- * - parent_comment_id: null → 일반 댓글
- * - parent_comment_id: number → 대댓글
+ * - parent_comment_id: undefined → 일반 댓글
+ * - parent_comment_id: number   → 대댓글
  */
 export const postVideoComment = async (
   orgId: number,
@@ -75,7 +72,11 @@ export const postVideoComment = async (
     const orgToken = localStorage.getItem("org_token");
     if (!orgToken) throw new Error("조직 토큰이 없습니다. 다시 로그인해주세요.");
 
-    const payload = { text, parent_comment_id: parentCommentId };
+    // 루트 댓글일 때는 parent_comment_id 아예 보내지 않음
+    const payload: any = { text };
+    if (parentCommentId !== null) {
+      payload.parent_comment_id = parentCommentId;
+    }
 
     const response = await api.post(
       `/${orgId}/video/${videoId}/comment`,
@@ -93,4 +94,3 @@ export const postVideoComment = async (
     );
   }
 };
-

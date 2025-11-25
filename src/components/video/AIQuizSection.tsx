@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { CheckCircle, XCircle, Award, HelpCircle } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
-import {startVideoSession} from "@/api/video/video";
+import { useModal } from "@/context/ModalContext";
 
 interface QuizQuestion {
   id: number;
@@ -31,8 +30,7 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
   const [showResults, setShowResults] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // 에러 모달 상태
-  const [showErrorModal, setShowErrorModal] = useState(false);
+  const { openModal } = useModal();
 
   const handleOptionSelect = (answer: boolean) => {
     if (isSubmitted) return;
@@ -53,8 +51,11 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
   const handleSubmit = () => {
     const allAnswered = selectedAnswers.every((a) => a !== null);
     if (!allAnswered) {
-      // 에러 모달 표시
-      setShowErrorModal(true);
+      openModal({
+        type: "error",
+        title: "오류 발생",
+        message: "처리 중 오류가 발생했습니다.",
+      });
       return;
     }
     setIsSubmitted(true);
@@ -103,13 +104,12 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                         <div
                           key={i}
                           className={`w-7 h-7 flex items-center justify-center rounded-full font-semibold text-sm cursor-pointer transition-all
-                        ${
-                            isActive
+                        ${isActive
                               ? "bg-primary text-white scale-110 shadow-base"
                               : isAnswered
-                              ? "bg-accent-light text-primary"
-                              : "bg-gray-200 text-gray-400"
-                          }
+                                ? "bg-accent-light text-primary"
+                                : "bg-gray-200 text-gray-400"
+                            }
                         hover:scale-105`}
                           onClick={() => setCurrentQuestion(i)}
                         >
@@ -131,34 +131,31 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     {/* O 버튼 */}
                     <button
                       className={`flex flex-col items-center justify-center gap-2 relative w-full max-w-[100px] h-[70px] border-[3px] rounded-xl bg-white transition-all
-                    ${
-                        selectedAnswers[currentQuestion] === true
+                    ${selectedAnswers[currentQuestion] === true
                           ? "border-primary bg-accent-light"
                           : "border-border-light"
-                      }
-                    ${
-                        isSubmitted && currentQ.correctAnswer === true
+                        }
+                    ${isSubmitted && currentQ.correctAnswer === true
                           ? "border-success bg-green-50"
                           : isSubmitted &&
                             selectedAnswers[currentQuestion] === true &&
                             currentQ.correctAnswer === false
-                          ? "border-error bg-red-50"
-                          : ""
-                      }
+                            ? "border-error bg-red-50"
+                            : ""
+                        }
                     hover:scale-105`}
                       onClick={() => handleOptionSelect(true)}
                       disabled={isSubmitted}
                     >
                       <span
-                        className={`text-3xl font-extrabold ${
-                          isSubmitted && currentQ.correctAnswer === true
+                        className={`text-3xl font-extrabold ${isSubmitted && currentQ.correctAnswer === true
                             ? "text-success"
                             : isSubmitted &&
                               selectedAnswers[currentQuestion] === true &&
                               currentQ.correctAnswer === false
-                            ? "text-error"
-                            : "text-primary"
-                        }`}
+                              ? "text-error"
+                              : "text-primary"
+                          }`}
                       >
                         O
                       </span>
@@ -181,34 +178,31 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
                     {/* X 버튼 */}
                     <button
                       className={`flex flex-col items-center justify-center gap-2 relative w-full max-w-[100px] h-[70px] border-[3px] rounded-2xl bg-white transition-all
-                    ${
-                        selectedAnswers[currentQuestion] === false
+                    ${selectedAnswers[currentQuestion] === false
                           ? "border-error bg-red-50"
                           : "border-border-light"
-                      }
-                    ${
-                        isSubmitted && currentQ.correctAnswer === false
+                        }
+                    ${isSubmitted && currentQ.correctAnswer === false
                           ? "border-success bg-green-50"
                           : isSubmitted &&
                             selectedAnswers[currentQuestion] === false &&
                             currentQ.correctAnswer === true
-                          ? "border-error bg-red-50"
-                          : ""
-                      }
+                            ? "border-error bg-red-50"
+                            : ""
+                        }
                     hover:scale-105`}
                       onClick={() => handleOptionSelect(false)}
                       disabled={isSubmitted}
                     >
                       <span
-                        className={`text-3xl font-extrabold ${
-                          isSubmitted && currentQ.correctAnswer === false
+                        className={`text-3xl font-extrabold ${isSubmitted && currentQ.correctAnswer === false
                             ? "text-success"
                             : isSubmitted &&
                               selectedAnswers[currentQuestion] === false &&
                               currentQ.correctAnswer === true
-                            ? "text-error"
-                            : "text-error"
-                        }`}
+                              ? "text-error"
+                              : "text-error"
+                          }`}
                       >
                         X
                       </span>
@@ -300,18 +294,6 @@ const AIQuizSection: React.FC<AIQuizSectionProps> = ({
           </div>
         )}
       </div>
-
-      {/* 에러 모달 */}
-      {showErrorModal && (
-        <ConfirmActionModal
-          title="답변 미완료"
-          message="모든 문제에 답변해주세요!"
-          confirmText="확인"
-          color="yellow"
-          onConfirm={() => setShowErrorModal(false)}
-          onClose={() => setShowErrorModal(false)}
-        />
-      )}
     </>
   );
 };

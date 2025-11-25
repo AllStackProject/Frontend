@@ -1,34 +1,4 @@
-import type { VideoHeatMapResponse, NormalizedSegment, VideoSegment } from "@/types/videoHeatmap";
-
-/**
- * 비디오 Heat Map 데이터를 가져오는 API 함수
- * TODO: 실제 API 엔드포인트로 교체 필요
- * 
- * @param videoId - 비디오 ID
- * @returns 구간별 재생 횟수 배열 [12, 23, 56, 48, ...]
- */
-export const fetchVideoHeatMap = async (
-  videoId: number
-): Promise<VideoHeatMapResponse> => {
-  // TODO: 실제 API 호출로 교체
-  // const response = await fetch(`/api/videos/${videoId}/heatmap`);
-  // return response.json();
-
-  // Mock 데이터 (개발용) - 단순 배열 형식
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 30개 구간 (0~9초, 10~19초, ..., 290~299초)
-      const mockData = Array.from({ length: 100 }, (_, i) => 
-        Math.floor(
-          Math.random() * 1000 + 
-          (i > 5 && i < 15 ? 1500 : 500) // 중간 구간이 더 많이 재생됨
-        )
-      );
-
-      resolve(mockData);
-    }, 500); // 네트워크 지연 시뮬레이션
-  });
-};
+import type { NormalizedSegment, VideoSegment } from "@/types/videoHeatmap";
 
 /**
  * 서버에서 받은 배열 데이터를 VideoSegment 형식으로 변환

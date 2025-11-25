@@ -8,7 +8,7 @@ import {
   Users,
   Brain,
 } from "lucide-react";
-import ConfirmActionModal from "@/components/common/modals/ConfirmActionModal";
+import { useModal } from "@/context/ModalContext";
 
 interface EditVideoModalProps {
   video: any;
@@ -24,13 +24,12 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { openModal } = useModal();
+
   const [formData, setFormData] = useState({
     ...video,
     thumbnailPreview: video.thumbnail || "",
   });
-
-  const [showCommentAlert, setShowCommentAlert] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: typeof formData) => ({ ...prev, [key]: value }));
@@ -61,12 +60,40 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
     }
   };
 
-  // 파일 용량 포맷
   const formatFileSize = (bytes: number) => {
     if (!bytes) return "—";
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  /** 댓글 허용 토글 */
+  const handleCommentToggle = () => {
+    if (formData.allowComments) {
+      openModal({
+        type: "confirm",
+        title: "댓글 기능 비활성화",
+        message: "댓글 기능을 비활성화하시겠습니까? 기존 댓글은 모두 삭제됩니다.",
+        confirmText: "확인",
+        onConfirm: () => handleChange("allowComments", false),
+      });
+    } else {
+      handleChange("allowComments", true);
+    }
+  };
+
+  /** 수정 저장 */
+  const handleSave = () => {
+    openModal({
+      type: "confirm",
+      title: "수정 확인",
+      message: "정말 수정하시겠습니까? 수정한 내용은 되돌릴 수 없습니다.",
+      confirmText: "확인",
+      onConfirm: () => {
+        onSubmit(formData);
+        onClose();
+      },
+    });
   };
 
   return (
@@ -93,9 +120,9 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
         {/* 콘텐츠 */}
         <div className="overflow-y-auto px-6 py-5">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* 왼쪽 */}
+            {/* 왼쪽 영역 */}
             <div className="space-y-6">
-              {/* 동영상 파일 정보 (수정 불가) */}
+              {/* 동영상 파일 정보 */}
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   동영상 파일 정보
@@ -118,62 +145,59 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                   썸네일 이미지 (1280×720)
                 </label>
 
-                <div className="flex flex-col gap-2">
-                  {/* 썸네일 미리보기 영역 */}
-                  <label className="w-full aspect-video border-2 border-gray-300 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-100 hover:border-blue-400 transition overflow-hidden">
-                    {formData.thumbnailPreview ? (
-                      <img
-                        src={formData.thumbnailPreview}
-                        alt="썸네일 미리보기"
-                        className="w-full h-full object-contain bg-black"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center text-gray-400">
-                        <Image size={32} className="mb-1" />
-                        <span className="text-sm">이미지를 선택하세요</span>
-                        <span className="text-xs text-gray-400">(권장: 1280×720)</span>
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const preview = URL.createObjectURL(file);
-                          setFormData((prev: typeof formData) => ({
-                            ...prev,
-                            thumbnail: file,
-                            thumbnailPreview: preview,
-                          }));
-                        }
-                      }}
+                <label className="w-full aspect-video border-2 border-gray-300 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-100 hover:border-blue-400 transition overflow-hidden">
+                  {formData.thumbnailPreview ? (
+                    <img
+                      src={formData.thumbnailPreview}
+                      alt="썸네일 미리보기"
+                      className="w-full h-full object-contain bg-black"
                     />
-                  </label>
-
-                  {/* 제거 버튼 */}
-                  {formData.thumbnail && (
-                    <button
-                      onClick={() =>
-                        setFormData((prev: typeof formData) => ({
-                          ...prev,
-                          thumbnail: null,
-                          thumbnailPreview: "",
-                        }))
-                      }
-                      className="text-xs text-gray-500 underline hover:text-red-500 self-end transition"
-                    >
-                      썸네일 제거
-                    </button>
+                  ) : (
+                    <div className="flex flex-col items-center text-gray-400">
+                      <Image size={32} className="mb-1" />
+                      <span className="text-sm">이미지를 선택하세요</span>
+                      <span className="text-xs text-gray-400">(권장: 1280×720)</span>
+                    </div>
                   )}
-                </div>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const preview = URL.createObjectURL(file);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          thumbnail: file,
+                          thumbnailPreview: preview,
+                        }));
+                      }
+                    }}
+                  />
+                </label>
+
+                {formData.thumbnail && (
+                  <button
+                    onClick={() =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        thumbnail: null,
+                        thumbnailPreview: "",
+                      }))
+                    }
+                    className="text-xs text-gray-500 underline hover:text-red-500 self-end transition"
+                  >
+                    썸네일 제거
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* 오른쪽 */}
+            {/* 오른쪽 영역 */}
             <div className="space-y-5">
-              {/* 제목 (수정 불가) */}
+              {/* 제목 */}
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   제목
@@ -212,10 +236,11 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                         key={tag}
                         onClick={() => toggleItem("hashtags", tag)}
                         type="button"
-                        className={`px-3 py-1.5 text-sm rounded-full border flex items-center gap-1 transition ${active
+                        className={`px-3 py-1.5 text-sm rounded-full border flex items-center gap-1 transition ${
+                          active
                             ? "bg-blue-500 text-white border-blue-500"
                             : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
-                          }`}
+                        }`}
                       >
                         <Hash size={14} />
                         {tag}
@@ -249,10 +274,11 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                           key={group}
                           onClick={() => toggleItem("selectedGroups", group)}
                           type="button"
-                          className={`px-3 py-1.5 text-sm rounded-full border flex items-center gap-1 transition ${active
+                          className={`px-3 py-1.5 text-sm rounded-full border flex items-center gap-1 transition ${
+                            active
                               ? "bg-blue-500 text-white border-blue-500"
                               : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
-                            }`}
+                          }`}
                         >
                           <Users size={14} />
                           {group}
@@ -268,24 +294,20 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                 <span className="text-sm font-medium text-gray-700">댓글 허용</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (formData.allowComments) {
-                      setShowCommentAlert(true);
-                    } else {
-                      handleChange("allowComments", true);
-                    }
-                  }}
-                  className={`w-12 h-6 rounded-full transition-all relative ${formData.allowComments ? "bg-blue-500" : "bg-gray-300"
-                    }`}
+                  onClick={handleCommentToggle}
+                  className={`w-12 h-6 rounded-full transition-all relative ${
+                    formData.allowComments ? "bg-blue-500" : "bg-gray-300"
+                  }`}
                 >
                   <span
-                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${formData.allowComments ? "translate-x-6" : ""
-                      }`}
+                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      formData.allowComments ? "translate-x-6" : ""
+                    }`}
                   />
                 </button>
               </div>
 
-              {/* AI 퀴즈 생성 (수정 불가 표시) */}
+              {/* AI 퀴즈 여부 */}
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   AI 퀴즈 생성 여부
@@ -298,7 +320,7 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                 </div>
               </div>
 
-              {/* 영상 만료 기간 */}
+              {/* 만료 기간 */}
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   영상 만료 기간
@@ -313,10 +335,11 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                       key={value}
                       type="button"
                       onClick={() => handleExpirationSelect(value)}
-                      className={`px-3 py-1.5 text-sm rounded-lg border transition ${formData.expiration === value
+                      className={`px-3 py-1.5 text-sm rounded-lg border transition ${
+                        formData.expiration === value
                           ? "bg-blue-500 text-white border-blue-500"
                           : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
-                        }`}
+                      }`}
                     >
                       {label}
                     </button>
@@ -347,7 +370,7 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
             취소
           </button>
           <button
-            onClick={() => setShowConfirmModal(true)}
+            onClick={handleSave}
             type="button"
             className="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
           >
@@ -355,38 +378,6 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
           </button>
         </div>
       </div>
-
-      {/* 댓글 OFF 경고 모달 */}
-      {showCommentAlert && (
-        <ConfirmActionModal
-          title="댓글 기능 비활성화"
-          message="댓글 기능을 비활성화하시겠습니까? 기존 댓글은 모두 삭제됩니다."
-          color="red"
-          confirmText="확인"
-          onConfirm={() => {
-            handleChange("allowComments", false);
-            setShowCommentAlert(false);
-          }}
-          onClose={() => setShowCommentAlert(false)}
-        />
-      )}
-
-      {/* 수정 확인 모달 */}
-      {showConfirmModal && (
-        <ConfirmActionModal
-          title="수정 확인"
-          message="정말 수정하시겠습니까? 수정한 내용은 되돌릴 수 없습니다."
-          keyword="수정"
-          confirmText="확인"
-          color="blue"
-          onConfirm={() => {
-            onSubmit(formData);
-            setShowConfirmModal(false);
-            onClose();
-          }}
-          onClose={() => setShowConfirmModal(false)}
-        />
-      )}
     </div>
   );
 };

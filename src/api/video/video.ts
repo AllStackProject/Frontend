@@ -70,6 +70,7 @@ export const leaveVideoSession = async (
 };
 
 /* 영상 업로드 */
+
 /**
  * Step 1. 영상 메타데이터 + 썸네일 업로드 → presigned URL 받기
  */
@@ -84,7 +85,7 @@ export const requestVideoUpload = async (
     expired_at: string | null;
     thumbnail_img: File;
   }
-): Promise<{ presigned_url: string, video_id: number }> => {
+): Promise<{ presigned_url: string; video_id: number }> => {
   try {
     const formData = new FormData();
     formData.append("title", payload.title);
@@ -124,9 +125,9 @@ export const uploadVideoToS3 = async (presignedUrl: string, file: File) => {
     const res = await fetch(presignedUrl, {
       method: "PUT",
       body: file,
-      headers: {
-        "Content-Type": "video/mp4",
-      },
+      // headers: {
+      //   "Content-Type": "video/mp4",
+      // },
     });
 
     if (!res.ok) throw new Error("S3 업로드 실패");
@@ -138,25 +139,29 @@ export const uploadVideoToS3 = async (presignedUrl: string, file: File) => {
   }
 };
 
-/** Step 3. 업로드 성공 여부 서버 전달 */
-export const notifyUploadStatus = async (
-  orgId: number,
-  videoId: number,
-  isSuccess: boolean
-) => {
+/**
+ * Step 3. 업로드 처리 성공 여부 조회 (GET /{orgId}/video/{videoId}/success)
+ */
+export const checkUploadStatus = async (
+  orgId: number, 
+  videoId: number
+): Promise<"IN_PROGRESS"|"COMPLETE"|"FAIL"> => {
   try {
-    const response = await api.put(
-      `/${orgId}/video/${videoId}`,
-      {},
-      {
-        params: { is_success: isSuccess },
-        tokenType: "org",
-      } as CustomAxiosRequestConfig
+    const response = await api.get(
+      `/${orgId}/video/${videoId}/success`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
     );
 
-    return response.data.result;
+    const status = response.data?.result?.upload_status;
+
+    if (status === "COMPLETE")
+      return "COMPLETE";
+    else if (status === "IN_PROGRESS") 
+      return "IN_PROGRESS";
+    return "FAIL"; // 기본값
+
   } catch (err: any) {
-    console.error("🚨 업로드 성공 여부 전달 실패", err);
-    throw new Error(err.response?.data?.message || "업로드 여부 전달 실패");
+    console.error("❌ 업로드 상태 확인 실패:", err);
+    return "IN_PROGRESS"; // 일시적 실패는 계속 폴링
   }
 };

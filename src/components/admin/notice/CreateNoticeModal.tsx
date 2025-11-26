@@ -1,82 +1,117 @@
-import React, { useState } from "react";
-import { X, FileText } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { X, FileText, AlertCircle } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
-
-interface NoticeFormData {
-  title: string;
-  content: string;
-  visibility: "전체공개" | "특정그룹공개" | "비공개";
-  selectedGroups: string[];
-  author: string;
-  attachments: File[];
-  linkedVideo?: string;
-}
+import { createAdminNotice } from "@/api/adminNotice/notice";
+import { fetchOrgInfo } from "@/api/adminOrg/info";
+import { useAuth } from "@/context/AuthContext";
 
 interface CreateNoticeModalProps {
   onClose: () => void;
-  onSubmit: (notice: any) => void;
+  onSubmit: () => void; 
 }
 
-// 조직의 그룹 목록
-const ORGANIZATION_GROUPS = ["HR팀", "IT팀", "R&D팀", "기획팀", "마케팅팀"];
+interface GroupItem {
+  id: number;
+  name: string;
+}
 
 const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [form, setForm] = useState<NoticeFormData>({
+  const { orgId } = useAuth();
+  const { openModal } = useModal();
+
+  const [groups, setGroups] = useState<GroupItem[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(true);
+
+  const [form, setForm] = useState({
     title: "",
     content: "",
-    visibility: "전체공개",
-    selectedGroups: [],
-    author: "관리자",
-    attachments: [],
-    linkedVideo: "",
+    visibility: "전체공개" as "전체공개" | "특정그룹공개" | "비공개",
+    selectedGroupIds: [] as number[],
   });
 
-  const { openModal } = useModal();
-  /** 에러 모달(공통모달) 호출 */
-  const showError = (msg: string) => {
+  /** 그룹 조회 */
+  useEffect(() => {
+    if (!orgId) return;
+
+    const loadGroups = async () => {
+      try {
+        const data = await fetchOrgInfo(orgId);
+        setGroups(data.member_groups || []);
+      } catch (err) {
+        console.error(err);
+        openModal({
+          type: "error",
+          title: "그룹 조회 실패",
+          message: "조직의 그룹 정보를 불러올 수 없습니다.",
+        });
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+
+    loadGroups();
+  }, [orgId]);
+
+  /** 에러 모달 공용 */
+  const showError = (msg: string) =>
     openModal({
       type: "error",
       title: "공지 입력 오류",
       message: msg,
       confirmText: "확인",
     });
-  };
 
-  const handleGroupToggle = (group: string) => {
+  /** 체크박스 토글 */
+  const toggleGroup = (id: number) => {
     setForm((prev) => ({
       ...prev,
-      selectedGroups: prev.selectedGroups.includes(group)
-        ? prev.selectedGroups.filter((g) => g !== group)
-        : [...prev.selectedGroups, group],
+      selectedGroupIds: prev.selectedGroupIds.includes(id)
+        ? prev.selectedGroupIds.filter((g) => g !== id)
+        : [...prev.selectedGroupIds, id],
     }));
   };
 
-  const handleSubmit = () => {
+  /** 등록 Submit */
+  const handleSubmit = async () => {
     if (!form.title.trim()) return showError("제목을 입력해주세요.");
     if (!form.content.trim()) return showError("내용을 입력해주세요.");
 
-    if (form.visibility === "특정그룹공개" && form.selectedGroups.length === 0) {
+    if (form.visibility === "특정그룹공개" && form.selectedGroupIds.length === 0) {
       return showError("공개할 그룹을 최소 1개 이상 선택해주세요.");
     }
 
-    const newNotice = {
-      id: Date.now(),
-      title: form.title,
-      author: form.author,
-      createdAt: new Date().toISOString().split("T")[0],
-      views: 0,
-      visibility: form.visibility,
-      selectedGroups: form.selectedGroups,
-      content: form.content,
-      attachments: form.attachments.map((f) => f.name),
-      linkedVideo: form.linkedVideo,
-    };
+    const open_scope =
+      form.visibility === "전체공개"
+        ? "PUBLIC"
+        : form.visibility === "비공개"
+        ? "PRIVATE"
+        : "GROUP";
 
-    onSubmit(newNotice);
-    onClose();
+    try {
+      const success = await createAdminNotice(orgId!, {
+        title: form.title,
+        content: form.content,
+        open_scope,
+        member_groups: form.selectedGroupIds,
+      });
+
+      if (success) {
+        openModal({
+          type: "success",
+          title: "등록 완료",
+          message: "새 공지가 성공적으로 등록되었습니다.",
+          autoClose: true,
+        });
+
+        onSubmit(); 
+        onClose();
+      }
+    } catch (err: any) {
+      showError(err.message || "공지 등록 실패");
+    }
   };
 
   return (
@@ -92,10 +127,17 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="닫기"
             >
               <X size={22} />
             </button>
+          </div>
+
+          {/* 안내 메세지 */}
+          <div className="px-6 py-3 bg-yellow-50 border-b border-yellow-200 flex items-center gap-2 text-yellow-800 text-sm">
+            <AlertCircle size={18} />
+            <span className="font-medium">
+              등록된 공지는 수정 불가합니다. 삭제만 가능합니다.
+            </span>
           </div>
 
           {/* 내용 */}
@@ -109,8 +151,10 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
                 <input
                   type="text"
                   value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) =>
+                    setForm({ ...form, title: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                   placeholder="공지 제목을 입력하세요"
                 />
               </div>
@@ -122,14 +166,14 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
                 </label>
                 <select
                   value={form.visibility}
-                  onChange={(e) => {
+                  onChange={(e) =>
                     setForm({
                       ...form,
                       visibility: e.target.value as any,
-                      selectedGroups: [],
-                    });
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      selectedGroupIds: [],
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="전체공개">전체공개</option>
                   <option value="특정그룹공개">특정그룹공개</option>
@@ -137,41 +181,31 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
                 </select>
               </div>
 
-              {/* 특정 그룹 선택 */}
+              {/* 특정 그룹 */}
               {form.visibility === "특정그룹공개" && (
                 <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     공개할 그룹 선택 <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {ORGANIZATION_GROUPS.map((group) => (
-                      <label
-                        key={group}
-                        className="flex items-center gap-2 cursor-pointer hover:bg-white p-2 rounded transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={form.selectedGroups.includes(group)}
-                          onChange={() => handleGroupToggle(group)}
-                          className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded"
-                        />
-                        <span className="text-sm text-gray-700">{group}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {form.selectedGroups.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <p className="text-xs text-gray-600 mb-2">선택된 그룹:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {form.selectedGroups.map((group) => (
-                          <span
-                            key={group}
-                            className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full"
-                          >
-                            {group}
-                          </span>
-                        ))}
-                      </div>
+
+                  {loadingGroups ? (
+                    <p className="text-sm text-gray-500">그룹 정보를 불러오는 중...</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {groups.map((g) => (
+                        <label
+                          key={g.id}
+                          className="flex items-center gap-2 cursor-pointer hover:bg-white p-2 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={form.selectedGroupIds.includes(g.id)}
+                            onChange={() => toggleGroup(g.id)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-gray-700">{g.name}</span>
+                        </label>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -185,8 +219,10 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
                 <textarea
                   rows={6}
                   value={form.content}
-                  onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  onChange={(e) =>
+                    setForm({ ...form, content: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"
                   placeholder="공지 내용을 입력하세요"
                 />
               </div>
@@ -194,16 +230,16 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
           </div>
 
           {/* 하단 */}
-          <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex justify-end gap-2 px-6 py-4 border-t bg-gray-50">
             <button
               onClick={onClose}
-              className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors"
+              className="px-5 py-2 text-sm border border-gray-300 rounded-lg"
             >
               취소
             </button>
             <button
               onClick={handleSubmit}
-              className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg"
             >
               등록
             </button>

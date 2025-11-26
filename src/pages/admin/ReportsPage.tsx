@@ -22,7 +22,7 @@ const ReportsPage: React.FC = () => {
     },
     { 
       id: "users", 
-      label: "사용자 분석", 
+      label: "조직 분석", 
       icon: Users,
       description: "그룹 비교 및 인구통계"
     },

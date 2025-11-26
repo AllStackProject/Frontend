@@ -129,3 +129,39 @@ export async function fetchIntervalDetail(orgId: number, videoId: number) {
     throw new Error(error.response?.data?.message || "구간 상세 조회 실패");
   }
 }
+
+/**
+ * 조직 내 성별 분포 조회
+ */
+export async function fetchGenderReport(orgId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/report/gender`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+
+    // { male: number, female: number }
+    return response.data.result;
+  } catch (error: any) {
+    console.error("❌ 성별 분포 조회 실패:", error);
+    throw new Error(error.response?.data?.message || "성별 분포 조회 실패");
+  }
+}
+
+/**
+ * 조직 내 연령대 분포 조회
+ */
+export async function fetchAgeReport(orgId: number) {
+  try {
+    const response = await api.get(
+      `/admin/org/${orgId}/report/age`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+
+    // { ten, twenty, thirty, forty, fifty, sixty }
+    return response.data.result;
+  } catch (error: any) {
+    console.error("❌ 연령대 분포 조회 실패:", error);
+    throw new Error(error.response?.data?.message || "연령대 분포 조회 실패");
+  }
+}

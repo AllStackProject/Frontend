@@ -99,8 +99,8 @@ const BaseModal: React.FC<BaseModalProps> = ({
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={`${requiredKeyword} 입력`}
-            className="w-full border rounded-lg px-3 py-2 text-center mb-5 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder={`${requiredKeyword}`}
+            className="w-full border rounded-lg px-3 py-2 italic text-center mb-5 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         )}
 

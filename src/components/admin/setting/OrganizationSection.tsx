@@ -39,7 +39,7 @@ const OrganizationSection: React.FC = () => {
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: orgId || 0,
     name: "",
-    image: "/dummy/woori-logo.png", // 더미 수정 필요
+    image: "",
     members: 0,
     inviteCode: "",
     groups: [],
@@ -60,7 +60,7 @@ const OrganizationSection: React.FC = () => {
         setOrganization({
           id: orgId || 0,
           name: response.org_name,
-          image: response.img_url || "/dummy/woori-logo.png",
+          image: response.img_url,
           members: response.member_cnt,
           inviteCode: response.org_code,
           groups: response.member_groups.map((g: any) => ({
@@ -140,34 +140,57 @@ const OrganizationSection: React.FC = () => {
   /* ---------------------------------------------------------
     초대 메세지 복사
   --------------------------------------------------------- */
-  const copyInviteMessage = () => {
+  const copyInviteMessage = async () => {
     const inviteMessage = `${organization.name}에 참가해보세요!\n\n조직 초대 코드: ${organization.inviteCode}`;
-    navigator.clipboard
-      .writeText(inviteMessage)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => alert("복사에 실패했습니다."));
+
+    try {
+      // 현대적 API 우선 시도
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteMessage);
+
+      } else {
+        // HTTPS가 아니거나 clipboard API 차단된 경우 fallback
+        const textarea = document.createElement("textarea");
+        textarea.value = inviteMessage;
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.appendChild(textarea);
+
+        textarea.focus();
+        textarea.select();
+
+        const success = document.execCommand("copy");
+        document.body.removeChild(textarea);
+
+        if (!success) throw new Error("execCommand copy failed");
+      }
+
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // 최종 실패
+      openModal({
+        type: "error",
+        title: "복사 실패",
+        message: "초대메세지를 복사할 수 없습니다. HTTPS 환경인지 확인해주세요.",
+      });
+    }
   };
 
   /* ---------------------------------------------------------
     조직 코드 재발급
   --------------------------------------------------------- */
 
-  const generateNewCode = async () => {
+  const regenerateCodeApi = async () => {
     try {
       const newCode = await regenerateOrgCode(orgId || 0);
       setOrganization((prev) => ({ ...prev, inviteCode: newCode }));
 
       openModal({
-        type: "confirm",
-        title: "초대 코드 재생성",
-        message:
-          "조직 코드를 재생성하시겠습니까?\n기존 코드는 즉시 무효화됩니다.",
-        requiredKeyword: "재생성",
-        confirmText: "재생성",
-        onConfirm: generateNewCode,
+        type: "success",
+        title: "재생성 완료",
+        message: "조직 코드가 성공적으로 재생성되었습니다.",
+        autoClose: true,
       });
     } catch (err: any) {
       openModal({
@@ -177,6 +200,17 @@ const OrganizationSection: React.FC = () => {
       });
     }
   };
+  const handleRegenerateCode = () => {
+    openModal({
+      type: "confirm",
+      title: "초대 코드 재생성",
+      message: "조직 코드를 재생성하시겠습니까?\n기존 코드는 즉시 무효화됩니다.",
+      confirmText: "재생성",
+      onConfirm: regenerateCodeApi,   // API만 실행
+    });
+  };
+
+
   /* ---------------------------------------------------------
        모달 닫기 → 그룹 목록 최신화
     --------------------------------------------------------- */
@@ -268,7 +302,7 @@ const OrganizationSection: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={generateNewCode}
+                    onClick={handleRegenerateCode}
                     className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                   >
                     <RefreshCcw size={12} />

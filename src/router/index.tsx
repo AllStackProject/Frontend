@@ -46,8 +46,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (!orgToken) {
-    // 로그인은 했지만 조직을 아직 선택 안한 경우
+  if (!orgToken && !localStorage.getItem("org_token")) {
     return <Navigate to="/login/select" replace />;
   }
 

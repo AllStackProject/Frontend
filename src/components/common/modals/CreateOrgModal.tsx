@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { X, ImagePlus } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
-import { createOrganization, checkOrgNameAvailability } from "@/api/organization/orgs";
+import { createOrganization, checkOrgNameAvailability, useSelectOrganization } from "@/api/organization/orgs";
 
 interface CreateOrgModalProps {
   onClose: () => void;
@@ -13,9 +13,8 @@ interface CreateOrgModalProps {
 
 const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
   onClose,
-  onSuccess,
 }) => {
-  const { openModal } = useModal();
+  const { openModal, closeModal } = useModal();
   const navigate = useNavigate();
   const [orgName, setOrgName] = useState("");
   const [orgDesc, setOrgDesc] = useState("");
@@ -25,6 +24,8 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
 
   const [orgNameChecked, setOrgNameChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { selectOrganization } = useSelectOrganization();
 
   /** 이미지 업로드 */
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,11 +85,11 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
 
   /** 조직 생성 */
   const handleCreateOrganization = async () => {
-    if (!orgName.trim() || !nickname.trim()) {
+    if (!orgName.trim() || !nickname.trim() || !orgDesc) {
       openModal({
         type: "error",
         title: "입력 오류",
-        message: "조직 이름과 닉네임은 필수입니다.",
+        message: "조직 이름과 설명, 닉네임은 필수입니다.",
       });
       return;
     }
@@ -111,22 +112,44 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
       formData.append("nickname", nickname);
       if (imageFile) formData.append("img", imageFile);
 
-      const res = await createOrganization(formData);
+      // 1. 조직 생성
+      const createResult = await createOrganization(formData);
 
+      if (!createResult.success || !createResult.id) {
+        throw new Error("조직 생성 결과가 올바르지 않습니다.");
+      }
+
+      const createdOrgId = createResult.id;
+
+      // 2. 조직 선택 (org_token 발급)
+      const tokenIssued = await selectOrganization(createdOrgId, orgName);
+
+      if (!tokenIssued) {
+        throw new Error("조직 토큰 발급 실패");
+      }
+
+      // 3. 성공 모달 → 홈 이동
       openModal({
         type: "success",
         title: "조직 생성 성공",
-        message: "조직이 성공적으로 생성되었습니다!",
+        message: `"${orgName}" 조직이 성공적으로 생성되었습니다!`,
         confirmText: "홈으로 이동",
         onConfirm: () => {
-          navigate("/home");
-        },
+          closeModal();
+          setTimeout(() => {
+            navigate("/home", { replace: true });
+            setTimeout(() => {
+              window.location.reload();
+            }, 50);
+          }, 10);
+        }
       });
+
     } catch (error: any) {
       openModal({
         type: "error",
         title: "조직 생성 실패",
-        message: error.message,
+        message: error.message ?? "조직 생성 중 오류가 발생했습니다.",
       });
     } finally {
       setIsSubmitting(false);
@@ -137,7 +160,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
     <>
       {createPortal(
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-20"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-40"
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative">

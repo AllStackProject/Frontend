@@ -133,7 +133,7 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 md:py-4 bg-white border-b border-gray-200 sticky top-0 z-30 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300">
+      <header className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 md:py-4 bg-white border-b border-gray-200 sticky top-0 z-20 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300">
 
         {/* 왼쪽: 로고 */}
         <div

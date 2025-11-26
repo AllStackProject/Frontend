@@ -67,7 +67,7 @@ export default function LoginSelect() {
       const formatted = orgs.map((org: any) => ({
         id: org.id,
         name: org.name,
-        image: org.img_url || "/dummy/woori-logo.png",
+        image: org.img_url,
         memberCount: 0,
         joinStatus: org.join_status,
         isAdmin: org.is_admin,

@@ -14,7 +14,7 @@ import { useModal } from "@/context/ModalContext";
 import EditVideoModal from "@/components/mypage/org/EditVideoModal";
 import VideoStatsModal from "@/components/mypage/org/VideoStatsModal";
 import { useAuth } from "@/context/AuthContext";
-import { fetchMyUploadedVideos, fetchMyVideoStats } from "@/api/myactivity/video";
+import { fetchMyUploadedVideos, fetchMyVideoStats, deleteVideo } from "@/api/myactivity/video";
 
 interface Video {
   id: number;
@@ -99,21 +99,41 @@ const MyVideoSection: React.FC = () => {
       type: "delete",
       title: "정말 삭제하시겠습니까?",
       message: `"${video.name}"을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
-      requiredKeyword: "삭제",
       onConfirm: () => handleDeleteConfirm(video),
     });
   };
 
-  const handleDeleteConfirm = (video: Video) => {
-    setVideos((prev) => prev.filter((v) => v.id !== video.id));
+  const handleDeleteConfirm = async (video: Video) => {
+    if (!orgId) return;
 
-    openModal({
-      type: "success",
-      title: "삭제 완료",
-      message: `"${video.name}" 영상이 삭제되었습니다.`,
-      autoClose: true,
-      autoCloseDelay: 1800,
-    });
+    try {
+      const ok = await deleteVideo(orgId, video.id);
+
+      if (!ok) {
+        throw new Error("삭제 실패");
+      }
+
+      // 목록에서 제거
+      setVideos((prev) => prev.filter((v) => v.id !== video.id));
+
+      // 성공 모달
+      openModal({
+        type: "success",
+        title: "삭제 완료",
+        message: `"${video.name}" 영상이 성공적으로 삭제되었습니다.`,
+        autoClose: true,
+        autoCloseDelay: 1800,
+      });
+
+    } catch (err: any) {
+      console.error("❌ 영상 삭제 API 실패:", err);
+
+      openModal({
+        type: "error",
+        title: "삭제 실패",
+        message: err.message || "영상 삭제 중 오류가 발생했습니다.",
+      });
+    }
   };
 
   const handleEditClick = (video: Video) => {

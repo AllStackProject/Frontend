@@ -17,12 +17,14 @@ type UploadStatus = "IDLE" | "IN_PROGRESS" | "COMPLETE" | "FAIL";
 interface StartUploadPayload {
   title: string;
   description: string;
-  whole_time: number;          // 초 단위
+  whole_time: number;          
   is_comment: boolean;
-  ai_function: string;         // "NONE" | "QUIZ" | ...
-  expired_at: string | null;   // yyyy-MM-dd or null
+  ai_function: string;         
+  expired_at: string | null;   
   thumbnail_img: File;
   video_file: File;
+  member_groups: number[];
+  categories: number[];
 }
 
 interface StartUploadParams {
@@ -40,7 +42,6 @@ interface UploadContextValue {
   uploadTitle: string | null;
   uploadStartTime: string | null;
   videoId: number | null;
-  /** 업로드 전체 플로우 시작 (모달에서 호출) */
   startUpload: (params: StartUploadParams) => void;
 }
 
@@ -143,6 +144,8 @@ export const UploadProvider = ({ children }: { children: ReactNode }) => {
             ai_function: payload.ai_function,
             expired_at: payload.expired_at,
             thumbnail_img: payload.thumbnail_img,
+            member_groups: payload.member_groups,
+            categories: payload.categories,
           });
 
           setVideoId(video_id);

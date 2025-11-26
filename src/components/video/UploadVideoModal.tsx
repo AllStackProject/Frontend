@@ -79,7 +79,8 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
     if (!formData.thumbnail) return showError("썸네일 PNG 파일을 업로드해주세요.");
     if (!orgId) return showError("조직 정보가 없습니다.");
 
-    // 업로드 시작 (전역 컨텍스트로 위임)
+    // 업로드 시작
+
     startUpload({
       orgId,
       payload: {
@@ -89,13 +90,12 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
         is_comment: formData.allowComments,
         ai_function: formData.aiType,
         expired_at: formData.expiration === "none" ? null : formData.customDate,
-        thumbnail_img: formData.thumbnail,
-        video_file: formData.videoFile,
+        thumbnail_img: formData.thumbnail!,
+        video_file: formData.videoFile!,
+        member_groups: formData.visibility === "group" ? formData.selectedGroups : [],
+        categories: formData.visibility === "group" ? formData.categories : [],
       },
-      onSuccess: () => {
-        // 업로드 + 서버 처리까지 끝난 후 리스트 리프레시 등
-        onSubmit(formData);
-      },
+      onSuccess: () => onSubmit(formData),
     });
 
     // 모달은 바로 닫아도 됨 (백그라운드 업로드)
@@ -279,385 +279,389 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
         </div>
 
         {/* CONTENT */}
-            <div className="px-6 py-5 overflow-y-auto flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-10 gap-6">
-                {/* -------------------------------------
+        <div className="px-6 py-5 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-10 gap-6">
+            {/* -------------------------------------
                   LEFT (30%) : VIDEO + THUMB
               -------------------------------------- */}
-                <div className="md:col-span-3 space-y-5">
-                  {/* VIDEO FILE */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      동영상 파일 (MP4) *
-                    </label>
-                    <label className="border-2 border-dashed border-gray-300 rounded-xl h-32 flex flex-col justify-center items-center cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition">
-                      <Upload size={16} className="text-gray-400 mb-1" />
-                      <span className="text-xs text-gray-500">
-                        {formData.videoFile?.name ?? "MP4 파일을 선택하거나 드래그하세요"}
+            <div className="md:col-span-3 space-y-5">
+              {/* VIDEO FILE */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">
+                  동영상 파일 (MP4) *
+                </label>
+                <label className="border-2 border-dashed border-gray-300 rounded-xl h-32 flex flex-col justify-center items-center cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition">
+                  <Upload size={16} className="text-gray-400 mb-1" />
+                  <span className="text-xs text-gray-500">
+                    {formData.videoFile?.name ?? "MP4 파일을 선택하거나 드래그하세요"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="video/mp4"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      handleVideoFileChange(file);
+                    }}
+                  />
+                </label>
+
+                {/* 비디오 기본 정보 */}
+                {formData.videoInfo && (
+                  <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-gray-700 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <FileVideo size={16} className="text-blue-600" />
+                      <span className="font-semibold">
+                        {formData.videoInfo.name}
                       </span>
-                      <input
-                        type="file"
-                        accept="video/mp4"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          handleVideoFileChange(file);
-                        }}
-                      />
-                    </label>
-
-                    {/* 비디오 기본 정보 */}
-                    {formData.videoInfo && (
-                      <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-gray-700 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <FileVideo size={16} className="text-blue-600" />
-                          <span className="font-semibold">
-                            {formData.videoInfo.name}
-                          </span>
-                        </div>
-                        <p className="pl-6">
-                          형식: <span className="font-medium">{formData.videoInfo.type}</span>
-                        </p>
-                        <p className="pl-6">
-                          파일 크기:{" "}
-                          <span className="font-medium">
-                            {formData.videoInfo.size}
-                          </span>
-                        </p>
-                        <p className="pl-6">
-                          영상 길이:{" "}
-                          <span className="font-medium">
-                            {formData.videoInfo.durationText}
-                          </span>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* THUMBNAIL */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      썸네일 이미지 (PNG) *
-                    </label>
-                    <label className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition overflow-hidden">
-                      {formData.thumbnailPreview ? (
-                        <img
-                          src={formData.thumbnailPreview}
-                          alt="썸네일 미리보기"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center text-gray-400">
-                          <Image size={28} className="mb-1" />
-                          <span className="text-xs">
-                            PNG 이미지 선택 (권장 1280×720)
-                          </span>
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/png"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          handleChange("thumbnail", file);
-                          handleChange(
-                            "thumbnailPreview",
-                            URL.createObjectURL(file)
-                          );
-                        }}
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* -------------------------------------
-                  RIGHT (70%) : META DATA
-              -------------------------------------- */}
-                <div className="md:col-span-7 space-y-6">
-                  {/* TITLE */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      제목 *
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      value={formData.title}
-                      onChange={(e) => handleChange("title", e.target.value)}
-                      placeholder="영상 제목을 입력하세요"
-                    />
-                  </div>
-
-                  {/* DESCRIPTION */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      설명 *
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      value={formData.description}
-                      onChange={(e) =>
-                        handleChange("description", e.target.value)
-                      }
-                      placeholder="영상에 대한 설명을 입력하세요"
-                    />
-                  </div>
-
-                  {/* VISIBILITY */}
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-gray-700">
-                      공개 범위
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: "조직 전체공개", value: "organization" },
-                        { label: "특정 그룹만 공개", value: "group" },
-                        { label: "비공개", value: "private" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() =>
-                            handleVisibilityChange(opt.value as string)
-                          }
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${formData.visibility === opt.value
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
-                            }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
                     </div>
+                    <p className="pl-6">
+                      형식: <span className="font-medium">{formData.videoInfo.type}</span>
+                    </p>
+                    <p className="pl-6">
+                      파일 크기:{" "}
+                      <span className="font-medium">
+                        {formData.videoInfo.size}
+                      </span>
+                    </p>
+                    <p className="pl-6">
+                      영상 길이:{" "}
+                      <span className="font-medium">
+                        {formData.videoInfo.durationText}
+                      </span>
+                    </p>
                   </div>
+                )}
+              </div>
 
-                  {/* GROUP SELECTION (visibility === group 일 때만) */}
-                  {formData.visibility === "group" && (
-                    <div className="space-y-2">
-                      <div>
-                        <label className="block mb-2 text-sm font-medium text-gray-700">
-                          그룹 선택 *
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {groups.map((g) => {
-                            const active =
-                              formData.selectedGroups.includes(g.id);
-                            return (
-                              <button
-                                key={g.id}
-                                type="button"
-                                onClick={() => handleGroupToggle(g.id)}
-                                className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${active
-                                  ? "bg-blue-500 text-white border-blue-500"
-                                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                                  }`}
-                              >
-                                <Users size={14} />
-                                {g.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* 선택된 그룹 태그 */}
-                      {formData.selectedGroups.length > 0 && (
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          {formData.selectedGroups.map((gid) => {
-                            const group = groups.find((g) => g.id === gid);
-                            if (!group) return null;
-                            return (
-                              <span
-                                key={gid}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
-                              >
-                                {group.name}
-                                <button
-                                  type="button"
-                                  onClick={() => removeSelectedGroup(gid)}
-                                  className="hover:text-blue-900"
-                                >
-                                  <X size={12} />
-                                </button>
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
+              {/* THUMBNAIL */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">
+                  썸네일 이미지 (PNG) *
+                </label>
+                <label className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition overflow-hidden">
+                  {formData.thumbnailPreview ? (
+                    <img
+                      src={formData.thumbnailPreview}
+                      alt="썸네일 미리보기"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center text-gray-400">
+                      <Image size={28} className="mb-1" />
+                      <span className="text-xs">
+                        PNG 이미지 선택 (권장 1280×720)
+                      </span>
                     </div>
                   )}
+                  <input
+                    type="file"
+                    accept="image/png"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      handleChange("thumbnail", file);
+                      handleChange(
+                        "thumbnailPreview",
+                        URL.createObjectURL(file)
+                      );
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
 
-                  {/* CATEGORY SELECTION (그룹이 선택된 경우에만) */}
-                  {formData.visibility === "group" &&
-                    availableCategories.length > 0 && (
-                      <div className="space-y-2">
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            카테고리 선택
-                          </label>
-                          <div className="flex flex-wrap gap-2">
-                            {availableCategories.map((c) => {
-                              const active = formData.categories.includes(c.id);
-                              return (
-                                <button
-                                  key={c.id}
-                                  type="button"
-                                  onClick={() => toggleCategory(c.id)}
-                                  className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${active
-                                    ? "bg-indigo-500 text-white border-indigo-500"
-                                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                                    }`}
-                                >
-                                  {c.title}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
+            {/* -------------------------------------
+                  RIGHT (70%) : META DATA
+              -------------------------------------- */}
+            <div className="md:col-span-7 space-y-6">
+              {/* TITLE */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">
+                  제목 *
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  value={formData.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  placeholder="영상 제목을 입력하세요"
+                />
+              </div>
 
-                        {/* 선택된 카테고리 태그 */}
-                        {formData.categories.length > 0 && (
-                          <div className="flex flex-wrap gap-2 text-xs">
-                            {formData.categories.map((cid) => {
-                              const cat = availableCategories.find(
-                                (c) => c.id === cid
-                              );
-                              if (!cat) return null;
-                              return (
-                                <span
-                                  key={cid}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"
-                                >
-                                  {cat.title}
-                                  <button
-                                    type="button"
-                                    onClick={() => removeCategory(cid)}
-                                    className="hover:text-indigo-900"
-                                  >
-                                    <X size={12} />
-                                  </button>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  {/* 댓글 허용 */}
-                  <div className="flex items-center gap-10 pt-2">
-                    <span className="text-sm font-medium text-gray-700">댓글 기능</span>
+              {/* DESCRIPTION */}
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">
+                  설명 *
+                </label>
+                <textarea
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleChange("description", e.target.value)
+                  }
+                  placeholder="영상에 대한 설명을 입력하세요"
+                />
+              </div>
 
+              {/* VISIBILITY */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  공개 범위
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "조직 전체공개", value: "organization" },
+                    { label: "특정 그룹만 공개", value: "group" },
+                    { label: "비공개", value: "private" },
+                  ].map((opt) => (
                     <button
+                      key={opt.value}
                       type="button"
-                      onClick={() => handleChange("allowComments", !formData.allowComments)}
-                      className={`w-11 h-6 rounded-full transition-all relative 
-      ${formData.allowComments ? "bg-blue-500" : "bg-gray-300"}`}
+                      onClick={() =>
+                        handleVisibilityChange(opt.value as string)
+                      }
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${formData.visibility === opt.value
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                        }`}
                     >
-                      <span
-                        className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow 
-        transition-transform ${formData.allowComments ? "translate-x-5" : ""}`}
-                      />
+                      {opt.label}
                     </button>
-                  </div>
-                  {/* AI TYPE */}
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-gray-700">
-                      AI 기능
-                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* GROUP SELECTION */}
+              {formData.visibility === "group" && (
+                <div className="space-y-2">
+
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    그룹 선택 *
+                  </label>
+                  {groups.length === 0 ? (
+                    <div className="text-xs text-blue-500  rounded-lg">
+                      속한 그룹이 없습니다
+                    </div>
+                  ) : (
                     <div className="flex flex-wrap gap-2">
-                      {aiOptions.map((opt) => {
-                        const active = formData.aiType === opt.key;
+                      {groups.map((g) => {
+                        const active = formData.selectedGroups.includes(g.id);
                         return (
                           <button
-                            key={opt.key}
+                            key={g.id}
                             type="button"
-                            onClick={() => handleChange("aiType", opt.key)}
-                            className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-2 transition ${active
-                              ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                              : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                            onClick={() => handleGroupToggle(g.id)}
+                            className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${active
+                                ? "bg-blue-500 text-white border-blue-500"
+                                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                               }`}
                           >
-                            {opt.icon}
-                            <span>{opt.label}</span>
+                            <Users size={14} />
+                            {g.name}
                           </button>
                         );
                       })}
                     </div>
+                  )}
 
-                    <div className="text-xs bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-900 space-y-1">
-                      <p>
-                        ⚠️ AI 생성을 위해 영상 일부 데이터가 AI 학습용으로
-                        일시적으로 사용될 수 있습니다.
-                      </p>
-                      <p>
-                        💡 동영상 업로드 후 <b>AI 사용 여부를 수정할 수 없습니다.</b>
-                      </p>
+                  {/* 선택된 그룹 태그 */}
+                  {formData.selectedGroups.length > 0 && (
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {formData.selectedGroups.map((gid) => {
+                        const group = groups.find((g) => g.id === gid);
+                        if (!group) return null;
+                        return (
+                          <span
+                            key={gid}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+                          >
+                            {group.name}
+                            <button
+                              type="button"
+                              onClick={() => removeSelectedGroup(gid)}
+                              className="hover:text-blue-900"
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        );
+                      })}
                     </div>
-                  </div>
+                  )}
+                </div>
+              )}
 
-                  {/* EXPIRATION */}
+              {/* CATEGORY SELECTION (그룹이 선택된 경우에만) */}
+              {formData.visibility === "group" &&
+                availableCategories.length > 0 && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      영상 만료 기간
-                    </label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {[
-                        { label: "7일 뒤", value: "7" },
-                        { label: "30일 뒤", value: "30" },
-                        { label: "만료 없음", value: "none" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => handleExpirationSelect(opt.value)}
-                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition ${formData.expiration === opt.value
-                            ? "bg-emerald-500 text-white border-emerald-500"
-                            : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
-                            }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700">
+                        카테고리 선택
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {availableCategories.map((c) => {
+                          const active = formData.categories.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => toggleCategory(c.id)}
+                              className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${active
+                                ? "bg-indigo-500 text-white border-indigo-500"
+                                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                }`}
+                            >
+                              {c.title}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    {/* Date Picker (만료 없음이면 숨김) */}
-                    {formData.expiration !== "none" && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <Calendar size={16} className="text-gray-400" />
-                        <input
-                          type="date"
-                          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm 
-                                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                          value={formData.customDate}
-                          onChange={(e) => handleChange("customDate", e.target.value)}
-                        />
+
+                    {/* 선택된 카테고리 태그 */}
+                    {formData.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        {formData.categories.map((cid) => {
+                          const cat = availableCategories.find(
+                            (c) => c.id === cid
+                          );
+                          if (!cat) return null;
+                          return (
+                            <span
+                              key={cid}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"
+                            >
+                              {cat.title}
+                              <button
+                                type="button"
+                                onClick={() => removeCategory(cid)}
+                                className="hover:text-indigo-900"
+                              >
+                                <X size={12} />
+                              </button>
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
+                )}
+              {/* 댓글 허용 */}
+              <div className="flex items-center gap-10 pt-2">
+                <span className="text-sm font-medium text-gray-700">댓글 기능</span>
 
+                <button
+                  type="button"
+                  onClick={() => handleChange("allowComments", !formData.allowComments)}
+                  className={`w-11 h-6 rounded-full transition-all relative 
+      ${formData.allowComments ? "bg-blue-500" : "bg-gray-300"}`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow 
+        transition-transform ${formData.allowComments ? "translate-x-5" : ""}`}
+                  />
+                </button>
+              </div>
+              {/* AI TYPE */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  AI 기능
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {aiOptions.map((opt) => {
+                    const active = formData.aiType === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => handleChange("aiType", opt.key)}
+                        className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-2 transition ${active
+                          ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                          : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                          }`}
+                      >
+                        {opt.icon}
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
+                <div className="text-xs bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-900 space-y-1">
+                  <p>
+                    ⚠️ AI 생성을 위해 영상 일부 데이터가 AI 학습용으로
+                    일시적으로 사용될 수 있습니다.
+                  </p>
+                  <p>
+                    💡 동영상 업로드 후 <b>AI 사용 여부를 수정할 수 없습니다.</b>
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* FOOTER */}
-            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <button
-                onClick={onClose}
-                className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-white transition"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-              >
-                업로드
-              </button>
+              {/* EXPIRATION */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  영상 만료 기간
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {[
+                    { label: "7일 뒤", value: "7" },
+                    { label: "30일 뒤", value: "30" },
+                    { label: "만료 없음", value: "none" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleExpirationSelect(opt.value)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition ${formData.expiration === opt.value
+                        ? "bg-emerald-500 text-white border-emerald-500"
+                        : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                        }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Date Picker (만료 없음이면 숨김) */}
+                {formData.expiration !== "none" && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Calendar size={16} className="text-gray-400" />
+                    <input
+                      type="date"
+                      className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm 
+                                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      value={formData.customDate}
+                      onChange={(e) => handleChange("customDate", e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
+
             </div>
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-white transition"
+          >
+            취소
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+          >
+            업로드
+          </button>
+        </div>
       </div>
     </div>
   );

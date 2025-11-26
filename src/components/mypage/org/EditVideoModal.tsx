@@ -1,14 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   X,
   Image,
   Calendar,
-  Hash,
   FileVideo,
   Users,
   Brain,
+  FileText,
+  MessageCircle,
+  Lock,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
+import { useAuth } from "@/context/AuthContext";
+import { fetchOrgMyActivityGroup } from "@/api/myactivity/info";
+import { updateVideo } from "@/api/myactivity/video";
+
+interface Category {
+  id: number;
+  title: string;
+}
+
+interface Group {
+  id: number;
+  name: string;
+  categories: Category[];
+}
 
 interface EditVideoModalProps {
   video: any;
@@ -16,8 +32,30 @@ interface EditVideoModalProps {
   onSubmit: (data: any) => void;
 }
 
-const ORG_HASHTAGS = ["AI", "교육", "보안", "신입교육", "테크"];
-const ORG_GROUPS = ["HR팀", "IT팀", "기획팀", "R&D팀", "디자인팀"];
+interface FormState {
+  title: string;
+  description: string;
+  thumbnailPreview: string;
+  visibility: "organization" | "group" | "private";
+  selectedGroupIds: number[];
+  selectedCategoryIds: number[];
+  allowComments: boolean;
+  aiType: "NONE" | "QUIZ" | "SUMMARY" | "FEEDBACK";
+  expiration: "7" | "30" | "none";
+  customDate: string;
+  videoInfo: {
+    name: string;
+    size: string;
+    type: string;
+    durationText: string;
+  } | null;
+}
+
+const isForeverDate = (dateStr?: string | null) => {
+  if (!dateStr) return true;
+  const year = Number(dateStr.split("-")[0]);
+  return year >= 9999;
+};
 
 const EditVideoModal: React.FC<EditVideoModalProps> = ({
   video,
@@ -25,334 +63,551 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
   onSubmit,
 }) => {
   const { openModal } = useModal();
+  const { orgId } = useAuth();
 
-  const [formData, setFormData] = useState({
-    ...video,
-    thumbnailPreview: video.thumbnail || "",
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+
+  // 초기값 설정
+  const initialTitle = video.title ?? video.name ?? "";
+  const initialDescription = video.description ?? "";
+  const initialThumbnail = video.thumbnail_url ?? "";
+  const initialAllowComments = typeof video.is_comment === "boolean" ? video.is_comment : true;
+  const initialAiType = video.ai_function ?? "NONE";
+  
+  let initialExpiration: "7" | "30" | "none" = "none";
+  let initialCustomDate = "";
+  
+  if (video.expired_at && !isForeverDate(video.expired_at)) {
+    initialCustomDate = video.expired_at.slice(0, 10);
+  }
+
+  // 공개 범위 결정
+  const initialVisibility = (() => {
+    if (video.member_groups && video.member_groups.length > 0) return "group";
+    if (video.is_private) return "private";
+    return "organization";
+  })();
+
+  const [form, setForm] = useState<FormState>({
+    title: initialTitle,
+    description: initialDescription,
+    thumbnailPreview: initialThumbnail,
+    visibility: initialVisibility,
+    selectedGroupIds: (video.member_groups as number[]) ?? [],
+    selectedCategoryIds: (video.categories as number[]) ?? [],
+    allowComments: initialAllowComments,
+    aiType: initialAiType,
+    expiration: initialCustomDate ? "none" : "none",
+    customDate: initialCustomDate,
+    videoInfo: video.whole_time ? {
+      name: video.file_name ?? "동영상 파일",
+      size: video.file_size ?? "알 수 없음",
+      type: "video/mp4",
+      durationText: formatDuration(video.whole_time),
+    } : null,
   });
 
-  const handleChange = (key: string, value: any) => {
-    setFormData((prev: typeof formData) => ({ ...prev, [key]: value }));
+  // Duration 포맷
+  function formatDuration(seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  // 그룹 로드
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        if (!orgId) return;
+        const result = await fetchOrgMyActivityGroup(orgId);
+        setGroups(result.member_groups || []);
+      } catch (err) {
+        console.error("❌ 그룹 조회 실패:", err);
+      }
+    };
+    loadGroups();
+  }, [orgId]);
+
+  // 선택된 그룹에 따라 카테고리 업데이트
+  useEffect(() => {
+    const relatedCategories = groups
+      .filter((g) => form.selectedGroupIds.includes(g.id))
+      .flatMap((g) => g.categories || []);
+
+    const categoryMap = new Map<number, Category>();
+    relatedCategories.forEach((c) => {
+      if (!categoryMap.has(c.id)) categoryMap.set(c.id, c);
+    });
+    setAvailableCategories(Array.from(categoryMap.values()));
+  }, [form.selectedGroupIds, groups]);
+
+  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const toggleItem = (key: "hashtags" | "selectedGroups", item: string) => {
-    setFormData((prev: typeof formData) => {
-      const list = prev[key] || [];
+  // 공개 범위 변경
+  const handleVisibilityChange = (value: "organization" | "group" | "private") => {
+    setField("visibility", value);
+    if (value !== "group") {
+      setForm((prev) => ({
+        ...prev,
+        selectedGroupIds: [],
+        selectedCategoryIds: [],
+      }));
+      setAvailableCategories([]);
+    }
+  };
+
+  // 그룹 선택
+  const handleGroupToggle = (groupId: number) => {
+    setForm((prev) => {
+      const exists = prev.selectedGroupIds.includes(groupId);
+      const nextGroups = exists
+        ? prev.selectedGroupIds.filter((id) => id !== groupId)
+        : [...prev.selectedGroupIds, groupId];
+
       return {
         ...prev,
-        [key]: list.includes(item)
-          ? list.filter((t: string) => t !== item)
-          : [...list, item],
+        selectedGroupIds: nextGroups,
       };
     });
   };
 
-  const handleExpirationSelect = (value: string) => {
-    handleChange("expiration", value);
+  // 그룹 제거
+  const removeSelectedGroup = (groupId: number) => {
+    handleGroupToggle(groupId);
+  };
+
+  // 카테고리 선택
+  const toggleCategory = (id: number) => {
+    setForm((prev) => ({
+      ...prev,
+      selectedCategoryIds: prev.selectedCategoryIds.includes(id)
+        ? prev.selectedCategoryIds.filter((c) => c !== id)
+        : [...prev.selectedCategoryIds, id],
+    }));
+  };
+
+  // 카테고리 제거
+  const removeCategory = (id: number) => {
+    setForm((prev) => ({
+      ...prev,
+      selectedCategoryIds: prev.selectedCategoryIds.filter((c) => c !== id),
+    }));
+  };
+
+  // 만료 기간 선택
+  const handleExpirationSelect = (value: "7" | "30" | "none") => {
+    setField("expiration", value);
 
     if (value === "7" || value === "30") {
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() + Number(value));
-      const formatted = targetDate.toISOString().split("T")[0];
-      handleChange("customDate", formatted);
-    } else if (value === "none") {
-      handleChange("customDate", "");
+      const date = new Date();
+      date.setDate(date.getDate() + Number(value));
+      setField("customDate", date.toISOString().split("T")[0]);
+    } else {
+      setField("customDate", "");
     }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (!bytes) return "—";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  /** 댓글 허용 토글 */
+  // 댓글 허용 토글
   const handleCommentToggle = () => {
-    if (formData.allowComments) {
+    if (form.allowComments) {
       openModal({
         type: "confirm",
         title: "댓글 기능 비활성화",
-        message: "댓글 기능을 비활성화하시겠습니까? 기존 댓글은 모두 삭제됩니다.",
+        message: "댓글 기능을 비활성화하시겠습니까?\n비활성화 시 기존 댓글이 모두 삭제될 수 있습니다.",
         confirmText: "확인",
-        onConfirm: () => handleChange("allowComments", false),
+        onConfirm: () => setField("allowComments", false),
       });
     } else {
-      handleChange("allowComments", true);
+      setField("allowComments", true);
     }
   };
 
-  /** 수정 저장 */
-  const handleSave = () => {
+  // 저장
+  const handleSave = async () => {
+    if (!orgId) {
+      openModal({
+        type: "error",
+        title: "오류",
+        message: "조직 정보를 찾을 수 없습니다.",
+      });
+      return;
+    }
+
+    if (!form.description.trim()) {
+      openModal({
+        type: "error",
+        title: "입력 오류",
+        message: "영상 설명을 입력해주세요.",
+      });
+      return;
+    }
+
+    const expired_at = form.expiration === "none" ? form.customDate || null : form.customDate;
+
+    const payload = {
+      description: form.description,
+      is_comment: form.allowComments,
+      expired_at,
+      member_groups: form.visibility === "group" ? form.selectedGroupIds : [],
+      categories: form.visibility === "group" ? form.selectedCategoryIds : [],
+    };
+
     openModal({
       type: "confirm",
       title: "수정 확인",
-      message: "정말 수정하시겠습니까? 수정한 내용은 되돌릴 수 없습니다.",
-      confirmText: "확인",
-      onConfirm: () => {
-        onSubmit(formData);
-        onClose();
+      message: "정말 이 영상 정보를 수정하시겠습니까?",
+      confirmText: "수정",
+      onConfirm: async () => {
+        try {
+          // API 호출
+          const success = await updateVideo(orgId, video.id, payload);
+
+          if (!success) {
+            throw new Error("영상 수정에 실패했습니다.");
+          }
+
+          // 성공 모달
+          openModal({
+            type: "success",
+            title: "수정 완료",
+            message: "영상 정보가 성공적으로 수정되었습니다.",
+            autoClose: true,
+            autoCloseDelay: 1500,
+          });
+
+          // 부모 컴포넌트에 업데이트 전달
+          onSubmit({
+            id: video.id,
+            ...payload,
+          });
+
+          onClose();
+        } catch (err: any) {
+          console.error("❌ 영상 수정 실패:", err);
+          
+          openModal({
+            type: "error",
+            title: "수정 실패",
+            message: err.message || "영상 수정 중 오류가 발생했습니다.",
+          });
+        }
       },
     });
   };
 
+  const aiOptions: { key: "NONE" | "QUIZ" | "SUMMARY" | "FEEDBACK"; label: string; icon: React.ReactNode }[] = [
+    { key: "NONE", label: "사용 안 함", icon: <X size={16} /> },
+    { key: "QUIZ", label: "퀴즈", icon: <Brain size={16} /> },
+    { key: "SUMMARY", label: "요약", icon: <FileText size={16} /> },
+    { key: "FEEDBACK", label: "피드백", icon: <MessageCircle size={16} /> },
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden max-h-[90vh] flex flex-col">
-        {/* 헤더 */}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* HEADER */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">동영상 수정</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
             <X size={22} />
           </button>
         </div>
 
-        {/* 상단 안내 */}
-        <div className="bg-amber-50 border-b border-amber-200 text-sm text-amber-800 px-6 py-3">
-          ⚠️ 제목, 동영상 파일 정보, AI 퀴즈 생성 여부는 수정할 수 없습니다.
-          <br />
-          🚨 댓글 기능을 OFF로 변경하면 기존 댓글이 모두 삭제됩니다.
+        {/* 안내 문구 */}
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
+          <p className="text-sm text-amber-800 flex items-center gap-2">
+            <Lock size={16} />
+            <span>제목, 동영상 파일, 썸네일, AI 기능은 수정할 수 없습니다.</span>
+          </p>
         </div>
 
-        {/* 콘텐츠 */}
-        <div className="overflow-y-auto px-6 py-5">
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* 왼쪽 영역 */}
-            <div className="space-y-6">
-              {/* 동영상 파일 정보 */}
+        {/* CONTENT */}
+        <div className="px-6 py-5 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-10 gap-6">
+            {/* LEFT (30%) : VIDEO + THUMB */}
+            <div className="md:col-span-3 space-y-5">
+              {/* VIDEO FILE - 수정 불가 */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  동영상 파일 정보
+                <label className="block mb-2 text-sm font-medium text-gray-700 flex items-center gap-2">
+                  동영상 파일
+                  <Lock size={14} className="text-gray-400" />
                 </label>
-                <div className="border border-gray-200 bg-gray-50 rounded-lg p-3 text-sm text-gray-600 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <FileVideo size={16} />
-                    <span className="font-medium">{formData.videoFile?.name || "파일명 미등록"}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 pl-6">
-                    용량: {formatFileSize(formData.videoFile?.size)} | 형식:{" "}
-                    {formData.videoFile?.type || "—"}
-                  </p>
+                <div className="border-2 border-gray-200 rounded-xl h-32 flex flex-col justify-center items-center bg-gray-50 cursor-not-allowed">
+                  <FileVideo size={24} className="text-gray-300 mb-2" />
+                  <span className="text-xs text-gray-400">수정 불가</span>
                 </div>
+
+                {/* 비디오 정보 */}
+                {form.videoInfo && (
+                  <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <FileVideo size={16} className="text-gray-500" />
+                      <span className="font-semibold">{form.videoInfo.name}</span>
+                    </div>
+                    <p className="pl-6">형식: <span className="font-medium">{form.videoInfo.type}</span></p>
+                    <p className="pl-6">파일 크기: <span className="font-medium">{form.videoInfo.size}</span></p>
+                    <p className="pl-6">영상 길이: <span className="font-medium">{form.videoInfo.durationText}</span></p>
+                  </div>
+                )}
               </div>
 
-              {/* 썸네일 변경 */}
+              {/* THUMBNAIL - 수정 불가 */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  썸네일 이미지 (1280×720)
+                <label className="block mb-2 text-sm font-medium text-gray-700 flex items-center gap-2">
+                  썸네일 이미지
+                  <Lock size={14} className="text-gray-400" />
                 </label>
-
-                <label className="w-full aspect-video border-2 border-gray-300 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-100 hover:border-blue-400 transition overflow-hidden">
-                  {formData.thumbnailPreview ? (
-                    <img
-                      src={formData.thumbnailPreview}
-                      alt="썸네일 미리보기"
-                      className="w-full h-full object-contain bg-black"
-                    />
+                <div className="w-full aspect-video border-2 border-gray-200 rounded-xl flex items-center justify-center bg-gray-50 cursor-not-allowed overflow-hidden">
+                  {form.thumbnailPreview ? (
+                    <div className="relative w-full h-full">
+                      <img src={form.thumbnailPreview} alt="썸네일" className="w-full h-full object-cover opacity-60" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                        <Lock size={24} className="text-gray-400" />
+                      </div>
+                    </div>
                   ) : (
-                    <div className="flex flex-col items-center text-gray-400">
-                      <Image size={32} className="mb-1" />
-                      <span className="text-sm">이미지를 선택하세요</span>
-                      <span className="text-xs text-gray-400">(권장: 1280×720)</span>
+                    <div className="flex flex-col items-center text-gray-300">
+                      <Image size={28} className="mb-1" />
+                      <span className="text-xs">썸네일 없음</span>
                     </div>
                   )}
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const preview = URL.createObjectURL(file);
-                        setFormData((prev: any) => ({
-                          ...prev,
-                          thumbnail: file,
-                          thumbnailPreview: preview,
-                        }));
-                      }
-                    }}
-                  />
-                </label>
-
-                {formData.thumbnail && (
-                  <button
-                    onClick={() =>
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        thumbnail: null,
-                        thumbnailPreview: "",
-                      }))
-                    }
-                    className="text-xs text-gray-500 underline hover:text-red-500 self-end transition"
-                  >
-                    썸네일 제거
-                  </button>
-                )}
+                </div>
               </div>
             </div>
 
-            {/* 오른쪽 영역 */}
-            <div className="space-y-5">
-              {/* 제목 */}
+            {/* RIGHT (70%) : META DATA */}
+            <div className="md:col-span-7 space-y-6">
+              {/* TITLE - 수정 불가 */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
+                <label className="block mb-2 text-sm font-medium text-gray-700 flex items-center gap-2">
                   제목
+                  <Lock size={14} className="text-gray-400" />
                 </label>
                 <input
                   type="text"
-                  value={formData.title || ""}
+                  value={form.title}
                   readOnly
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
               </div>
 
-              {/* 설명 */}
+              {/* DESCRIPTION - 수정 가능 */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  설명
-                </label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">설명 *</label>
                 <textarea
-                  value={formData.description || ""}
-                  onChange={(e) => handleChange("description", e.target.value)}
                   rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  value={form.description}
+                  onChange={(e) => setField("description", e.target.value)}
+                  placeholder="영상에 대한 설명을 입력하세요"
                 />
               </div>
 
-              {/* 해시태그 */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  해시태그
+              {/* VISIBILITY */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">공개 범위</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "조직 전체공개", value: "organization" },
+                    { label: "특정 그룹만 공개", value: "group" },
+                    { label: "비공개", value: "private" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleVisibilityChange(opt.value as any)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                        form.visibility === opt.value
+                          ? "bg-blue-500 text-white border-blue-500"
+                          : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* GROUP SELECTION */}
+              {form.visibility === "group" && (
+                <div className="space-y-2">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">그룹 선택 *</label>
+                  {groups.length === 0 ? (
+                    <div className="text-xs text-blue-500 rounded-lg">속한 그룹이 없습니다</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {groups.map((g) => {
+                        const active = form.selectedGroupIds.includes(g.id);
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            onClick={() => handleGroupToggle(g.id)}
+                            className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${
+                              active
+                                ? "bg-blue-500 text-white border-blue-500"
+                                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                            }`}
+                          >
+                            <Users size={14} />
+                            {g.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* 선택된 그룹 태그 */}
+                  {form.selectedGroupIds.length > 0 && (
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {form.selectedGroupIds.map((gid) => {
+                        const group = groups.find((g) => g.id === gid);
+                        if (!group) return null;
+                        return (
+                          <span
+                            key={gid}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+                          >
+                            {group.name}
+                            <button type="button" onClick={() => removeSelectedGroup(gid)} className="hover:text-blue-900">
+                              <X size={12} />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* CATEGORY SELECTION */}
+              {form.visibility === "group" && availableCategories.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">카테고리 선택</label>
+                  <div className="flex flex-wrap gap-2">
+                    {availableCategories.map((c) => {
+                      const active = form.selectedCategoryIds.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleCategory(c.id)}
+                          className={`px-3 py-1.5 rounded-full border text-xs transition ${
+                            active
+                              ? "bg-indigo-500 text-white border-indigo-500"
+                              : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                          }`}
+                        >
+                          {c.title}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* 선택된 카테고리 태그 */}
+                  {form.selectedCategoryIds.length > 0 && (
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {form.selectedCategoryIds.map((cid) => {
+                        const cat = availableCategories.find((c) => c.id === cid);
+                        if (!cat) return null;
+                        return (
+                          <span
+                            key={cid}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"
+                          >
+                            {cat.title}
+                            <button type="button" onClick={() => removeCategory(cid)} className="hover:text-indigo-900">
+                              <X size={12} />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 댓글 허용 */}
+              <div className="flex items-center gap-10 pt-2">
+                <span className="text-sm font-medium text-gray-700">댓글 기능</span>
+                <button
+                  type="button"
+                  onClick={handleCommentToggle}
+                  className={`w-11 h-6 rounded-full transition-all relative ${
+                    form.allowComments ? "bg-blue-500" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      form.allowComments ? "translate-x-5" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* AI TYPE - 수정 불가 */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  AI 기능
+                  <Lock size={14} className="text-gray-400" />
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {ORG_HASHTAGS.map((tag) => {
-                    const active = formData.hashtags?.includes(tag);
+                  {aiOptions.map((opt) => {
+                    const active = form.aiType === opt.key;
                     return (
                       <button
-                        key={tag}
-                        onClick={() => toggleItem("hashtags", tag)}
+                        key={opt.key}
                         type="button"
-                        className={`px-3 py-1.5 text-sm rounded-full border flex items-center gap-1 transition ${
+                        disabled
+                        className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-2 cursor-not-allowed ${
                           active
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
+                            ? "bg-gray-200 text-gray-600 border-gray-300"
+                            : "bg-gray-50 text-gray-400 border-gray-200"
                         }`}
                       >
-                        <Hash size={14} />
-                        {tag}
+                        {opt.icon}
+                        <span>{opt.label}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* 공개 범위 */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  공개 범위
-                </label>
-                <select
-                  value={formData.visibility}
-                  onChange={(e) => handleChange("visibility", e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="organization">조직 전체공개</option>
-                  <option value="private">비공개</option>
-                  <option value="group">특정 그룹만 공개</option>
-                </select>
-
-                {formData.visibility === "group" && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {ORG_GROUPS.map((group) => {
-                      const active = formData.selectedGroups?.includes(group);
-                      return (
-                        <button
-                          key={group}
-                          onClick={() => toggleItem("selectedGroups", group)}
-                          type="button"
-                          className={`px-3 py-1.5 text-sm rounded-full border flex items-center gap-1 transition ${
-                            active
-                              ? "bg-blue-500 text-white border-blue-500"
-                              : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
-                          }`}
-                        >
-                          <Users size={14} />
-                          {group}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* 댓글 허용 */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">댓글 허용</span>
-                <button
-                  type="button"
-                  onClick={handleCommentToggle}
-                  className={`w-12 h-6 rounded-full transition-all relative ${
-                    formData.allowComments ? "bg-blue-500" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                      formData.allowComments ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* AI 퀴즈 여부 */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  AI 퀴즈 생성 여부
-                </label>
-                <div className="flex items-center gap-3 border border-gray-200 bg-gray-50 text-gray-600 text-sm rounded-lg px-4 py-2">
-                  <Brain size={16} />
-                  <span>
-                    {formData.enableQuiz ? "ON (활성화됨)" : "OFF (비활성화됨)"}
-                  </span>
-                </div>
-              </div>
-
-              {/* 만료 기간 */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  영상 만료 기간
-                </label>
-                <div className="flex gap-2 flex-wrap mb-3">
+              {/* EXPIRATION */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">영상 만료 기간</label>
+                <div className="flex flex-wrap gap-2 mb-2">
                   {[
                     { label: "7일 뒤", value: "7" },
                     { label: "30일 뒤", value: "30" },
                     { label: "만료 없음", value: "none" },
-                  ].map(({ label, value }) => (
+                  ].map((opt) => (
                     <button
-                      key={value}
+                      key={opt.value}
                       type="button"
-                      onClick={() => handleExpirationSelect(value)}
-                      className={`px-3 py-1.5 text-sm rounded-lg border transition ${
-                        formData.expiration === value
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200"
+                      onClick={() => handleExpirationSelect(opt.value as any)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition ${
+                        form.expiration === opt.value
+                          ? "bg-emerald-500 text-white border-emerald-500"
+                          : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                     >
-                      {label}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Date Picker */}
+                <div className="flex items-center gap-2 mt-1">
                   <Calendar size={16} className="text-gray-400" />
                   <input
                     type="date"
-                    value={formData.customDate || ""}
-                    onChange={(e) => handleChange("customDate", e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500"
+                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={form.customDate}
+                    onChange={(e) => setField("customDate", e.target.value)}
                   />
                 </div>
               </div>
@@ -360,18 +615,16 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
           </div>
         </div>
 
-        {/* 하단 버튼 */}
+        {/* FOOTER */}
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}
-            type="button"
             className="px-5 py-2 text-sm border border-gray-300 rounded-lg hover:bg-white transition"
           >
             취소
           </button>
           <button
             onClick={handleSave}
-            type="button"
             className="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
           >
             수정 저장

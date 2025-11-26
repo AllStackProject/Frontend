@@ -70,7 +70,6 @@ export const leaveVideoSession = async (
 };
 
 /* 영상 업로드 */
-
 /**
  * Step 1. 영상 메타데이터 + 썸네일 업로드 → presigned URL 받기
  */
@@ -83,29 +82,35 @@ export const requestVideoUpload = async (
     is_comment: boolean;
     ai_function: string;
     expired_at: string | null;
-    thumbnail_img: File;
+    member_groups: number[];
+    categories: number[];
+    thumbnail_img: File; 
   }
 ): Promise<{ presigned_url: string; video_id: number }> => {
   try {
-    const formData = new FormData();
-    formData.append("title", payload.title);
-    formData.append("description", payload.description);
-    formData.append("whole_time", String(payload.whole_time));
-    formData.append("is_comment", String(payload.is_comment));
-    formData.append("ai_function", payload.ai_function);
+    const query = new URLSearchParams({
+      title: payload.title,
+      description: payload.description,
+      whole_time: String(payload.whole_time),
+      is_comment: String(payload.is_comment),
+      ai_function: payload.ai_function,
+      member_groups: payload.member_groups.join(","), 
+      categories: payload.categories.join(","),
+    });
 
     if (payload.expired_at) {
-      formData.append("expired_at", payload.expired_at);
+      query.append("expired_at", payload.expired_at);
     }
 
+    const formData = new FormData();
     formData.append("thumbnail_img", payload.thumbnail_img);
 
     const res = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/${orgId}/video`,
+      `${import.meta.env.VITE_API_BASE_URL}/${orgId}/video?${query.toString()}`,
       formData,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("org_token")}`,
+          Authorization: `Bearer ${localStorage.getItem("org_token")}`
         },
       }
     );

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, AlertTriangle } from "lucide-react";
 import { removeOrgMember } from "@/api/adminSuper/members";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
 
 interface ConfirmRemoveUserModalProps {
   user: { id: number; name: string; email: string; role: string };
@@ -16,6 +17,7 @@ const ConfirmRemoveUserModal: React.FC<ConfirmRemoveUserModalProps> = ({
 }) => {
   const { orgId } = useAuth();
   const [confirmText, setConfirmText] = useState("");
+  const { openModal } = useModal();
   const [removing, setRemoving] = useState(false);
 
   const isConfirmValid = confirmText === "내보내기";
@@ -30,14 +32,26 @@ const ConfirmRemoveUserModal: React.FC<ConfirmRemoveUserModalProps> = ({
       const success = await removeOrgMember(orgId, user.id);
 
       if (success) {
-        alert("✅ 사용자가 성공적으로 내보내졌습니다.");
+        openModal({
+          type: "confirm",
+          title: "사용자 내보내기 성공",
+          message: "사용자가 성공적으로 내보내졌습니다. ",
+        });
         onConfirm(); // 부모 컴포넌트에 성공 알림
         onClose();
       } else {
-        alert("⚠️ 사용자 내보내기에 실패했습니다.");
+        openModal({
+          type: "error",
+          title: "사용자 내보내기 오류",
+          message: "사용자 내보내기에 실패했습니다.",
+        });
       }
     } catch (error: any) {
-      alert(error.message || "사용자 내보내기 중 오류가 발생했습니다.");
+      openModal({
+          type: "error",
+          title: "사용자 내보내기 오류",
+          message: error.message || "사용자 내보내기 중 오류가 발생했습니다.",
+        });
     } finally {
       setRemoving(false);
     }

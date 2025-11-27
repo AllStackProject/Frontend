@@ -1,6 +1,7 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 import type { StartVideoSessionResponse } from "@/types/video";
+import type { VideoMetaData } from "@/types/video";
 import axios from "axios";
 
 /**
@@ -48,6 +49,7 @@ export const leaveVideoSession = async (
   orgId: number,
   videoId: number,
   payload: {
+    member_id: number,
     session_id: string;
     watch_rate: number;
     watch_segments: string;
@@ -81,29 +83,35 @@ export const requestVideoUpload = async (
     is_comment: boolean;
     ai_function: string;
     expired_at: string | null;
-    thumbnail_img: File;
+    member_groups: number[];
+    categories: number[];
+    thumbnail_img: File; 
   }
-): Promise<{ presigned_url: string, video_id: number }> => {
+): Promise<{ presigned_url: string; video_id: number }> => {
   try {
-    const formData = new FormData();
-    formData.append("title", payload.title);
-    formData.append("description", payload.description);
-    formData.append("whole_time", String(payload.whole_time));
-    formData.append("is_comment", String(payload.is_comment));
-    formData.append("ai_function", payload.ai_function);
+    const query = new URLSearchParams({
+      title: payload.title,
+      description: payload.description,
+      whole_time: String(payload.whole_time),
+      is_comment: String(payload.is_comment),
+      ai_function: payload.ai_function,
+      member_groups: payload.member_groups.join(","), 
+      categories: payload.categories.join(","),
+    });
 
     if (payload.expired_at) {
-      formData.append("expired_at", payload.expired_at);
+      query.append("expired_at", payload.expired_at);
     }
 
+    const formData = new FormData();
     formData.append("thumbnail_img", payload.thumbnail_img);
 
     const res = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/${orgId}/video`,
+      `${import.meta.env.VITE_API_BASE_URL}/${orgId}/video?${query.toString()}`,
       formData,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("org_token")}`,
+          Authorization: `Bearer ${localStorage.getItem("org_token")}`
         },
       }
     );
@@ -123,9 +131,9 @@ export const uploadVideoToS3 = async (presignedUrl: string, file: File) => {
     const res = await fetch(presignedUrl, {
       method: "PUT",
       body: file,
-      headers: {
-        "Content-Type": "video/mp4",
-      },
+      // headers: {
+      //   "Content-Type": "video/mp4",
+      // },
     });
 
     if (!res.ok) throw new Error("S3 업로드 실패");
@@ -137,25 +145,62 @@ export const uploadVideoToS3 = async (presignedUrl: string, file: File) => {
   }
 };
 
-/** Step 3. 업로드 성공 여부 서버 전달 */
-export const notifyUploadStatus = async (
-  orgId: number,
-  videoId: number,
-  isSuccess: boolean
-) => {
+/**
+ * Step 3. 업로드 처리 성공 여부 조회 (GET /{orgId}/video/{videoId}/success)
+ */
+export const checkUploadStatus = async (
+  orgId: number, 
+  videoId: number
+): Promise<"IN_PROGRESS"|"COMPLETE"|"FAIL"> => {
   try {
-    const response = await api.put(
-      `/${orgId}/video/${videoId}`,
-      {},
-      {
-        params: { is_success: isSuccess },
-        tokenType: "org",
-      } as CustomAxiosRequestConfig
+    const response = await api.get(
+      `/${orgId}/video/${videoId}/success`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
     );
 
-    return response.data.result;
+    const status = response.data?.result?.upload_status;
+
+    if (status === "COMPLETE")
+      return "COMPLETE";
+    else if (status === "IN_PROGRESS") 
+      return "IN_PROGRESS";
+    return "FAIL"; // 기본값
+
   } catch (err: any) {
-    console.error("🚨 업로드 성공 여부 전달 실패", err);
-    throw new Error(err.response?.data?.message || "업로드 여부 전달 실패");
+    console.error("❌ 업로드 상태 확인 실패:", err);
+    return "IN_PROGRESS"; // 일시적 실패는 계속 폴링
+  }
+};
+
+/* 영상 메타데이터 조회 */
+export const getVideoData = async (
+  orgId: number,
+  videoId: number
+): Promise<VideoMetaData | null> => {
+  try {
+    const response = await api.get(
+      `/${orgId}/video/${videoId}`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+
+    const data = response.data?.result;
+    if (!data) return null;
+
+    // thumbnail_url 정규화
+    const normalizedThumbnail =
+      data.thumbnail_url?.startsWith("http")
+        ? data.thumbnail_url
+        : `https://${data.thumbnail_url}`;
+
+    const mapped: VideoMetaData = {
+      ...data,
+      thumbnail_url: normalizedThumbnail,
+    };
+
+    return mapped;
+
+  } catch (err) {
+    console.error("❌ 영상 메타데이터 확인 실패:", err);
+    return null;
   }
 };

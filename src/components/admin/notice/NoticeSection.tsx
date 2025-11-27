@@ -1,9 +1,24 @@
-import React, { useState, useMemo } from "react";
-import { Plus, Edit, Trash2, Eye, Filter, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Plus,
+  Trash2,
+  Eye,
+  Filter,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
 import CreateNoticeModal from "@/components/admin/notice/CreateNoticeModal";
-import EditNoticeModal from "@/components/admin/notice/EditNoticeModal";
 import ViewNoticeModal from "@/components/admin/notice/ViewNoticeModal";
+
 import { useModal } from "@/context/ModalContext";
+import { useAuth } from "@/context/AuthContext";
+
+import {
+  fetchAdminNoticeList,
+  deleteAdminNotice,
+} from "@/api/adminNotice/notice";
 
 interface Notice {
   id: number;
@@ -17,115 +32,71 @@ interface Notice {
   linkedVideo?: string;
 }
 
-const dummyNotices: Notice[] = [
-  {
-    id: 1,
-    title: "신규 서비스 오픈 안내",
-    author: "관리자",
-    createdAt: "2025-10-21",
-    views: 125,
-    visibility: "전체공개",
-    content: "우리 조직의 신규 서비스가 오픈되었습니다!",
-    linkedVideo: "AI교육1.mp4",
-  },
-  {
-    id: 2,
-    title: "AI 퀴즈 기능 점검 안내",
-    author: "홍길동",
-    createdAt: "2025-10-15",
-    views: 78,
-    visibility: "특정그룹공개",
-    content: "AI 퀴즈 기능 점검으로 일시 중단됩니다.",
-  },
-  {
-    id: 3,
-    title: "정기 점검 안내",
-    author: "박민지",
-    createdAt: "2025-10-10",
-    views: 203,
-    visibility: "전체공개",
-    content: "10월 25일 정기 점검이 예정되어 있습니다.",
-  },
-  {
-    id: 4,
-    title: "신규 기능 업데이트",
-    author: "이수현",
-    createdAt: "2025-10-05",
-    views: 156,
-    visibility: "전체공개",
-    content: "새로운 기능이 추가되었습니다.",
-  },
-  {
-    id: 5,
-    title: "보안 패치 안내",
-    author: "관리자",
-    createdAt: "2025-09-30",
-    views: 89,
-    visibility: "비공개",
-    content: "보안 패치가 적용되었습니다.",
-  },
-  {
-    id: 6,
-    title: "신규 서비스 오픈 안내",
-    author: "관리자",
-    createdAt: "2025-10-21",
-    views: 125,
-    visibility: "전체공개",
-    content: "우리 조직의 신규 서비스가 오픈되었습니다!",
-    linkedVideo: "AI교육1.mp4",
-  },
-  {
-    id: 7,
-    title: "AI 퀴즈 기능 점검 안내",
-    author: "홍길동",
-    createdAt: "2025-10-15",
-    views: 78,
-    visibility: "특정그룹공개",
-    content: "AI 퀴즈 기능 점검으로 일시 중단됩니다.",
-  },
-  {
-    id: 8,
-    title: "정기 점검 안내",
-    author: "박민지",
-    createdAt: "2025-10-10",
-    views: 203,
-    visibility: "전체공개",
-    content: "10월 25일 정기 점검이 예정되어 있습니다.",
-  },
-  {
-    id: 9,
-    title: "신규 기능 업데이트",
-    author: "이수현",
-    createdAt: "2025-10-05",
-    views: 156,
-    visibility: "전체공개",
-    content: "새로운 기능이 추가되었습니다.",
-  },
-  {
-    id: 10,
-    title: "보안 패치 안내",
-    author: "관리자",
-    createdAt: "2025-09-30",
-    views: 89,
-    visibility: "비공개",
-    content: "보안 패치가 적용되었습니다.",
-  },
-];
+type NoticeOpenScope = "PUBLIC" | "PRIVATE" | "GROUP";
+
+const visibilityMap: Record<NoticeOpenScope, Notice["visibility"]> = {
+  PUBLIC: "전체공개",
+  PRIVATE: "비공개",
+  GROUP: "특정그룹공개",
+};
 
 const NoticeSection: React.FC = () => {
-  const [notices, setNotices] = useState<Notice[]>(dummyNotices);
+  const { orgId } = useAuth();
+  const { openModal } = useModal();
+
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // 모달 상태
-  const { openModal } = useModal();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [viewingNotice, setViewingNotice] = useState<Notice | null>(null);
 
-  // 검색 + 필터
+  // ---------------------------------------------------------
+  // 공지 목록 조회
+  // ---------------------------------------------------------
+  const loadNotices = async () => {
+    if (!orgId) return;
+
+    try {
+      setLoading(true);
+
+      const data = await fetchAdminNoticeList(orgId);
+
+      const mapped: Notice[] = data.map((n: any) => ({
+        id: n.id,
+        title: n.title,
+        author: n.creator,
+        createdAt: n.created_at.slice(0, 10),
+        views: n.watch_cnt,
+        visibility: visibilityMap[n.open_scope as NoticeOpenScope],
+        content: "",
+      }));
+
+      setNotices(mapped);
+    } catch (err) {
+      console.error("❌ 공지 목록 조회 실패:", err);
+      openModal({
+        type: "error",
+        title: "조회 오류",
+        message: "공지 목록을 불러오는 중 문제가 발생했습니다.",
+        confirmText: "확인",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotices();
+  }, [orgId]);
+
+  // ---------------------------------------------------------
+  // 검색 + 필터링
+  // ---------------------------------------------------------
   const filteredNotices = useMemo(() => {
     return notices
       .filter(
@@ -136,21 +107,15 @@ const NoticeSection: React.FC = () => {
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }, [notices, search, visibilityFilter]);
 
-  // 페이지 계산
   const totalPages = Math.ceil(filteredNotices.length / itemsPerPage);
   const currentItems = filteredNotices.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 필터 초기화
-  const resetFilters = () => {
-    setSearch("");
-    setVisibilityFilter("전체");
-    setCurrentPage(1);
-  };
-
-  // 공통 모달로 삭제 처리
+  // ---------------------------------------------------------
+  // 공지 삭제
+  // ---------------------------------------------------------
   const handleDelete = (notice: Notice) => {
     openModal({
       type: "delete",
@@ -159,20 +124,37 @@ const NoticeSection: React.FC = () => {
       requiredKeyword: "삭제",
       confirmText: "삭제",
       cancelText: "취소",
-      onConfirm: () => {
-        setNotices((prev) => prev.filter((n) => n.id !== notice.id));
+      onConfirm: async () => {
+        try {
+          const ok = await deleteAdminNotice(orgId!, notice.id);
 
-        openModal({
-          type: "success",
-          title: "삭제 완료",
-          message: "공지사항이 성공적으로 삭제되었습니다.",
-          autoClose: true,
-          autoCloseDelay: 2000,
-        });
+          if (!ok) throw new Error("삭제 실패");
+
+          await loadNotices();
+
+          openModal({
+            type: "success",
+            title: "삭제 완료",
+            message: "공지사항이 성공적으로 삭제되었습니다.",
+            autoClose: true,
+            autoCloseDelay: 1500,
+          });
+        } catch (err) {
+          console.error("❌ 삭제 실패:", err);
+          openModal({
+            type: "error",
+            title: "삭제 오류",
+            message: "공지 삭제 중 오류가 발생했습니다.",
+            confirmText: "확인",
+          });
+        }
       },
     });
   };
 
+  // ---------------------------------------------------------
+  // UI 영역
+  // ---------------------------------------------------------
   return (
     <div>
       {/* 필터 */}
@@ -180,6 +162,7 @@ const NoticeSection: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Filter size={18} className="text-gray-500" />
+
             <input
               type="text"
               placeholder="제목 검색"
@@ -190,6 +173,7 @@ const NoticeSection: React.FC = () => {
               }}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+
             <select
               value={visibilityFilter}
               onChange={(e) => {
@@ -198,7 +182,7 @@ const NoticeSection: React.FC = () => {
               }}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="전체">전체 공개범위</option>
+              <option value="전체">전체 보기</option>
               <option value="전체공개">전체공개</option>
               <option value="특정그룹공개">특정그룹공개</option>
               <option value="비공개">비공개</option>
@@ -207,11 +191,16 @@ const NoticeSection: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={resetFilters}
+              onClick={() => {
+                setSearch("");
+                setVisibilityFilter("전체");
+                setCurrentPage(1);
+              }}
               className="flex items-center gap-2 text-gray-600 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors"
             >
               <RotateCcw size={16} /> 필터 초기화
             </button>
+
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
@@ -224,74 +213,75 @@ const NoticeSection: React.FC = () => {
 
       {/* 테이블 */}
       <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-gray-700">
-              <th className="px-4 py-3 font-semibold">제목</th>
-              <th className="px-4 py-3 font-semibold">작성자</th>
-              <th className="px-4 py-3 font-semibold">작성일</th>
-              <th className="px-4 py-3 font-semibold">조회수</th>
-              <th className="px-4 py-3 font-semibold">공개 범위</th>
-              <th className="px-4 py-3 font-semibold text-center">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.map((n, index) => (
-              <tr
-                key={n.id}
-                className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${
-                  index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                }`}
-              >
-                <td className="px-4 py-3 font-medium text-gray-800">{n.title}</td>
-                <td className="px-4 py-3 text-gray-600">{n.author}</td>
-                <td className="px-4 py-3 text-gray-600">{n.createdAt}</td>
-                <td className="px-4 py-3 text-gray-600">{n.views.toLocaleString()}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
-                      n.visibility === "전체공개"
-                        ? "bg-green-100 text-green-700"
-                        : n.visibility === "특정그룹공개"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    {n.visibility}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-center items-center gap-2">
-                    <button
-                      onClick={() => setViewingNotice(n)}
-                      className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                      title="보기"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      onClick={() => setEditingNotice(n)}
-                      className="p-1.5 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded transition-colors"
-                      title="수정"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(n)}
-                      className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                      title="삭제"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
+        {loading ? (
+          <div className="py-12 text-center text-gray-500">불러오는 중...</div>
+        ) : (
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr className="text-left text-gray-700">
+                <th className="px-4 py-3 font-semibold">제목</th>
+                <th className="px-4 py-3 font-semibold">작성자</th>
+                <th className="px-4 py-3 font-semibold">작성일</th>
+                <th className="px-4 py-3 font-semibold">조회수</th>
+                <th className="px-4 py-3 font-semibold">공개 범위</th>
+                <th className="px-4 py-3 font-semibold text-center">관리</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentItems.map((n, index) => (
+                <tr
+                  key={n.id}
+                  className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                  }`}
+                >
+                  <td className="px-4 py-3 font-medium text-gray-800">
+                    {n.title}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{n.author}</td>
+                  <td className="px-4 py-3 text-gray-600">{n.createdAt}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {n.views.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
+                        n.visibility === "전체공개"
+                          ? "bg-green-100 text-green-700"
+                          : n.visibility === "특정그룹공개"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {n.visibility}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-center items-center gap-2">
+                      <button
+                        onClick={() => setViewingNotice(n)}
+                        className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(n)}
+                        className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
-        {currentItems.length === 0 && (
-          <div className="text-center text-gray-500 py-12">등록된 공지사항이 없습니다.</div>
+        {!loading && currentItems.length === 0 && (
+          <div className="text-center text-gray-500 py-12">
+            등록된 공지사항이 없습니다.
+          </div>
         )}
       </div>
 
@@ -318,8 +308,7 @@ const NoticeSection: React.FC = () => {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="이전 페이지"
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
@@ -343,8 +332,7 @@ const NoticeSection: React.FC = () => {
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="다음 페이지"
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 transition-colors"
             >
               <ChevronRight size={18} />
             </button>
@@ -356,20 +344,15 @@ const NoticeSection: React.FC = () => {
       {showCreateModal && (
         <CreateNoticeModal
           onClose={() => setShowCreateModal(false)}
-          onSubmit={(newNotice) => setNotices([newNotice, ...notices])}
+          onSubmit={() => loadNotices()}
         />
       )}
-      {editingNotice && (
-        <EditNoticeModal
-          notice={editingNotice}
-          onClose={() => setEditingNotice(null)}
-          onSubmit={(updated) =>
-            setNotices((prev) => prev.map((n) => (n.id === updated.id ? updated : n)))
-          }
-        />
-      )}
+
       {viewingNotice && (
-        <ViewNoticeModal notice={viewingNotice} onClose={() => setViewingNotice(null)} />
+        <ViewNoticeModal
+          notice={viewingNotice}
+          onClose={() => setViewingNotice(null)}
+        />
       )}
     </div>
   );

@@ -22,9 +22,9 @@ export const updateMemberPermission = async (
   memberId: number,
   body: {
     video_manage: boolean;
-    stats_report: boolean;
-    notice: boolean;
-    org_setting: boolean;
+    stats_report_manage: boolean;
+    notice_manage: boolean;
+    org_setting_manage: boolean;
   }
 ) => {
   try {

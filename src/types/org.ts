@@ -27,6 +27,10 @@ export interface OrganizationResponse {
   img_url?: string;
   code: string;
   join_at: string;
-  is_admin: boolean;
+  is_super_admin: boolean;
+  video_manage: boolean;
+  stats_report_manage: boolean;
+  notice_manage: boolean;
+  org_setting_manage: boolean;
   join_status: "APPROVED" | "PENDING" | "REJECTED";
 }

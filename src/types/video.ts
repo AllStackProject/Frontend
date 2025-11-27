@@ -161,7 +161,7 @@ export interface MyVideoItem {
   thumbnail_url: string;
   created_at: string;
   expired_at: string | null;
-  open_scope: "PUBLIC" | "GROUP" | "PRIVATE";
+  open_scope: "PUBLIC" | "GROUP" ;
   view_cnt: number;
 }
 
@@ -180,3 +180,24 @@ export interface UploadVideoResponse {
   presigned_url: string;
 }
 
+
+/* 영상 메타데이터 조회 */
+export interface VideoMetaData {
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  watch_cnt: number;
+  expired_at: string | null;
+  is_comment: boolean;
+  open_scope: "PUBLIC" | "GROUP";
+  member_groups: {
+    id: number;
+    name: string;
+    categories: {
+      id: number;
+      title: string;
+      is_selected: boolean;
+    }[];
+    is_selected: boolean;
+  }[];
+}

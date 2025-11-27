@@ -99,13 +99,39 @@ const BaseModal: React.FC<BaseModalProps> = ({
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={`${requiredKeyword} 입력`}
-            className="w-full border rounded-lg px-3 py-2 text-center mb-5 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder={`${requiredKeyword}`}
+            className="w-full border rounded-lg px-3 py-2 italic text-center mb-5 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         )}
 
         {/* BUTTONS */}
-        {type !== "success" && type !== "error" ? (
+        {type === "success" || type === "error" ? (
+          onConfirm ? (
+            // ⭐ success/error 이지만, onConfirm 제공됨 → 버튼 2개
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 py-2 rounded-lg border hover:bg-gray-100"
+              >
+                {cancelText}
+              </button>
+              <button
+                onClick={onConfirm}
+                className="flex-1 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+              >
+                {confirmText}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onClose}
+              className="w-full py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700"
+            >
+              확인
+            </button>
+          )
+        ) : (
+          // confirm / delete / edit
           <div className="flex gap-3">
             <button
               onClick={onClose}
@@ -116,22 +142,14 @@ const BaseModal: React.FC<BaseModalProps> = ({
             <button
               disabled={isDisabled}
               onClick={onConfirm}
-              className={`flex-1 py-2 rounded-lg text-white font-semibold transition ${
-                disabled
+              className={`flex-1 py-2 rounded-lg text-white font-semibold transition ${disabled
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
-              }`}
+                }`}
             >
               {confirmText}
             </button>
           </div>
-        ) : (
-          <button
-            onClick={onClose}
-            className="w-full py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700"
-          >
-            확인
-          </button>
         )}
 
         {/* SUCCESS AUTO CLOSE 안내 */}

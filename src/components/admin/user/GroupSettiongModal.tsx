@@ -61,8 +61,15 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
       그룹 저장 실행 → API 호출
   --------------------------------------------------------- */
   const handleConfirmSave = async () => {
-    if (!orgId) return alert("조직 정보를 찾을 수 없습니다.");
-
+    if (!orgId) {
+      openModal({
+        type: "error",
+        title: "조직 정보 오류",
+        message: "조직 정보를 찾을 수 없습니다.",
+      });
+      return;
+    }
+    
     try {
       setSaving(true);
 

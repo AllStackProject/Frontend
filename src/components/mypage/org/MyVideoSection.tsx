@@ -14,7 +14,9 @@ import { useModal } from "@/context/ModalContext";
 import EditVideoModal from "@/components/mypage/org/EditVideoModal";
 import VideoStatsModal from "@/components/mypage/org/VideoStatsModal";
 import { useAuth } from "@/context/AuthContext";
-import { fetchMyUploadedVideos, fetchMyVideoStats } from "@/api/myactivity/video";
+import { fetchMyUploadedVideos, fetchMyVideoStats, deleteVideo } from "@/api/myactivity/video";
+import { getVideoData } from "@/api/video/video";
+import type { VideoMetaData } from "@/types/video";
 
 interface Video {
   id: number;
@@ -26,6 +28,7 @@ interface Video {
   views: number;
 }
 
+
 const MyVideoSection: React.FC = () => {
   const { orgId, orgName } = useAuth();
   const { openModal } = useModal();
@@ -33,11 +36,9 @@ const MyVideoSection: React.FC = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ===== 필터 및 정렬 =====
+  // 필터
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortType, setSortType] = useState<"latest" | "oldest" | "views">(
-    "latest"
-  );
+  const [sortType, setSortType] = useState<"latest" | "oldest" | "views">("latest");
   const [visibilityFilter, setVisibilityFilter] = useState<
     "all" | "organization" | "private" | "group"
   >("all");
@@ -48,8 +49,35 @@ const MyVideoSection: React.FC = () => {
   // 모달 상태
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
-  const [videoStats, setVideoStats] = useState<any[]>([]);
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+
+  // 수정 모달용 - id를 포함한 VideoMetaData
+  const [selectedEditVideo, setSelectedEditVideo] = useState<(VideoMetaData & { id: number }) | null>(null);
+
+  // 통계 모달용
+  const [selectedStatsVideo, setSelectedStatsVideo] = useState<Video | null>(null);
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSortType("latest");
+    setVisibilityFilter("all");
+    setCurrentPage(1);
+  };
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("ko-KR");
+
+  const formatExpireDate = (dateString?: string | null) => {
+    if (!dateString) return "-";
+
+    const expireDate = new Date(dateString);
+    const now = new Date();
+    const yearsDiff =
+      (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
+
+    if (yearsDiff >= 100) return "만료 없음";
+
+    return expireDate.toLocaleDateString("ko-KR");
+  };
 
   /* ============================================================
       API 호출
@@ -70,8 +98,8 @@ const MyVideoSection: React.FC = () => {
             v.open_scope === "PUBLIC"
               ? "organization"
               : v.open_scope === "GROUP"
-              ? "group"
-              : "private",
+                ? "group"
+                : "private",
           created_at: v.created_at,
           expire_at: v.expired_at,
           views: v.view_cnt,
@@ -89,97 +117,130 @@ const MyVideoSection: React.FC = () => {
   }, [orgId]);
 
   /* ============================================================
-      핸들러들
+      삭제
   ============================================================ */
 
   const handleDeleteClick = (video: Video) => {
-    setSelectedVideo(video);
-
     openModal({
       type: "delete",
       title: "정말 삭제하시겠습니까?",
       message: `"${video.name}"을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
-      requiredKeyword: "삭제",
       onConfirm: () => handleDeleteConfirm(video),
     });
   };
 
-  const handleDeleteConfirm = (video: Video) => {
-    setVideos((prev) => prev.filter((v) => v.id !== video.id));
+  const handleDeleteConfirm = async (video: Video) => {
+    if (!orgId) return;
 
-    openModal({
-      type: "success",
-      title: "삭제 완료",
-      message: `"${video.name}" 영상이 삭제되었습니다.`,
-      autoClose: true,
-      autoCloseDelay: 1800,
-    });
+    try {
+      const ok = await deleteVideo(orgId, video.id);
+      if (!ok) throw new Error("삭제 실패");
+
+      setVideos((prev) => prev.filter((v) => v.id !== video.id));
+
+      openModal({
+        type: "success",
+        title: "삭제 완료",
+        message: `"${video.name}" 영상이 성공적으로 삭제되었습니다.`,
+        autoClose: true,
+        autoCloseDelay: 1800,
+      });
+    } catch (err: any) {
+      openModal({
+        type: "error",
+        title: "삭제 실패",
+        message: err.message || "영상 삭제 중 오류가 발생했습니다.",
+      });
+    }
   };
 
-  const handleEditClick = (video: Video) => {
-    setSelectedVideo(video);
-    setShowEditModal(true);
+
+  /* ============================================================
+      수정
+  ============================================================ */
+
+  const handleEditClick = async (video: Video) => {
+    if (!orgId) return;
+
+    try {
+      console.log("📝 수정 클릭:", video);
+      
+      const detail = await getVideoData(orgId, video.id);
+      
+      console.log("📥 메타데이터 응답:", detail);
+      
+      if (!detail) {
+        openModal({
+          type: "error",
+          title: "불러오기 실패",
+          message: "영상 정보를 불러올 수 없습니다.",
+        });
+        return;
+      }
+
+      // 메타데이터에 원본 video.id를 추가해서 전달
+      const videoWithId = {
+        ...detail,
+        id: video.id,  // ← 중요! API 응답에 없는 id를 추가
+      };
+      
+      console.log("✅ 모달에 전달할 데이터:", videoWithId);
+      
+      setSelectedEditVideo(videoWithId);
+      setShowEditModal(true);
+
+    } catch (err) {
+      console.error("❌ 메타데이터 조회 실패:", err);
+      openModal({
+        type: "error",
+        title: "오류",
+        message: "영상 정보를 불러오지 못했습니다.",
+      });
+    }
   };
 
   const handleEditSubmit = (data: any) => {
-    console.log("🔥 수정된 데이터:", data);
-
+    console.log("💾 수정 완료 데이터:", data);
+    
     setVideos((prev) =>
-      prev.map((v) => (v.id === data.id ? { ...v, ...data } : v))
+      prev.map((v) => {
+        if (v.id === data.id) {
+          return {
+            ...v,
+            // visibility 업데이트
+            visibility: data.visibility || v.visibility,
+          };
+        }
+        return v;
+      })
     );
 
-    openModal({
-      type: "success",
-      title: "수정 완료",
-      message: "영상 정보가 성공적으로 수정되었습니다.",
-      autoClose: true,
-      autoCloseDelay: 1800,
-    });
+    // 성공 모달은 EditVideoModal에서 이미 표시됨
   };
+
+
+  /* ============================================================
+      통계
+  ============================================================ */
 
   const handleStatsClick = async (video: Video) => {
     if (!orgId) return;
 
     try {
-      const stats = await fetchMyVideoStats(orgId, video.id);
-      setVideoStats(stats);
-      setSelectedVideo(video);
+      await fetchMyVideoStats(orgId, video.id);
+
+      setSelectedStatsVideo(video);
       setShowStatsModal(true);
+
     } catch (err) {
       console.error(err);
       alert("통계를 불러올 수 없습니다.");
     }
   };
 
-  const resetFilters = () => {
-    setSearchTerm("");
-    setSortType("latest");
-    setVisibilityFilter("all");
-    setCurrentPage(1);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ko-KR");
-  };
-
-  const formatExpireDate = (dateString?: string | null) => {
-    if (!dateString) return "-";
-
-    const expireDate = new Date(dateString);
-    const now = new Date();
-    const yearsDiff =
-      (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
-
-    // 100년 이상이면 만료 없음으로 처리
-    if (yearsDiff >= 100) {
-      return "만료 없음";
-    }
-
-    return expireDate.toLocaleDateString("ko-KR");
-  };
 
   /* ============================================================
-      검색 + 필터 + 정렬
+      검색 + 정렬
   ============================================================ */
   const filteredVideos = useMemo(() => {
     let result = [...videos];
@@ -194,14 +255,13 @@ const MyVideoSection: React.FC = () => {
       result = result.filter((v) => v.visibility === visibilityFilter);
     }
 
-    if (sortType === "latest")
-      result.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
-    if (sortType === "oldest")
-      result.sort((a, b) => (a.created_at > b.created_at ? 1 : -1));
+    if (sortType === "latest") result.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    if (sortType === "oldest") result.sort((a, b) => (a.created_at > b.created_at ? 1 : -1));
     if (sortType === "views") result.sort((a, b) => b.views - a.views);
 
     return result;
   }, [videos, searchTerm, sortType, visibilityFilter]);
+
 
   /* ============================================================
       페이지네이션
@@ -348,19 +408,18 @@ const MyVideoSection: React.FC = () => {
                   </td>
                   <td className="p-3 hidden md:table-cell align-middle">
                     <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        video.visibility === "organization"
+                      className={`px-3 py-1 text-xs rounded-full ${video.visibility === "organization"
                           ? "bg-green-100 text-green-700"
                           : video.visibility === "group"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-200 text-gray-700"
-                      }`}
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
                     >
                       {video.visibility === "organization"
                         ? "전체"
                         : video.visibility === "group"
-                        ? "그룹"
-                        : "비공개"}
+                          ? "그룹"
+                          : "비공개"}
                     </span>
                   </td>
                   <td className="p-3 hidden md:table-cell align-middle">
@@ -443,11 +502,10 @@ const MyVideoSection: React.FC = () => {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition ${
-                      currentPage === page
+                    className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium transition ${currentPage === page
                         ? "bg-primary text-white shadow-sm"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
@@ -468,20 +526,25 @@ const MyVideoSection: React.FC = () => {
       )}
 
       {/* 모달  */}
-      {showStatsModal && selectedVideo && (
+      {/* ----- 통계 모달 ----- */}
+      {showStatsModal && selectedStatsVideo && (
         <VideoStatsModal
-          video={selectedVideo}
+          video={selectedStatsVideo}
           orgId={Number(orgId)}
-          onClose={() => setShowStatsModal(false)}
+          onClose={() => {
+            setShowStatsModal(false);
+            setSelectedStatsVideo(null);
+          }}
         />
       )}
 
-      {showEditModal && selectedVideo && (
+      {/* ----- 수정 모달 ----- */}
+      {showEditModal && selectedEditVideo && (
         <EditVideoModal
-          video={selectedVideo}
+          video={selectedEditVideo}
           onClose={() => {
             setShowEditModal(false);
-            setSelectedVideo(null);
+            setSelectedEditVideo(null);
           }}
           onSubmit={handleEditSubmit}
         />

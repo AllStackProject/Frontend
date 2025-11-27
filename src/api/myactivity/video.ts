@@ -42,3 +42,45 @@ export const fetchMyVideoStats = async (orgId: number, videoId: number) => {
     throw new Error("통계 정보를 불러오는 중 오류가 발생했습니다.");
   }
 };
+
+/* 내가 올린 영상 수정 */
+export const updateVideo = async (
+  orgId: number,
+  videoId: number,
+  payload: {
+    description: string;
+    is_comment: boolean;
+    expired_at: string;
+    member_groups: number[];
+    categories: number[];
+  }
+) => {
+  try {
+    const res = await api.patch(
+      `/${orgId}/video/${videoId}`,
+      payload,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+    return res.data.result.is_success;
+  } catch (err: any) {
+    console.error("❌ 영상 수정 실패:", err);
+    throw new Error(err.response?.data?.message || "영상 수정 실패");
+  }
+};
+
+/* 내가 올린 영상 삭제 */
+export const deleteVideo = async (
+  orgId: number,
+  videoId: number,
+) => {
+  try {
+    const res = await api.delete(
+      `/${orgId}/video/${videoId}`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+    return res.data.result.is_success;
+  } catch (err: any) {
+    console.error("❌ 영상 삭제 실패:", err);
+    throw new Error(err.response?.data?.message || "영상 삭제 실패");
+  }
+};

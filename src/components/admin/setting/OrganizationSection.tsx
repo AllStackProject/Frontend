@@ -8,14 +8,16 @@ import {
   Copy,
   Check,
   RefreshCcw,
-  Settings,
+  Settings, Trash2,
   Save,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 import GroupCategoryModal from "@/components/admin/setting/GroupCategoryModal";
-import { patchOrgImage, regenerateOrgCode } from "@/api/adminOrg/info";
+import { patchOrgImage, regenerateOrgCode, deleteOrganization } from "@/api/adminOrg/info";
+import { getOrganizations } from "@/api/organization/orgs";
 import { useAuth } from "@/context/AuthContext";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
+import { useNavigate } from "react-router-dom";
 
 interface GroupCategory {
   id: number;
@@ -35,11 +37,13 @@ interface OrganizationInfo {
 const OrganizationSection: React.FC = () => {
   const { orgId } = useAuth();
   const { openModal } = useModal();
+  const navigate = useNavigate();
+  const { clearOrganization, setAuthenticated } = useAuth();
 
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: orgId || 0,
     name: "",
-    image: "/dummy/woori-logo.png", // 더미 수정 필요
+    image: "",
     members: 0,
     inviteCode: "",
     groups: [],
@@ -47,6 +51,7 @@ const OrganizationSection: React.FC = () => {
 
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [superAdmin, setSuperAdmin] = useState(false); 
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   /* ---------------------------------------------------------
@@ -60,7 +65,7 @@ const OrganizationSection: React.FC = () => {
         setOrganization({
           id: orgId || 0,
           name: response.org_name,
-          image: response.img_url || "/dummy/woori-logo.png",
+          image: response.img_url,
           members: response.member_cnt,
           inviteCode: response.org_code,
           groups: response.member_groups.map((g: any) => ({
@@ -78,6 +83,24 @@ const OrganizationSection: React.FC = () => {
     if (orgId) {
       loadOrgInfo();
     }
+  }, [orgId]);
+
+  /* ---------------------------------------------------------
+    superAdmin 여부 확인 (조직 설정 페이지에서만 확인)
+  --------------------------------------------------------- */
+  useEffect(() => {
+    const checkSuperAdmin = async () => {
+      try {
+        const orgs = await getOrganizations();
+        const org = orgs.find((o) => o.id === orgId);
+
+        setSuperAdmin(org?.is_super_admin === true);
+      } catch (err) {
+        console.error("❌ 슈퍼어드민 권한 확인 실패:", err);
+      }
+    };
+
+    if (orgId) checkSuperAdmin();
   }, [orgId]);
 
   /* ---------------------------------------------------------
@@ -121,7 +144,6 @@ const OrganizationSection: React.FC = () => {
       if (res?.is_success) {
         // 서버에서 최종 이미지 URL을 내려준다면 여기서 적용 가능
         // setOrganization(prev => ({ ...prev, image: res.image_url }));
-        alert("이미지 변경이 저장되었습니다.");
         openModal({
           type: "confirm",
           title: "이미지 저장 성공",
@@ -140,34 +162,57 @@ const OrganizationSection: React.FC = () => {
   /* ---------------------------------------------------------
     초대 메세지 복사
   --------------------------------------------------------- */
-  const copyInviteMessage = () => {
+  const copyInviteMessage = async () => {
     const inviteMessage = `${organization.name}에 참가해보세요!\n\n조직 초대 코드: ${organization.inviteCode}`;
-    navigator.clipboard
-      .writeText(inviteMessage)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => alert("복사에 실패했습니다."));
+
+    try {
+      // 현대적 API 우선 시도
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteMessage);
+
+      } else {
+        // HTTPS가 아니거나 clipboard API 차단된 경우 fallback
+        const textarea = document.createElement("textarea");
+        textarea.value = inviteMessage;
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.appendChild(textarea);
+
+        textarea.focus();
+        textarea.select();
+
+        const success = document.execCommand("copy");
+        document.body.removeChild(textarea);
+
+        if (!success) throw new Error("execCommand copy failed");
+      }
+
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // 최종 실패
+      openModal({
+        type: "error",
+        title: "복사 실패",
+        message: "초대메세지를 복사할 수 없습니다. HTTPS 환경인지 확인해주세요.",
+      });
+    }
   };
 
   /* ---------------------------------------------------------
     조직 코드 재발급
   --------------------------------------------------------- */
 
-  const generateNewCode = async () => {
+  const regenerateCodeApi = async () => {
     try {
       const newCode = await regenerateOrgCode(orgId || 0);
       setOrganization((prev) => ({ ...prev, inviteCode: newCode }));
 
       openModal({
-        type: "confirm",
-        title: "초대 코드 재생성",
-        message:
-          "조직 코드를 재생성하시겠습니까?\n기존 코드는 즉시 무효화됩니다.",
-        requiredKeyword: "재생성",
-        confirmText: "재생성",
-        onConfirm: generateNewCode,
+        type: "success",
+        title: "재생성 완료",
+        message: "조직 코드가 성공적으로 재생성되었습니다.",
+        autoClose: true,
       });
     } catch (err: any) {
       openModal({
@@ -177,6 +222,53 @@ const OrganizationSection: React.FC = () => {
       });
     }
   };
+  const handleRegenerateCode = () => {
+    openModal({
+      type: "confirm",
+      title: "초대 코드 재생성",
+      message: "조직 코드를 재생성하시겠습니까?\n기존 코드는 즉시 무효화됩니다.",
+      confirmText: "재생성",
+      onConfirm: regenerateCodeApi,   // API만 실행
+    });
+  };
+  /* ---------------------------------------------------------
+    조직 삭제 API
+  --------------------------------------------------------- */
+  const handleDeleteOrganization = () => {
+    openModal({
+      type: "confirm",
+      title: "조직 삭제",
+      message: "정말로 이 조직을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.",
+      confirmText: "삭제",
+      onConfirm: async () => {
+        try {
+          const res = await deleteOrganization(orgId!);
+
+          if (res?.is_success) {
+            openModal({
+              type: "success",
+              title: "삭제 완료",
+              message: "조직이 성공적으로 삭제되었습니다.",
+              autoClose: true,
+            });
+            
+            clearOrganization();
+            
+            setTimeout(() => {
+              navigate("/login/select", { replace: true });
+            }, 800);
+          }
+        } catch (err: any) {
+          openModal({
+            type: "error",
+            title: "삭제 실패",
+            message: err.message || "조직 삭제 중 오류가 발생했습니다.",
+          });
+        }
+      }
+    });
+  };
+
   /* ---------------------------------------------------------
        모달 닫기 → 그룹 목록 최신화
     --------------------------------------------------------- */
@@ -228,6 +320,7 @@ const OrganizationSection: React.FC = () => {
               <Building2 size={22} className="text-blue-600" />
               {organization.name}
             </h2>
+            
 
             {/* 멤버 */}
             <div className="flex items-center gap-2 text-gray-700">
@@ -268,7 +361,7 @@ const OrganizationSection: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={generateNewCode}
+                    onClick={handleRegenerateCode}
                     className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700"
                   >
                     <RefreshCcw size={12} />
@@ -277,6 +370,19 @@ const OrganizationSection: React.FC = () => {
                 </div>
               </div>
             </div>
+              {/* 슈퍼어드민만 삭제 버튼 표시 */}
+              {superAdmin && (
+                <div className="w-full flex justify-end mt-3">
+                  <button
+                    onClick={handleDeleteOrganization}
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-400 hover:bg-red-700 text-white text-xs rounded-md shadow-sm"
+                  >
+                    <Trash2 size={12} />
+                    조직 삭제
+                  </button>
+                </div>
+              )}
+            
           </div>
         </div>
       </div>

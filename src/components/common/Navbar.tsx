@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import OrganizationSelectModal from "@/components/common/modals/OrganizationSelectModal";
 import { getUserInfo } from "@/api/user/userInfo";
 import { getOrganizations } from "@/api/organization/orgs";
-import type { OrganizationResponse } from "@/types/org";
 import { useLogout } from "@/api/user/useLogout";
 import { useAuth } from "@/context/AuthContext";
 
@@ -44,29 +43,36 @@ const Navbar = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        const orgs: OrganizationResponse[] = await getOrganizations();
+        const res = await getOrganizations(); // result.organizations 반환됨
+        const orgs = res;
 
-        if (!orgId) {
-          setIsAdmin(false);
-          return;
-        }
+        if (!orgId) return setIsAdmin(false);
 
-        const selectedOrg = orgs.find((org) => org.id === orgId);
+        const selected = orgs.find((org) => org.id === orgId);
+        if (!selected) return setIsAdmin(false);
 
-        // 관리자이면서 승인된 조직일 때만 true
-        if (selectedOrg?.is_admin && selectedOrg.join_status === "APPROVED") {
+        const isManager =
+          selected.is_super_admin ||
+          selected.video_manage ||
+          selected.stats_report_manage ||
+          selected.notice_manage ||
+          selected.org_setting_manage;
+
+        // 가입 승인된 조직 + 관리자 권한 보유
+        if (selected.join_status === "APPROVED" && isManager) {
           setIsAdmin(true);
         } else {
           setIsAdmin(false);
         }
+
       } catch (err) {
         console.error("🚨 조직 정보 확인 실패:", err);
         setIsAdmin(false);
       }
     };
 
-    checkAdminStatus();
-  }, [orgId]);
+  checkAdminStatus();
+}, [orgId]);
 
   useEffect(() => {
     const fetchOrgImage = async () => {
@@ -133,7 +139,7 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 md:py-4 bg-white border-b border-gray-200 sticky top-0 z-50 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300">
+      <header className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 md:py-4 bg-white border-b border-gray-200 sticky top-0 z-20 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300">
 
         {/* 왼쪽: 로고 */}
         <div

@@ -3,7 +3,6 @@ import Hls from "hls.js";
 import {
   Play,
   Pause,
-  Settings,
   Maximize,
   Volume2,
   Volume1,
@@ -111,7 +110,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   /* ---------------------------- Heatmap Load ----------------------------- */
   useEffect(() => {
     if (heatmapCounts?.length > 0) {
-      const segments = convertToSegments(heatmapCounts, 10);
+      const segments = convertToSegments([...heatmapCounts].reverse(), 10);
       const normalized = normalizeHeatMapData(segments);
       setHeatMapData(normalized);
     }
@@ -405,8 +404,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     { label: "0.75x", value: 0.75 },
     { label: "0.5x", value: 0.5 },
   ];
-
-  /* --------------------------------------------------------------------- */
 
   return (
     <div

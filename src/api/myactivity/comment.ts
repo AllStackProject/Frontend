@@ -1,12 +1,12 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
-import type { Comment } from "@/types/comment";
+import type { MyComment } from "@/types/comment";
 
 /**
  * 내가 작성한 댓글 조회
  * @param orgId 조직 ID
  */
-export const getMyComments = async (orgId: number): Promise<Comment[]> => {
+export const getMyComments = async (orgId: number): Promise<MyComment[]> => {
   try {
     const orgToken = localStorage.getItem("org_token");
     const storedOrgId = localStorage.getItem("org_id");
@@ -19,7 +19,8 @@ export const getMyComments = async (orgId: number): Promise<Comment[]> => {
       console.warn("⚠️ 전달된 orgId와 현재 저장된 org_id가 다릅니다.");
     }
 
-    const response = await api.get(`/${orgId}/myactivity/comment`, {
+    const response = await api.get(
+      `/${orgId}/myactivity/comment`, {
       tokenType: "org",
     } as CustomAxiosRequestConfig);
 
@@ -62,7 +63,8 @@ export const deleteComment = async (orgId: number, commentId: number): Promise<b
         }
 
         // API 호출 (org_token 인증)
-        const response = await api.delete(`/${orgId}/myactivity/${commentId}`, {
+        const response = await api.delete(
+          `/${orgId}/myactivity/${commentId}`, {
             tokenType: "org",
         } as CustomAxiosRequestConfig);
 

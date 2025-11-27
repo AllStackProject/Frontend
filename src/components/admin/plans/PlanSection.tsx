@@ -21,7 +21,7 @@ const PlanSection: React.FC = () => {
             <Crown className="text-yellow-500" /> 현재 요금제: {currentPlan.name}
           </h3>
           <p className="text-gray-600 mt-2 text-sm">
-            조직원: {currentPlan.members} / 스토리지: {currentPlan.storage}
+            멤버수: {currentPlan.members} / 스토리지: {currentPlan.storage}
           </p>
           <p className="text-gray-700 font-semibold mt-1">요금: {currentPlan.price}</p>
         </div>

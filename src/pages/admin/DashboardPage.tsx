@@ -44,10 +44,10 @@ const DashboardPage: React.FC = () => {
       권한 기반 메뉴 정의
   ─────────────────────────────────────────────── */
   const menuList = [
-    /* 사용자 관리 (super admin 전용) */
+    /* 멤버 관리 (super admin 전용) */
     is_super_admin && {
-      title: "사용자 관리",
-      description: "사용자 권한 설정",
+      title: "멤버 관리",
+      description: "멤버 권한 설정",
       icon: Users,
       color: "green",
       path: "/admin/users",
@@ -62,10 +62,10 @@ const DashboardPage: React.FC = () => {
       path: "/admin/videos",
     },
 
-    /* 사용자별 시청 관리 */
+    /* 멤버별 시청 관리 */
     (stats_report_manage || is_super_admin) && {
-      title: "사용자별 시청 관리",
-      description: "사용자별 시청 기록",
+      title: "멤버별 시청 관리",
+      description: "멤버별 시청 기록",
       icon: BookOpen,
       color: "cyan",
       path: "/admin/learning",

@@ -85,7 +85,7 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
   );
   
   const [expiration, setExpiration] = useState<"7" | "30" | "none">(
-    isForever ? "none" : "none"  // 기본값은 "none", 사용자가 preset 선택하면 변경됨
+    isForever ? "none" : "none"  // 기본값은 "none", 멤버가 preset 선택하면 변경됨
   );
 
   console.log("📅 초기 만료일 설정:", {

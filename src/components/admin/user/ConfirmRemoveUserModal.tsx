@@ -34,23 +34,23 @@ const ConfirmRemoveUserModal: React.FC<ConfirmRemoveUserModalProps> = ({
       if (success) {
         openModal({
           type: "confirm",
-          title: "사용자 내보내기 성공",
-          message: "사용자가 성공적으로 내보내졌습니다. ",
+          title: "멤버 내보내기 성공",
+          message: "멤버가 성공적으로 내보내졌습니다. ",
         });
         onConfirm(); // 부모 컴포넌트에 성공 알림
         onClose();
       } else {
         openModal({
           type: "error",
-          title: "사용자 내보내기 오류",
-          message: "사용자 내보내기에 실패했습니다.",
+          title: "멤버 내보내기 오류",
+          message: "멤버 내보내기에 실패했습니다.",
         });
       }
     } catch (error: any) {
       openModal({
           type: "error",
-          title: "사용자 내보내기 오류",
-          message: error.message || "사용자 내보내기 중 오류가 발생했습니다.",
+          title: "멤버 내보내기 오류",
+          message: error.message || "멤버 내보내기 중 오류가 발생했습니다.",
         });
     } finally {
       setRemoving(false);
@@ -64,7 +64,7 @@ const ConfirmRemoveUserModal: React.FC<ConfirmRemoveUserModalProps> = ({
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-red-50">
           <h2 className="text-lg font-semibold text-red-800 flex items-center gap-2">
             <AlertTriangle size={20} className="text-red-600" />
-            사용자 내보내기
+            멤버 내보내기
           </h2>
           <button
             onClick={onClose}
@@ -84,11 +84,11 @@ const ConfirmRemoveUserModal: React.FC<ConfirmRemoveUserModalProps> = ({
               ⚠️ 이 작업은 되돌릴 수 없습니다
             </p>
             <p className="text-xs text-red-700">
-              사용자를 조직에서 내보내면 해당 사용자는 더 이상 조직의 콘텐츠와 데이터에 접근할 수 없습니다.
+              멤버를 조직에서 내보내면 해당 멤버는 더 이상 조직의 콘텐츠와 데이터에 접근할 수 없습니다.
             </p>
           </div>
 
-          {/* 사용자 정보 */}
+          {/* 멤버 정보 */}
           <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">이름</span>

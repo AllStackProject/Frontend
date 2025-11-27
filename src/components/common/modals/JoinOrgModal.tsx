@@ -26,14 +26,14 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
     setIsNicknameChecked(false);
   };
 
-  // 로그인 사용자 이름을 닉네임 초기값으로 설정
+  // 로그인 멤버 이름을 닉네임 초기값으로 설정
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const data = await getUserInfo();
         setNickname(data.name || "");
       } catch (err) {
-        console.error("🚨 사용자 정보 로드 실패:", err);
+        console.error("🚨 멤버 정보 로드 실패:", err);
       } finally {
         setIsLoadingUser(false);
       }

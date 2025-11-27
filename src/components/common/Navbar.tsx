@@ -19,21 +19,21 @@ const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [userName, setUserName] = useState("사용자");
+  const [userName, setUserName] = useState("멤버");
   const [isAdmin, setIsAdmin] = useState(false);
 
   const { openLogoutModal } = useLogout(navigate);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  //  로그인 사용자 정보 불러오기
+  //  로그인 멤버 정보 불러오기
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const data = await getUserInfo();
-        setUserName(data.name || "사용자");
+        setUserName(data.name || "멤버");
       } catch (err) {
-        console.error("🚨 사용자 정보 로드 실패:", err);
+        console.error("🚨 멤버 정보 로드 실패:", err);
       }
     };
     fetchUser();
@@ -132,7 +132,7 @@ const Navbar = () => {
     { icon: Bookmark, label: "스크랩", path: "/orgmypage/scrap", isChild: true },
     { icon: MessageCircle, label: "내 댓글", path: "/orgmypage/comment", isChild: true },
     { icon: ListVideo, label: "내 영상", path: "/orgmypage/myvideo", isChild: true },
-    { icon: ShieldUser, label: "설정", path: "/orgmypage/orgsetting", isChild: true },
+    { icon: ShieldUser, label: "조직 설정", path: "/orgmypage/orgsetting", isChild: true },
     { type: "divider", label: "" },
     { icon: User, label: "마이페이지", path: "/usermypage/profile" }
   ];
@@ -325,7 +325,6 @@ const Navbar = () => {
                 >
                   <div className="relative">
                     <Settings size={18} className="text-purple-600" />
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"></span>
                   </div>
                   <span className="text-sm font-semibold text-purple-700">관리자</span>
                 </button>

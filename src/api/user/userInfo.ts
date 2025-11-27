@@ -3,7 +3,7 @@ import type { UserInfoResponse, UpdateUserInfoRequest, UpdateUserInfoResponse } 
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 
 /**
- * 사용자 정보 조회 API (GET /user/info)
+ * 멤버 정보 조회 API (GET /user/info)
  */
 export const getUserInfo = async (): Promise<UserInfoResponse> => {
   try {
@@ -21,12 +21,12 @@ export const getUserInfo = async (): Promise<UserInfoResponse> => {
   } catch (error: any) {
     console.error("❌ [getUserInfo] 오류:", error);
     throw new Error(
-      error.response?.data?.message || "사용자 정보를 불러오지 못했습니다."
+      error.response?.data?.message || "멤버 정보를 불러오지 못했습니다."
     );
   }
 };
 
-/* 사용자 정보 수정 API (PATCH /user/info) */
+/* 멤버 정보 수정 API (PATCH /user/info) */
 export const updateUserInfo = async (
   data: UpdateUserInfoRequest
 ): Promise<UpdateUserInfoResponse> => {
@@ -44,7 +44,7 @@ export const updateUserInfo = async (
 
 
 /**
- * 사용자 탈퇴 API (DELETE /user)
+ * 멤버 탈퇴 API (DELETE /user)
  */
 export const deleteUser = async (): Promise<{ success: boolean; message: string }> => {
   try {

@@ -43,7 +43,7 @@ export default function LoginSelect() {
         const formatted = orgs.map((org: any) => ({
           id: org.id,
           name: org.name,
-          image: org.img_url || "/dummy/woori-logo.png",
+          image: org.img_url,
           memberCount: 0,
           joinStatus: org.join_status,
           isAdmin: org.is_admin,
@@ -84,22 +84,22 @@ export default function LoginSelect() {
       const success = await selectOrganization(orgId, orgName);
 
       if (!success) {
-
         openModal({
-  type: "error",
-  title: "오류 발생",
-  message: "조직 토큰 발급에 실패했습니다.",
-});
+          type: "error",
+          title: "오류 발생",
+          message: "조직 토큰 발급에 실패했습니다.",
+        });
         return;
       }
 
       navigate("/home", { replace: true });
+      window.location.reload();
     } catch (error: any) {
       openModal({
-  type: "error",
-  title: "오류 발생",
-  message: error.message || "조직 선택 중 오류가 발생했습니다."
-});
+        type: "error",
+        title: "오류 발생",
+        message: error.message || "조직 선택 중 오류가 발생했습니다."
+      });
     }
   };
 

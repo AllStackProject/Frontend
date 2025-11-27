@@ -107,7 +107,7 @@ export const router = createBrowserRouter([
     ),
   },
   // -----------------------------
-  // 사용자 전용 레이아웃
+  // 멤버 전용 레이아웃
   // -----------------------------
   {
     path: "/login/select",

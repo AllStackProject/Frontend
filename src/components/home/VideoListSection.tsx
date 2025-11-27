@@ -91,7 +91,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
   const finalVideos = useMemo(() => {
     let result = [...videos];
 
-    // 1) 사용자 지정 그룹 카테고리 필터
+    // 1) 멤버 지정 그룹 카테고리 필터
     if (selectedCategory !== "전체") {
       result = result.filter((v) => v.hashtags?.includes(selectedCategory));
     }

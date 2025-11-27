@@ -150,7 +150,7 @@ const UserInviteSection: React.FC = () => {
                 <UserCheck size={32} className="text-gray-400" />
               </div>
             </div>
-            <p className="text-gray-500">승인 대기 중인 사용자가 없습니다.</p>
+            <p className="text-gray-500">승인 대기 중인 멤버가 없습니다.</p>
           </div>
         )}
       </div>

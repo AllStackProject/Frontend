@@ -138,7 +138,7 @@ const TimePatternSection: React.FC = () => {
             <h3 className="text-lg font-bold text-gray-800">시청 패턴</h3>
           </div>
           <p className="text-sm text-gray-600">
-            요일별, 시간대별 사용자 시청 활동 패턴 분석
+            요일별, 시간대별 멤버 시청 활동 패턴 분석
           </p>
         </div>
 

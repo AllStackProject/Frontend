@@ -62,8 +62,8 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
         <div className="p-6">
           <p className="text-sm text-gray-600 mb-4">
             {isApprove
-              ? "이 사용자를 승인하고 조직에 추가합니다."
-              : "해당 사용자 가입 요청을 거절합니다."}
+              ? "이 멤버를 승인하고 조직에 추가합니다."
+              : "해당 멤버 가입 요청을 거절합니다."}
           </p>
 
           {/* User info */}

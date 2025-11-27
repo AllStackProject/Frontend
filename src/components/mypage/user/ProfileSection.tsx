@@ -65,7 +65,7 @@ const ProfileSection: React.FC = () => {
     passwordConfirm: "",
   });
 
-  // 사용자 정보 불러오기
+  // 멤버 정보 불러오기
   useEffect(() => {
     const fetchUserInfoData = async () => {
       try {
@@ -104,7 +104,7 @@ const ProfileSection: React.FC = () => {
         openModal({
           type: "error",
           title: "정보 로드 실패",
-          message: err.message || "사용자 정보를 불러오지 못했습니다.",
+          message: err.message || "멤버 정보를 불러오지 못했습니다.",
         });
       }
     };
@@ -202,7 +202,7 @@ const ProfileSection: React.FC = () => {
         openModal({
           type: "success",
           title: "수정 완료",
-          message: "사용자 정보가 성공적으로 수정되었습니다.",
+          message: "멤버 정보가 성공적으로 수정되었습니다.",
           autoClose: true,
           autoCloseDelay: 2000,
         });
@@ -210,7 +210,7 @@ const ProfileSection: React.FC = () => {
         openModal({
           type: "error",
           title: "수정 실패",
-          message: "사용자 정보 수정에 실패했습니다.",
+          message: "멤버 정보 수정에 실패했습니다.",
         });
       }
     } catch (err: any) {

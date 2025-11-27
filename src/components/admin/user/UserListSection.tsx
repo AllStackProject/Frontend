@@ -24,7 +24,7 @@ interface Group {
 }
 
 // 역할 옵션
-const ROLE_OPTIONS = ["슈퍼관리자", "관리자", "일반 사용자"];
+const ROLE_OPTIONS = ["슈퍼관리자", "관리자", "일반 멤버"];
 
 const UserListSection: React.FC = () => {
   const { orgId } = useAuth();
@@ -100,7 +100,7 @@ const UserListSection: React.FC = () => {
     loadData();
   }, [orgId]);
 
-  // UI 표시용 사용자 데이터 변환
+  // UI 표시용 멤버 데이터 변환
   const uiUsers = users.map((u) => ({
     id: u.id,
     name: u.user_name,
@@ -109,7 +109,7 @@ const UserListSection: React.FC = () => {
       ? "슈퍼관리자"
       : u.is_admin
         ? "관리자"
-        : "일반 사용자",
+        : "일반 멤버",
     groups: u.member_groups?.map((g) => g.name) || [],
   }));
 

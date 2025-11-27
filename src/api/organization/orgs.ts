@@ -33,7 +33,7 @@ export const useSelectOrganization = () => {
 
       if (!orgToken) throw new Error("조직 토큰을 가져올 수 없습니다.");
 
-      const nickname = result.nickname || "사용자";
+      const nickname = result.nickname || "멤버";
 
       // 로컬스토리지 저장
       localStorage.setItem("org_token", orgToken);
@@ -62,7 +62,7 @@ export const useSelectOrganization = () => {
 /**
  * 조직 가입 요청
  * @param code 조직 가입 코드
- * @param nickname 사용자가 사용할 닉네임
+ * @param nickname 멤버가 사용할 닉네임
  */
 export const joinOrganization = async (code: string, nickname: string) => {
   try {

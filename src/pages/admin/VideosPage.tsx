@@ -9,7 +9,7 @@ const VideosPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">동영상 관리</h1>
           <p className="text-sm text-gray-600">
-            조직에 업로드된 모든 동영상을 확인하고 관리할 수 있습니다.
+            업로드된 모든 동영상을 확인하고 관리할 수 있습니다.
           </p>
         </div>
       </div>

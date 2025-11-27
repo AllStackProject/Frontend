@@ -55,7 +55,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     });
   };
 
-  /* 사용자 랜덤 이미지 */
+  /* 멤버 랜덤 이미지 */
   const getRandomAvatar = (userId: number) => {
     const avatarNumber = (userId % 9) + 1;
     return `/user-icon/user${avatarNumber}.png`;
@@ -125,7 +125,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                 id: Date.now(),
                 parent_comment_id: parentId,
                 text: replyContent,
-                creator: nickname ?? "사용자",
+                creator: nickname ?? "멤버",
                 created_at: new Date().toISOString(),
               },
             ],
@@ -309,7 +309,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                         onKeyPress={(e) =>
                           handleKeyPress(e, () => handleAddReply(comment.id))
                         }
-                        placeholder={`${comment.creator || "사용자"}님에게 답글 작성...`}
+                        placeholder={`${comment.creator || "멤버"}님에게 답글 작성...`}
                         disabled={submitting}
                         className="flex-1 px-3 py-2 border-b-2 border-gray-300 focus:border-blue-600 focus:outline-none resize-none text-sm disabled:bg-gray-100 bg-transparent"
                         rows={2}

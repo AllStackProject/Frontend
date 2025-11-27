@@ -34,7 +34,7 @@ export const getVideoComments = async (
       if (!childMap[parentId]) childMap[parentId] = [];
       childMap[parentId].push({
         ...child,
-        creator: (child as any).creator ?? child.creator ?? "사용자",
+        creator: (child as any).creator ?? child.creator ?? "멤버",
         created_at: child.created_at || new Date().toISOString(),
       } as any);
     });
@@ -42,7 +42,7 @@ export const getVideoComments = async (
     // 부모 댓글 + 대댓글 합치기
     const merged: CommentWithReplies[] = comments.map((c) => ({
       ...c,
-      creator: (c as any).creator ?? c.creator ?? "사용자",
+      creator: (c as any).creator ?? c.creator ?? "멤버",
       created_at: c.created_at || new Date().toISOString(),
       replies: childMap[c.id] || [],
     }));

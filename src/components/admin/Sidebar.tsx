@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ permissions }) => {
     { label: "홈", icon: Home, path: "/admin" },
 
     ...(is_super_admin
-      ? [{ label: "사용자 관리", icon: Users, path: "/admin/users" }]
+      ? [{ label: "멤버 관리", icon: Users, path: "/admin/users" }]
       : []),
 
     ...(video_manage || is_super_admin
@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ permissions }) => {
       : []),
 
     ...(stats_report_manage || is_super_admin
-      ? [{ label: "사용자별 시청 관리", icon: BookOpen, path: "/admin/learning" }]
+      ? [{ label: "멤버별 시청 관리", icon: BookOpen, path: "/admin/learning" }]
       : []),
 
     ...(stats_report_manage || is_super_admin

@@ -37,10 +37,10 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
   const getRoleDescription = (roleName: string) => {
     switch (roleName) {
       case "슈퍼관리자":
-        return "모든 권한을 가지며, 조직 설정 및 사용자 관리가 가능합니다.";
+        return "모든 권한을 가지며, 조직 설정 및 멤버 관리가 가능합니다.";
       case "관리자":
         return "콘텐츠 관리 권한을 가집니다. 접근 권한이 없는 페이지는 비활성화됩니다.";
-      case "일반 사용자":
+      case "일반 멤버":
         return "기본적인 콘텐츠 조회 및 제한적인 기능만 사용 가능합니다.";
       default:
         return "";
@@ -111,9 +111,9 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
 
           {/* 내용 */}
           <div className="p-6 overflow-y-auto flex-1">
-            {/* 사용자 정보 */}
+            {/* 멤버 정보 */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">권한을 변경할 사용자</p>
+              <p className="text-sm text-gray-600 mb-2">권한을 변경할 멤버</p>
               <p className="font-semibold text-gray-800">{user.name}</p>
               <p className="text-sm text-gray-600">{user.email}</p>
             </div>
@@ -143,10 +143,10 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                   <div className="space-y-2">
                     {[
                       "동영상 관리",
-                      "시청 관리 & 통계 및 리포트",
+                      "시청 관리 & 통계 및 분석",
                       "공지 등록",
                       "조직 설정",
-                      "사용자 관리",
+                      "멤버 관리",
                       "요금제 관리",
                     ].map((permission) => (
                       <div
@@ -178,7 +178,7 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="관리자">관리자</option>
-                    <option value="일반 사용자">일반 사용자</option>
+                    <option value="일반 멤버">일반 멤버</option>
                   </select>
 
                   {/* 슈퍼관리자 안내 */}
@@ -202,10 +202,10 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                     세부 권한 설정
                   </label>
 
-                  {role === "일반 사용자" ? (
+                  {role === "일반 멤버" ? (
                     <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
                       <p className="text-sm text-gray-600">
-                        일반 사용자는 세부 권한을 설정할 수 없습니다.
+                        일반 멤버는 세부 권한을 설정할 수 없습니다.
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         관리자 권한이 필요합니다.
@@ -222,8 +222,8 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                         },
                         {
                           key: "manageViewingAndStats",
-                          label: "시청 관리 & 통계 및 리포트",
-                          description: "사용자 시청 기록 조회 및 분석 & 조직 통계 및 리포트 조회",
+                          label: "시청 관리 & 통계 및 분석",
+                          description: "멤버 시청 기록 조회 및 분석 & 조직 통계 및 분석 조회",
                           adminOnly: false
                         },
                         {
@@ -240,8 +240,8 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                         },
                         {
                           key: "manageUsers",
-                          label: "사용자 관리",
-                          description: "사용자 승인, 권한 설정 및 관리",
+                          label: "멤버 관리",
+                          description: "멤버 승인, 권한 설정 및 관리",
                           adminOnly: true
                         },
                         {
@@ -297,7 +297,7 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                   <div className="flex gap-2">
                     <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-amber-800">
-                      <span className="font-semibold">주의:</span> 권한 변경 시 해당 사용자의 접근 권한이 즉시 적용됩니다.
+                      <span className="font-semibold">주의:</span> 권한 변경 시 해당 멤버의 접근 권한이 즉시 적용됩니다.
                     </p>
                   </div>
                 </div>

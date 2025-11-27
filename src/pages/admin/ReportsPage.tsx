@@ -38,7 +38,7 @@ const ReportsPage: React.FC = () => {
     <div className="p-6">
       {/* 헤더 */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">통계 및 리포트</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">통계 및 분석</h1>
         <p className="text-sm text-gray-600">
           시청률, 시간대별 분석 등 조직의 시청 데이터를 시각화하여 확인합니다.
         </p>

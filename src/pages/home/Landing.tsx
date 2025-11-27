@@ -65,7 +65,7 @@ export default function Landing() {
     {
       icon: Lock,
       title: '세밀한 권한 관리',
-      description: '조직별, 사용자별로 접근 권한을 세밀하게 제어할 수 있습니다.',
+      description: '조직별, 멤버별로 접근 권한을 세밀하게 제어할 수 있습니다.',
     },
   ]
 

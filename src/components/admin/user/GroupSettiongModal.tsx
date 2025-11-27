@@ -30,7 +30,7 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
   const { orgId } = useAuth();
   const { openModal } = useModal();
   const [saving, setSaving] = useState(false);
-  // 사용자 현재 그룹 → ID 배열로 저장
+  // 멤버 현재 그룹 → ID 배열로 저장
   const [selectedGroups, setSelectedGroups] = useState<number[]>(
     user.groups.map((g) => g.id)
   );
@@ -114,9 +114,9 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
 
           {/* 내용 */}
           <div className="p-6 space-y-4">
-            {/* 사용자 정보 */}
+            {/* 멤버 정보 */}
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">그룹을 변경할 사용자</p>
+              <p className="text-sm text-gray-600 mb-2">그룹을 변경할 멤버</p>
               <p className="font-semibold text-gray-800">{user.name}</p>
               <p className="text-sm text-gray-600">{user.email}</p>
             </div>

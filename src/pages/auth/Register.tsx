@@ -5,21 +5,21 @@ import AgeGroupSelect from '@/components/signup/AgeGroupSelect';
 import TermsAgreement from '@/components/signup/TermsAgreement';
 import RegisterForm from '@/components/signup/RegisterForm';
 import RegisterComplete from '@/components/signup/RegisterComplete';
-
-
+import { useModal } from "@/context/ModalContext";
 import { signup } from "@/api/user/signup";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const phoneRe = /^[0-9]{10,11}$/;
+const nameRe = /^[가-힣]{2,5}$/;
 
 // 비밀번호 정책: 영문, 숫자, 특수문자 중 2종류 이상 조합 + 8자 이상
 const validatePassword = (password: string): boolean => {
   if (password.length < 8) return false;
-  
+
   const hasLetter = /[a-zA-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-  
+
   const typeCount = [hasLetter, hasNumber, hasSpecial].filter(Boolean).length;
   return typeCount >= 2;
 };
@@ -29,18 +29,6 @@ const steps = ['약관동의', '정보입력', '가입완료'];
 export default function Register() {
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
-
-  // 모달 상태 관리
-  const [modal, setModal] = useState<{
-    isOpen: boolean;
-    title?: string;
-    message: string;
-    color?: "blue" | "red" | "green" | "yellow";
-    onConfirm?: () => void;
-  }>({
-    isOpen: false,
-    message: '',
-  });
 
   const [values, setValues] = useState({
     name: '',
@@ -60,33 +48,11 @@ export default function Register() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  // 모달 열기 함수
-  const openModal = (
-    message: string,
-    options?: {
-      title?: string;
-      color?: "blue" | "red" | "green" | "yellow";
-      onConfirm?: () => void;
-    }
-  ) => {
-    setModal({
-      isOpen: true,
-      message,
-      title: options?.title,
-      color: options?.color,
-      onConfirm: options?.onConfirm,
-    });
-  };
-
-  // 모달 닫기 함수
-  const closeModal = () => {
-    setModal({ isOpen: false, message: '' });
-  };
+  const { openModal } = useModal();
 
   const validate = () => {
     const e: Record<string, string> = {};
-    
+
     if (step === 1) {
       // 연령대 필수 선택
       if (!values.ageGroup) {
@@ -104,71 +70,79 @@ export default function Register() {
       if (!values.ageGroup) {
         e.ageGroup = '연령대를 선택해 주세요.';
       }
-      
+
       // 이름 (필수)
       if (!values.name.trim()) {
         e.name = '이름을 입력해 주세요.';
+      } else if (!nameRe.test(values.name)) {
+        e.name = '이름은 한글 2~5글자로 입력해 주세요.';
       }
-      
+
       // 성별 (필수)
       if (!values.gender) {
         e.gender = '성별을 선택해 주세요.';
       }
-      
+
       // 나이대 (필수)
       if (!values.age) {
         e.age = '나이대를 선택해 주세요.';
       }
-      
+
       // 전화번호 (필수)
       if (!values.phone) {
         e.phone = '전화번호를 입력해 주세요.';
       } else if (!phoneRe.test(values.phone)) {
         e.phone = '전화번호는 10~11자리 숫자로 입력해 주세요.';
       }
-      
+
       // 이메일 (필수)
       if (!values.email) {
         e.email = '이메일을 입력해 주세요.';
       } else if (!emailRe.test(values.email)) {
         e.email = '올바른 이메일 형식으로 입력해 주세요.';
       }
-      
+
       // 비밀번호 (필수 + 정책)
       if (!values.password) {
         e.password = '비밀번호를 입력해 주세요.';
       } else if (!validatePassword(values.password)) {
         e.password = '영문, 숫자, 특수문자 중 2종류 이상을 조합하여 8자 이상 입력해 주세요.';
       }
-      
+
       // 비밀번호 확인 (필수)
       if (!values.confirm) {
         e.confirm = '비밀번호 확인을 입력해 주세요.';
       } else if (values.confirm !== values.password) {
         e.confirm = '비밀번호가 일치하지 않아요.';
       }
-      
+
       // 조직코드는 선택사항이므로 검증 제외
     }
-    
+
     return e;
   };
 
   const handleChange = (key: keyof typeof values, value: any) => {
+    // 전화번호 입력 제한: 숫자만 + 최대 11자리
+    if (key === "phone") {
+      value = value.replace(/[^0-9]/g, ""); // 숫자만
+      value = value.slice(0, 11);           // 11자리 제한
+    }
+
     const next = { ...values, [key]: value };
 
     // 전체 동의 로직
     if (key === 'agreeAll') {
       next.agreeTos = next.agreePrivacy = next.agreeMarketing = !!value;
     }
-    
+
     // 개별 약관 체크 시 전체 동의 업데이트
     if (['agreeTos', 'agreePrivacy', 'agreeMarketing'].includes(key)) {
       next.agreeAll = next.agreeTos && next.agreePrivacy && next.agreeMarketing;
     }
 
     setValues(next);
-    
+
     // 입력 중 실시간 에러 제거
     if (touched[key]) {
       const newErrors = validate();
@@ -185,21 +159,21 @@ export default function Register() {
   const nextStep = () => {
     const errs = validate();
     setErrors(errs);
-    
+
     const touchFields: Record<string, boolean> = step === 1
       ? { ageGroup: true, agreeTos: true, agreePrivacy: true }
-      : { 
-          name: true, 
-          gender: true, 
-          age: true, 
-          phone: true, 
-          email: true, 
-          password: true, 
-          confirm: true 
-        };
-    
+      : {
+        name: true,
+        gender: true,
+        age: true,
+        phone: true,
+        email: true,
+        password: true,
+        confirm: true
+      };
+
     setTouched((prev) => ({ ...prev, ...touchFields }));
-    
+
     if (Object.keys(errs).length > 0) {
       // 에러가 있을 경우 첫 번째 에러 필드로 스크롤
       const firstErrorField = Object.keys(errs)[0];
@@ -209,7 +183,7 @@ export default function Register() {
       }
       return;
     }
-    
+
     setStep((s) => s + 1);
   };
 
@@ -230,30 +204,16 @@ export default function Register() {
       return;
     }
 
-    if (!values.ageGroup) {
-      openModal("연령대를 선택해 주세요.", {
-        title: "입력 오류",
-        color: "yellow",
-        onConfirm: () => {
-          closeModal();
-          setStep(1);
-        },
-      });
-      return;
-    }
-
     try {
       let genderValue: "MALE" | "FEMALE";
-      
-      if (values.gender === "남성") {
-        genderValue = "MALE";
-      } else if (values.gender === "여성") {
-        genderValue = "FEMALE";
-      } else {
-        openModal("성별을 올바르게 선택해 주세요.", {
-          title: "입력 오류",
-          color: "yellow",
-          onConfirm: closeModal,
+
+      if (values.gender === "남성") genderValue = "MALE";
+      else if (values.gender === "여성") genderValue = "FEMALE";
+      else {
+        openModal({
+          type: "error",
+          title: "오류 발생",
+          message: "성별을 올바르게 선택해 주세요.",
         });
         return;
       }
@@ -270,20 +230,27 @@ export default function Register() {
 
       const res = await signup(payload);
 
-      if (res.code === 1000 || res.status === 'OK') {
-         setStep(3);
-      } else {
-        openModal(res.message || "회원가입에 실패했습니다.", {
-          title: "가입 실패",
-          color: "red",
-          onConfirm: closeModal,
-        });
+      if (res.code === 200 || res.status === "CONTINUE") {
+        setStep(3);
+        return;
       }
-    } catch (err: any) {
-      openModal(err.message || "회원가입 중 문제가 발생했습니다.", {
+
+      openModal({
+        type: "error",
         title: "오류 발생",
-        color: "red",
-        onConfirm: closeModal,
+        message: res.message,
+      });
+
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "회원가입 중 문제가 발생했습니다.";
+
+      openModal({
+        type: "error",
+        title: "오류 발생",
+        message: errorMsg,
       });
     }
   };

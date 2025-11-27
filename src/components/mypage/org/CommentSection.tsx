@@ -2,15 +2,15 @@ import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Trash2, X, MessageSquare, Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import { getMyComments, deleteComment } from "@/api/myactivity/comment"
-import type { Comment } from "@/types/comment"
+import type { MyComment } from "@/types/comment"
 import { useAuth } from "@/context/AuthContext"
 
 const CommentSection: React.FC = () => {
   const navigate = useNavigate()
-  const [comments, setComments] = useState<Comment[]>([])
+  const [comments, setComments] = useState<MyComment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Comment | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<MyComment | null>(null)
   const [showAll, setShowAll] = useState(false)
   const handleGoToVideo = (videoId: number) => navigate(`/video/${videoId}`)
   const visibleComments = showAll ? comments : comments.slice(0, 4)
@@ -123,7 +123,7 @@ const CommentSection: React.FC = () => {
               {/* 썸네일 */}
               <div
                 className="relative w-32 h-20 flex-shrink-0 bg-gray-100 rounded-lg cursor-pointer overflow-hidden"
-                onClick={() => handleGoToVideo(comment.video_id)}
+                onClick={() => handleGoToVideo(comment.id)}
               >
                 {comment.video_img ? (
                   <img

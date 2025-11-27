@@ -9,6 +9,7 @@ import {
   HiUser
 } from "react-icons/hi";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
+import { useModal } from "@/context/ModalContext";
 
 interface VideoCardProps {
   thumbnail: string;
@@ -37,6 +38,7 @@ const VideoCard = ({
 }: VideoCardProps) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
   const [loading, setLoading] = useState(false);
+  const { openModal } = useModal();
   const navigate = useNavigate();
 
   /** props 변경 시 자동 반영 */
@@ -71,7 +73,11 @@ const VideoCard = ({
       if (error.message?.includes("이미 스크랩")) {
         setIsFavorite(true);
       } else {
-        alert(error.message || "스크랩 처리 중 오류가 발생했습니다.");
+        openModal({
+          type: "error",
+          title: "중복 확인 오류",
+          message: error.message || "스크랩 처리 중 오류가 발생했습니다.",
+        });
       }
     } finally {
       setLoading(false);

@@ -8,6 +8,17 @@ export interface ApiResponse<T> {
   result: T;
 }
 
+/* 내가 작성한 댓글 */ 
+export interface MyComment {
+  id: number;
+  text: string;
+  creator: string;
+  created_at?: string;
+  video_id: number;
+  video_name: string;
+  video_img: string;
+}
+
 /**
  * 댓글 (부모)
  */

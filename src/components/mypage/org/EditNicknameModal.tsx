@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Edit3 } from "lucide-react";
 import { checkNicknameAvailability } from "@/api/organization/orgs";
+import { useModal } from "@/context/ModalContext";
 
 const EditNicknameModal = ({
   currentNickname,
@@ -15,11 +16,16 @@ const EditNicknameModal = ({
 }) => {
   const [nickname, setNickname] = useState(currentNickname);
   const [checking, setChecking] = useState(false);
+  const { openModal } = useModal();
   const [checkResult, setCheckResult] = useState<"idle" | "ok" | "dup">("idle");
 
   const handleCheck = async () => {
     if (!nickname.trim()) {
-      alert("닉네임을 입력하세요.");
+      openModal({
+        type: "error",
+        title: "입력 오류",
+        message: "닉네임을 입력하세요.",
+      });
       return;
     }
 
@@ -28,7 +34,11 @@ const EditNicknameModal = ({
       const available = await checkNicknameAvailability(orgCode, nickname.trim());
       setCheckResult(available ? "ok" : "dup");
     } catch (err: any) {
-      alert(err.message || "중복 확인 실패");
+      openModal({
+        type: "error",
+        title: "중복 확인 오류",
+        message: err.message || "중복 확인 실패",
+      });
     } finally {
       setChecking(false);
     }

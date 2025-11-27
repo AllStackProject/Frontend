@@ -156,8 +156,6 @@ const CurrentOrganizationSettings: React.FC = () => {
     try {
       const ok = await exitOrganization(org.id);
       if (ok) {
-        alert("🚪 조직에서 성공적으로 나갔습니다.");
-
         setShowLeaveModal(false);
 
         if (Number(localStorage.getItem("org_id")) === org.id) {

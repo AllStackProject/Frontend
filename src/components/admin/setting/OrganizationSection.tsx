@@ -121,7 +121,6 @@ const OrganizationSection: React.FC = () => {
       if (res?.is_success) {
         // 서버에서 최종 이미지 URL을 내려준다면 여기서 적용 가능
         // setOrganization(prev => ({ ...prev, image: res.image_url }));
-        alert("이미지 변경이 저장되었습니다.");
         openModal({
           type: "confirm",
           title: "이미지 저장 성공",

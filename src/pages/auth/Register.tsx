@@ -230,16 +230,10 @@ export default function Register() {
 
       const res = await signup(payload);
 
-      if (res.code === 200 || res.status === "CONTINUE") {
+      if (res.code === 1000 || res.status === "OK") {
         setStep(3);
         return;
       }
-
-      openModal({
-        type: "error",
-        title: "오류 발생",
-        message: res.message,
-      });
 
     } catch (err: any) {
       const errorMsg =

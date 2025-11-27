@@ -64,3 +64,20 @@ export const regenerateOrgCode = async (orgId: number) => {
     throw new Error(err.response?.data?.message || "조직 코드 재발급 실패");
   }
 };
+
+/* 조직 삭제(슈퍼어드민만 가능)*/
+export const deleteOrganization = async (orgId: number) => {
+  try {
+    const response = await api.delete(
+      `/admin/org/${orgId}`,
+      {
+        tokenType: "org",
+      } as CustomAxiosRequestConfig
+    );
+
+    return response.data.result;
+  } catch (err: any) {
+    console.error("🚨 조직 삭제 실패:", err);
+    throw new Error(err.response?.data?.message || "조직 삭제 실패");
+  }
+};

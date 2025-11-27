@@ -8,14 +8,16 @@ import {
   Copy,
   Check,
   RefreshCcw,
-  Settings,
+  Settings, Trash2,
   Save,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 import GroupCategoryModal from "@/components/admin/setting/GroupCategoryModal";
-import { patchOrgImage, regenerateOrgCode } from "@/api/adminOrg/info";
+import { patchOrgImage, regenerateOrgCode, deleteOrganization } from "@/api/adminOrg/info";
+import { getOrganizations } from "@/api/organization/orgs";
 import { useAuth } from "@/context/AuthContext";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
+import { useNavigate } from "react-router-dom";
 
 interface GroupCategory {
   id: number;
@@ -35,6 +37,8 @@ interface OrganizationInfo {
 const OrganizationSection: React.FC = () => {
   const { orgId } = useAuth();
   const { openModal } = useModal();
+  const navigate = useNavigate();
+  const { clearOrganization, setAuthenticated } = useAuth();
 
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: orgId || 0,
@@ -47,6 +51,7 @@ const OrganizationSection: React.FC = () => {
 
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [superAdmin, setSuperAdmin] = useState(false); 
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   /* ---------------------------------------------------------
@@ -78,6 +83,24 @@ const OrganizationSection: React.FC = () => {
     if (orgId) {
       loadOrgInfo();
     }
+  }, [orgId]);
+
+  /* ---------------------------------------------------------
+    superAdmin 여부 확인 (조직 설정 페이지에서만 확인)
+  --------------------------------------------------------- */
+  useEffect(() => {
+    const checkSuperAdmin = async () => {
+      try {
+        const orgs = await getOrganizations();
+        const org = orgs.find((o) => o.id === orgId);
+
+        setSuperAdmin(org?.is_super_admin === true);
+      } catch (err) {
+        console.error("❌ 슈퍼어드민 권한 확인 실패:", err);
+      }
+    };
+
+    if (orgId) checkSuperAdmin();
   }, [orgId]);
 
   /* ---------------------------------------------------------
@@ -208,7 +231,43 @@ const OrganizationSection: React.FC = () => {
       onConfirm: regenerateCodeApi,   // API만 실행
     });
   };
+  /* ---------------------------------------------------------
+    조직 삭제 API
+  --------------------------------------------------------- */
+  const handleDeleteOrganization = () => {
+    openModal({
+      type: "confirm",
+      title: "조직 삭제",
+      message: "정말로 이 조직을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.",
+      confirmText: "삭제",
+      onConfirm: async () => {
+        try {
+          const res = await deleteOrganization(orgId!);
 
+          if (res?.is_success) {
+            openModal({
+              type: "success",
+              title: "삭제 완료",
+              message: "조직이 성공적으로 삭제되었습니다.",
+              autoClose: true,
+            });
+            
+            clearOrganization();
+            
+            setTimeout(() => {
+              navigate("/login/select", { replace: true });
+            }, 800);
+          }
+        } catch (err: any) {
+          openModal({
+            type: "error",
+            title: "삭제 실패",
+            message: err.message || "조직 삭제 중 오류가 발생했습니다.",
+          });
+        }
+      }
+    });
+  };
 
   /* ---------------------------------------------------------
        모달 닫기 → 그룹 목록 최신화
@@ -261,6 +320,7 @@ const OrganizationSection: React.FC = () => {
               <Building2 size={22} className="text-blue-600" />
               {organization.name}
             </h2>
+            
 
             {/* 멤버 */}
             <div className="flex items-center gap-2 text-gray-700">
@@ -310,6 +370,19 @@ const OrganizationSection: React.FC = () => {
                 </div>
               </div>
             </div>
+              {/* 슈퍼어드민만 삭제 버튼 표시 */}
+              {superAdmin && (
+                <div className="w-full flex justify-end mt-3">
+                  <button
+                    onClick={handleDeleteOrganization}
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-400 hover:bg-red-700 text-white text-xs rounded-md shadow-sm"
+                  >
+                    <Trash2 size={12} />
+                    조직 삭제
+                  </button>
+                </div>
+              )}
+            
           </div>
         </div>
       </div>

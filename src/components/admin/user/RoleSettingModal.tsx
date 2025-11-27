@@ -72,9 +72,9 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
 
       await updateMemberPermission(orgId, user.id, {
         video_manage: permissions.manageVideosAndQuiz,
-        stats_report: permissions.manageViewingAndStats,
-        notice: permissions.manageNotice,
-        org_setting: permissions.manageOrganization,
+        stats_report_manage: permissions.manageViewingAndStats,
+        notice_manage: permissions.manageNotice,
+        org_setting_manage: permissions.manageOrganization,
       });
 
       onSubmit(role);
@@ -142,12 +142,12 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                   </label>
                   <div className="space-y-2">
                     {[
-                      "동영상 & AI 퀴즈 관리",
+                      "동영상 관리",
                       "시청 관리 & 통계 및 리포트",
                       "공지 등록",
                       "조직 설정",
                       "사용자 관리",
-                      "요금제 & 배너",
+                      "요금제 관리",
                     ].map((permission) => (
                       <div
                         key={permission}
@@ -246,8 +246,8 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                         },
                         {
                           key: "viewPricing",
-                          label: "요금제 & 배너",
-                          description: "조직의 요금제와 배너 관리",
+                          label: "요금제 관리",
+                          description: "조직의 요금제 관리",
                           adminOnly: true
                         },
                       ].map((item) => {

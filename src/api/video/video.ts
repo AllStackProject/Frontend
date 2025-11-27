@@ -1,6 +1,7 @@
 import api from "@/api/axiosInstance";
 import type { CustomAxiosRequestConfig } from "@/api/axiosInstance";
 import type { StartVideoSessionResponse } from "@/types/video";
+import type { VideoMetaData } from "@/types/video";
 import axios from "axios";
 
 /**
@@ -168,5 +169,38 @@ export const checkUploadStatus = async (
   } catch (err: any) {
     console.error("❌ 업로드 상태 확인 실패:", err);
     return "IN_PROGRESS"; // 일시적 실패는 계속 폴링
+  }
+};
+
+/* 영상 메타데이터 조회 */
+export const getVideoData = async (
+  orgId: number,
+  videoId: number
+): Promise<VideoMetaData | null> => {
+  try {
+    const response = await api.get(
+      `/${orgId}/video/${videoId}`,
+      { tokenType: "org" } as CustomAxiosRequestConfig
+    );
+
+    const data = response.data?.result;
+    if (!data) return null;
+
+    // thumbnail_url 정규화
+    const normalizedThumbnail =
+      data.thumbnail_url?.startsWith("http")
+        ? data.thumbnail_url
+        : `https://${data.thumbnail_url}`;
+
+    const mapped: VideoMetaData = {
+      ...data,
+      thumbnail_url: normalizedThumbnail,
+    };
+
+    return mapped;
+
+  } catch (err) {
+    console.error("❌ 영상 메타데이터 확인 실패:", err);
+    return null;
   }
 };

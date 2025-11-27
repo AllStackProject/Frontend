@@ -50,7 +50,7 @@ export const updateVideo = async (
   payload: {
     description: string;
     is_comment: boolean;
-    expired_at: string | null;
+    expired_at: string;
     member_groups: number[];
     categories: number[];
   }

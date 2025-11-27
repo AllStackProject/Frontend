@@ -1,62 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   X,
-  Image,
   Calendar,
   FileVideo,
+  Image,
   Users,
-  Brain,
-  FileText,
-  MessageCircle,
   Lock,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
-import { useAuth } from "@/context/AuthContext";
-import { fetchOrgMyActivityGroup } from "@/api/myactivity/info";
 import { updateVideo } from "@/api/myactivity/video";
+import { useAuth } from "@/context/AuthContext";
+import type { VideoMetaData } from "@/types/video";
+
+/* ============================
+    타입 정의
+============================ */
 
 interface Category {
   id: number;
   title: string;
+  is_selected: boolean;
 }
 
 interface Group {
   id: number;
   name: string;
+  is_selected: boolean;
   categories: Category[];
 }
 
 interface EditVideoModalProps {
-  video: any;
+  video: VideoMetaData & { id: number }; // id 명시적으로 추가
   onClose: () => void;
   onSubmit: (data: any) => void;
 }
 
-interface FormState {
-  title: string;
-  description: string;
-  thumbnailPreview: string;
-  visibility: "organization" | "group" | "private";
-  selectedGroupIds: number[];
-  selectedCategoryIds: number[];
-  allowComments: boolean;
-  aiType: "NONE" | "QUIZ" | "SUMMARY" | "FEEDBACK";
-  expiration: "7" | "30" | "none";
-  customDate: string;
-  videoInfo: {
-    name: string;
-    size: string;
-    type: string;
-    durationText: string;
-  } | null;
-}
-
-const isForeverDate = (dateStr?: string | null) => {
-  if (!dateStr) return true;
-  const year = Number(dateStr.split("-")[0]);
-  return year >= 9999;
-};
-
+/* ============================
+    Modal Component
+============================ */
 const EditVideoModal: React.FC<EditVideoModalProps> = ({
   video,
   onClose,
@@ -65,211 +46,197 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
   const { openModal } = useModal();
   const { orgId } = useAuth();
 
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  /* ============================================================
+      초기 상태 설정
+  ============================================================ */
+  const [description, setDescription] = useState(video.description);
+  const [allowComments, setAllowComments] = useState(video.is_comment);
+  const [visibility, setVisibility] = useState<"organization" | "group" | "private">(
+    video.open_scope === "PUBLIC" 
+      ? "organization" 
+      : video.open_scope === "GROUP"
+      ? "group"
+      : "private"
+  );
 
-  // 초기값 설정
-  const initialTitle = video.title ?? video.name ?? "";
-  const initialDescription = video.description ?? "";
-  const initialThumbnail = video.thumbnail_url ?? "";
-  const initialAllowComments = typeof video.is_comment === "boolean" ? video.is_comment : true;
-  const initialAiType = video.ai_function ?? "NONE";
-  
-  let initialExpiration: "7" | "30" | "none" = "none";
-  let initialCustomDate = "";
-  
-  if (video.expired_at && !isForeverDate(video.expired_at)) {
-    initialCustomDate = video.expired_at.slice(0, 10);
-  }
+  // 선택된 그룹
+  const [selectedGroups, setSelectedGroups] = useState<number[]>(
+    video.member_groups
+      .filter((g) => g.is_selected)
+      .map((g) => g.id)
+  );
 
-  // 공개 범위 결정
-  const initialVisibility = (() => {
-    if (video.member_groups && video.member_groups.length > 0) return "group";
-    if (video.is_private) return "private";
-    return "organization";
-  })();
-
-  const [form, setForm] = useState<FormState>({
-    title: initialTitle,
-    description: initialDescription,
-    thumbnailPreview: initialThumbnail,
-    visibility: initialVisibility,
-    selectedGroupIds: (video.member_groups as number[]) ?? [],
-    selectedCategoryIds: (video.categories as number[]) ?? [],
-    allowComments: initialAllowComments,
-    aiType: initialAiType,
-    expiration: initialCustomDate ? "none" : "none",
-    customDate: initialCustomDate,
-    videoInfo: video.whole_time ? {
-      name: video.file_name ?? "동영상 파일",
-      size: video.file_size ?? "알 수 없음",
-      type: "video/mp4",
-      durationText: formatDuration(video.whole_time),
-    } : null,
+  // 선택된 카테고리
+  const [selectedCategories, setSelectedCategories] = useState<number[]>(() => {
+    const selected: number[] = [];
+    video.member_groups.forEach((g) => {
+      g.categories.forEach((c) => {
+        if (c.is_selected) selected.push(c.id);
+      });
+    });
+    return selected;
   });
 
-  // Duration 포맷
-  function formatDuration(seconds: number) {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  }
+  // 만료일 처리
+  const isForever = !video.expired_at || Number(video.expired_at.slice(0, 4)) >= 2100;
+  
+  const [customDate, setCustomDate] = useState(
+    isForever ? "" : video.expired_at?.slice(0, 10) || ""
+  );
+  
+  const [expiration, setExpiration] = useState<"7" | "30" | "none">(
+    isForever ? "none" : "none"  // 기본값은 "none", 사용자가 preset 선택하면 변경됨
+  );
 
-  // 그룹 로드
-  useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        if (!orgId) return;
-        const result = await fetchOrgMyActivityGroup(orgId);
-        setGroups(result.member_groups || []);
-      } catch (err) {
-        console.error("❌ 그룹 조회 실패:", err);
-      }
-    };
-    loadGroups();
-  }, [orgId]);
+  console.log("📅 초기 만료일 설정:", {
+    expired_at: video.expired_at,
+    isForever,
+    customDate,
+    expiration,
+  });
 
-  // 선택된 그룹에 따라 카테고리 업데이트
-  useEffect(() => {
-    const relatedCategories = groups
-      .filter((g) => form.selectedGroupIds.includes(g.id))
-      .flatMap((g) => g.categories || []);
+  // 선택 가능한 카테고리 계산
+  const availableCategories = video.member_groups
+    .filter((g) => selectedGroups.includes(g.id))
+    .flatMap((g) => g.categories);
 
-    const categoryMap = new Map<number, Category>();
-    relatedCategories.forEach((c) => {
-      if (!categoryMap.has(c.id)) categoryMap.set(c.id, c);
-    });
-    setAvailableCategories(Array.from(categoryMap.values()));
-  }, [form.selectedGroupIds, groups]);
-
-  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+  /* ============================================================
+      그룹 선택
+  ============================================================ */
+  const toggleGroup = (groupId: number) => {
+    setSelectedGroups((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId]
+    );
   };
 
-  // 공개 범위 변경
-  const handleVisibilityChange = (value: "organization" | "group" | "private") => {
-    setField("visibility", value);
-    if (value !== "group") {
-      setForm((prev) => ({
-        ...prev,
-        selectedGroupIds: [],
-        selectedCategoryIds: [],
-      }));
-      setAvailableCategories([]);
-    }
+  const removeGroup = (groupId: number) => {
+    setSelectedGroups((prev) => prev.filter((id) => id !== groupId));
   };
 
-  // 그룹 선택
-  const handleGroupToggle = (groupId: number) => {
-    setForm((prev) => {
-      const exists = prev.selectedGroupIds.includes(groupId);
-      const nextGroups = exists
-        ? prev.selectedGroupIds.filter((id) => id !== groupId)
-        : [...prev.selectedGroupIds, groupId];
-
-      return {
-        ...prev,
-        selectedGroupIds: nextGroups,
-      };
-    });
+  const toggleCategory = (catId: number) => {
+    setSelectedCategories((prev) =>
+      prev.includes(catId)
+        ? prev.filter((id) => id !== catId)
+        : [...prev, catId]
+    );
   };
 
-  // 그룹 제거
-  const removeSelectedGroup = (groupId: number) => {
-    handleGroupToggle(groupId);
+  const removeCategory = (catId: number) => {
+    setSelectedCategories((prev) => prev.filter((id) => id !== catId));
   };
 
-  // 카테고리 선택
-  const toggleCategory = (id: number) => {
-    setForm((prev) => ({
-      ...prev,
-      selectedCategoryIds: prev.selectedCategoryIds.includes(id)
-        ? prev.selectedCategoryIds.filter((c) => c !== id)
-        : [...prev.selectedCategoryIds, id],
-    }));
-  };
-
-  // 카테고리 제거
-  const removeCategory = (id: number) => {
-    setForm((prev) => ({
-      ...prev,
-      selectedCategoryIds: prev.selectedCategoryIds.filter((c) => c !== id),
-    }));
-  };
-
-  // 만료 기간 선택
+  /* ============================================================
+      만료일 preset 선택
+  ============================================================ */
   const handleExpirationSelect = (value: "7" | "30" | "none") => {
-    setField("expiration", value);
+    setExpiration(value);
 
     if (value === "7" || value === "30") {
       const date = new Date();
       date.setDate(date.getDate() + Number(value));
-      setField("customDate", date.toISOString().split("T")[0]);
+      setCustomDate(date.toISOString().split("T")[0]);
     } else {
-      setField("customDate", "");
+      // 만료 없음 선택 시 customDate 초기화
+      setCustomDate("");
     }
   };
 
-  // 댓글 허용 토글
-  const handleCommentToggle = () => {
-    if (form.allowComments) {
-      openModal({
-        type: "confirm",
-        title: "댓글 기능 비활성화",
-        message: "댓글 기능을 비활성화하시겠습니까?\n비활성화 시 기존 댓글이 모두 삭제될 수 있습니다.",
-        confirmText: "확인",
-        onConfirm: () => setField("allowComments", false),
-      });
-    } else {
-      setField("allowComments", true);
+  /* ============================================================
+      공개 범위 변경
+  ============================================================ */
+  const handleVisibilityChange = (value: "organization" | "group" | "private") => {
+    setVisibility(value);
+    if (value !== "group") {
+      setSelectedGroups([]);
+      setSelectedCategories([]);
     }
   };
 
-  // 저장
+  /* ============================================================
+      저장하기 (API 호출)
+  ============================================================ */
   const handleSave = async () => {
     if (!orgId) {
-      openModal({
+      console.error("❌ orgId가 없습니다");
+      return openModal({
         type: "error",
         title: "오류",
         message: "조직 정보를 찾을 수 없습니다.",
       });
-      return;
     }
 
-    if (!form.description.trim()) {
-      openModal({
+    // videoId 확인
+    const videoId = video.id || (video as any).video_id;
+    if (!videoId) {
+      console.error("❌ videoId를 찾을 수 없습니다:", video);
+      return openModal({
+        type: "error",
+        title: "오류",
+        message: "영상 ID를 찾을 수 없습니다.",
+      });
+    }
+
+    if (!description.trim()) {
+      return openModal({
         type: "error",
         title: "입력 오류",
         message: "영상 설명을 입력해주세요.",
       });
-      return;
     }
 
-    const expired_at = form.expiration === "none" ? form.customDate || null : form.customDate;
+    // 만료일 처리
+    // - 만료 없음: 먼 미래 날짜 (2125-12-31)
+    // - 7일/30일: 선택된 날짜
+    const expired_at: string =
+      expiration === "none" 
+        ? "2125-12-31"  // 만료 없음 = 먼 미래 날짜
+        : (customDate && customDate.trim() !== "" ? customDate : "2125-12-31");
 
+    // API 전송 payload
     const payload = {
-      description: form.description,
-      is_comment: form.allowComments,
-      expired_at,
-      member_groups: form.visibility === "group" ? form.selectedGroupIds : [],
-      categories: form.visibility === "group" ? form.selectedCategoryIds : [],
+      description: description.trim(),
+      is_comment: allowComments,
+      expired_at,  // 항상 string (null 아님)
+      member_groups: visibility === "group" ? selectedGroups : [],
+      categories: visibility === "group" ? selectedCategories : [],
     };
+
+    console.log("📤 수정 API 전송 데이터:", {
+      videoId,
+      orgId,
+      payload,
+      rawData: {
+        description,
+        allowComments,
+        visibility,
+        expiration,
+        customDate,
+        selectedGroups,
+        selectedCategories,
+      }
+    });
 
     openModal({
       type: "confirm",
-      title: "수정 확인",
-      message: "정말 이 영상 정보를 수정하시겠습니까?",
+      title: "영상 수정",
+      message: "정말로 이 영상 정보를 수정하시겠습니까?",
       confirmText: "수정",
       onConfirm: async () => {
         try {
-          // API 호출
-          const success = await updateVideo(orgId, video.id, payload);
+          console.log("🚀 updateVideo API 호출 시작...");
+          console.log(`   - URL: /${orgId}/video/${videoId}`);
+          console.log(`   - Payload:`, payload);
+          
+          const ok = await updateVideo(orgId, videoId, payload);
 
-          if (!success) {
-            throw new Error("영상 수정에 실패했습니다.");
+          console.log("✅ API 응답:", ok);
+
+          if (!ok) {
+            throw new Error("수정 실패: API가 false를 반환했습니다");
           }
 
-          // 성공 모달
           openModal({
             type: "success",
             title: "수정 완료",
@@ -278,12 +245,14 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
             autoCloseDelay: 1500,
           });
 
-          // 부모 컴포넌트에 업데이트 전달
-          onSubmit({
-            id: video.id,
+          // 부모 컴포넌트에 업데이트된 데이터 전달
+          onSubmit({ 
+            id: videoId, 
             ...payload,
+            // 추가 정보도 함께 전달
+            visibility,
           });
-
+          
           onClose();
         } catch (err: any) {
           console.error("❌ 영상 수정 실패:", err);
@@ -298,20 +267,19 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
     });
   };
 
-  const aiOptions: { key: "NONE" | "QUIZ" | "SUMMARY" | "FEEDBACK"; label: string; icon: React.ReactNode }[] = [
-    { key: "NONE", label: "사용 안 함", icon: <X size={16} /> },
-    { key: "QUIZ", label: "퀴즈", icon: <Brain size={16} /> },
-    { key: "SUMMARY", label: "요약", icon: <FileText size={16} /> },
-    { key: "FEEDBACK", label: "피드백", icon: <MessageCircle size={16} /> },
-  ];
-
+  /* ============================================================
+      UI
+  ============================================================ */
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* HEADER */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">동영상 수정</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition"
+          >
             <X size={22} />
           </button>
         </div>
@@ -320,7 +288,9 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
         <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
           <p className="text-sm text-amber-800 flex items-center gap-2">
             <Lock size={16} />
-            <span>제목, 동영상 파일, 썸네일, AI 기능은 수정할 수 없습니다.</span>
+            <span>
+              제목, 동영상 파일, 썸네일, AI 기능은 수정할 수 없습니다.
+            </span>
           </p>
         </div>
 
@@ -339,19 +309,6 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                   <FileVideo size={24} className="text-gray-300 mb-2" />
                   <span className="text-xs text-gray-400">수정 불가</span>
                 </div>
-
-                {/* 비디오 정보 */}
-                {form.videoInfo && (
-                  <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <FileVideo size={16} className="text-gray-500" />
-                      <span className="font-semibold">{form.videoInfo.name}</span>
-                    </div>
-                    <p className="pl-6">형식: <span className="font-medium">{form.videoInfo.type}</span></p>
-                    <p className="pl-6">파일 크기: <span className="font-medium">{form.videoInfo.size}</span></p>
-                    <p className="pl-6">영상 길이: <span className="font-medium">{form.videoInfo.durationText}</span></p>
-                  </div>
-                )}
               </div>
 
               {/* THUMBNAIL - 수정 불가 */}
@@ -361,9 +318,13 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                   <Lock size={14} className="text-gray-400" />
                 </label>
                 <div className="w-full aspect-video border-2 border-gray-200 rounded-xl flex items-center justify-center bg-gray-50 cursor-not-allowed overflow-hidden">
-                  {form.thumbnailPreview ? (
+                  {video.thumbnail_url ? (
                     <div className="relative w-full h-full">
-                      <img src={form.thumbnailPreview} alt="썸네일" className="w-full h-full object-cover opacity-60" />
+                      <img
+                        src={video.thumbnail_url}
+                        alt="썸네일"
+                        className="w-full h-full object-cover opacity-60"
+                      />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/10">
                         <Lock size={24} className="text-gray-400" />
                       </div>
@@ -388,7 +349,7 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={form.title}
+                  value={video.title}
                   readOnly
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                 />
@@ -396,31 +357,36 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
 
               {/* DESCRIPTION - 수정 가능 */}
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">설명 *</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">
+                  설명 *
+                </label>
                 <textarea
                   rows={3}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  value={form.description}
-                  onChange={(e) => setField("description", e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="영상에 대한 설명을 입력하세요"
                 />
               </div>
 
               {/* VISIBILITY */}
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">공개 범위</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  공개 범위
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: "조직 전체공개", value: "organization" },
                     { label: "특정 그룹만 공개", value: "group" },
-                    { label: "비공개", value: "private" },
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => handleVisibilityChange(opt.value as any)}
+                      onClick={() =>
+                        handleVisibilityChange(opt.value as any)
+                      }
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-                        form.visibility === opt.value
+                        visibility === opt.value
                           ? "bg-blue-500 text-white border-blue-500"
                           : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -432,20 +398,24 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
               </div>
 
               {/* GROUP SELECTION */}
-              {form.visibility === "group" && (
+              {visibility === "group" && (
                 <div className="space-y-2">
-                  <label className="block mb-2 text-sm font-medium text-gray-700">그룹 선택 *</label>
-                  {groups.length === 0 ? (
-                    <div className="text-xs text-blue-500 rounded-lg">속한 그룹이 없습니다</div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    그룹 선택 *
+                  </label>
+                  {video.member_groups.length === 0 ? (
+                    <div className="text-xs text-blue-500 rounded-lg">
+                      속한 그룹이 없습니다
+                    </div>
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      {groups.map((g) => {
-                        const active = form.selectedGroupIds.includes(g.id);
+                      {video.member_groups.map((g) => {
+                        const active = selectedGroups.includes(g.id);
                         return (
                           <button
                             key={g.id}
                             type="button"
-                            onClick={() => handleGroupToggle(g.id)}
+                            onClick={() => toggleGroup(g.id)}
                             className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-1 transition ${
                               active
                                 ? "bg-blue-500 text-white border-blue-500"
@@ -461,10 +431,12 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                   )}
 
                   {/* 선택된 그룹 태그 */}
-                  {form.selectedGroupIds.length > 0 && (
+                  {selectedGroups.length > 0 && (
                     <div className="flex flex-wrap gap-2 text-xs">
-                      {form.selectedGroupIds.map((gid) => {
-                        const group = groups.find((g) => g.id === gid);
+                      {selectedGroups.map((gid) => {
+                        const group = video.member_groups.find(
+                          (g) => g.id === gid
+                        );
                         if (!group) return null;
                         return (
                           <span
@@ -472,7 +444,11 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
                           >
                             {group.name}
-                            <button type="button" onClick={() => removeSelectedGroup(gid)} className="hover:text-blue-900">
+                            <button
+                              type="button"
+                              onClick={() => removeGroup(gid)}
+                              className="hover:text-blue-900"
+                            >
                               <X size={12} />
                             </button>
                           </span>
@@ -484,12 +460,14 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
               )}
 
               {/* CATEGORY SELECTION */}
-              {form.visibility === "group" && availableCategories.length > 0 && (
+              {visibility === "group" && availableCategories.length > 0 && (
                 <div className="space-y-2">
-                  <label className="block mb-2 text-sm font-medium text-gray-700">카테고리 선택</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    카테고리 선택
+                  </label>
                   <div className="flex flex-wrap gap-2">
                     {availableCategories.map((c) => {
-                      const active = form.selectedCategoryIds.includes(c.id);
+                      const active = selectedCategories.includes(c.id);
                       return (
                         <button
                           key={c.id}
@@ -508,10 +486,12 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                   </div>
 
                   {/* 선택된 카테고리 태그 */}
-                  {form.selectedCategoryIds.length > 0 && (
+                  {selectedCategories.length > 0 && (
                     <div className="flex flex-wrap gap-2 text-xs">
-                      {form.selectedCategoryIds.map((cid) => {
-                        const cat = availableCategories.find((c) => c.id === cid);
+                      {selectedCategories.map((cid) => {
+                        const cat = availableCategories.find(
+                          (c) => c.id === cid
+                        );
                         if (!cat) return null;
                         return (
                           <span
@@ -519,7 +499,11 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"
                           >
                             {cat.title}
-                            <button type="button" onClick={() => removeCategory(cid)} className="hover:text-indigo-900">
+                            <button
+                              type="button"
+                              onClick={() => removeCategory(cid)}
+                              className="hover:text-indigo-900"
+                            >
                               <X size={12} />
                             </button>
                           </span>
@@ -532,17 +516,19 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
 
               {/* 댓글 허용 */}
               <div className="flex items-center gap-10 pt-2">
-                <span className="text-sm font-medium text-gray-700">댓글 기능</span>
+                <span className="text-sm font-medium text-gray-700">
+                  댓글 기능
+                </span>
                 <button
                   type="button"
-                  onClick={handleCommentToggle}
+                  onClick={() => setAllowComments(!allowComments)}
                   className={`w-11 h-6 rounded-full transition-all relative ${
-                    form.allowComments ? "bg-blue-500" : "bg-gray-300"
+                    allowComments ? "bg-blue-500" : "bg-gray-300"
                   }`}
                 >
                   <span
                     className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                      form.allowComments ? "translate-x-5" : ""
+                      allowComments ? "translate-x-5" : ""
                     }`}
                   />
                 </button>
@@ -554,31 +540,23 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                   AI 기능
                   <Lock size={14} className="text-gray-400" />
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {aiOptions.map((opt) => {
-                    const active = form.aiType === opt.key;
-                    return (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        disabled
-                        className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-2 cursor-not-allowed ${
-                          active
-                            ? "bg-gray-200 text-gray-600 border-gray-300"
-                            : "bg-gray-50 text-gray-400 border-gray-200"
-                        }`}
-                      >
-                        {opt.icon}
-                        <span>{opt.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
 
               {/* EXPIRATION */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">영상 만료 기간</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  영상 만료 기간
+                </label>
+
+                {/* 현재 설정된 만료일 표시 */}
+                {!isForever && customDate && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                    <span className="text-blue-800">
+                      현재 만료일: <strong>{new Date(customDate).toLocaleDateString("ko-KR")}</strong>
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-2 mb-2">
                   {[
                     { label: "7일 뒤", value: "7" },
@@ -588,9 +566,11 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => handleExpirationSelect(opt.value as any)}
+                      onClick={() =>
+                        handleExpirationSelect(opt.value as any)
+                      }
                       className={`px-3 py-1.5 rounded-full border text-xs font-medium transition ${
-                        form.expiration === opt.value
+                        expiration === opt.value
                           ? "bg-emerald-500 text-white border-emerald-500"
                           : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -601,15 +581,19 @@ const EditVideoModal: React.FC<EditVideoModalProps> = ({
                 </div>
 
                 {/* Date Picker */}
-                <div className="flex items-center gap-2 mt-1">
-                  <Calendar size={16} className="text-gray-400" />
-                  <input
-                    type="date"
-                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    value={form.customDate}
-                    onChange={(e) => setField("customDate", e.target.value)}
-                  />
-                </div>
+                {/* 1. expiration이 7일/30일이면 표시 */}
+                {/* 2. 기존 날짜가 있으면 표시 (expiration=none이어도) */}
+                {(expiration !== "none" || (!isForever && customDate)) && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Calendar size={16} className="text-gray-400" />
+                    <input
+                      type="date"
+                      className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

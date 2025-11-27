@@ -416,7 +416,6 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                   {[
                     { label: "조직 전체공개", value: "organization" },
                     { label: "특정 그룹만 공개", value: "group" },
-                    { label: "비공개", value: "private" },
                   ].map((opt) => (
                     <button
                       key={opt.value}

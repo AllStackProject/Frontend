@@ -230,7 +230,12 @@ export default function Register() {
 
       const res = await signup(payload);
 
-      if (res.code === 1000 || res.status === "OK") {
+      if (
+        res.code === 1000 ||
+        res.status === "OK" ||
+        res.message == "요청에 성공하였습니다." ||
+        res.result === true
+      ) {
         setStep(3);
         return;
       }

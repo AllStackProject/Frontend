@@ -7,6 +7,7 @@ import { useSelectOrganization } from "@/api/organization/orgs";
 import { useModal } from "@/context/ModalContext";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
+import { useLogout } from "@/api/user/useLogout";
 
 interface Organization {
   id: number;
@@ -26,6 +27,8 @@ export default function LoginSelect() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { selectOrganization } = useSelectOrganization();
+
+  const { openLogoutModal } = useLogout(navigate);
 
   // 모달 상태
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -172,6 +175,10 @@ export default function LoginSelect() {
               {userName}님 반갑습니다! 👋
             </h1>
             <p className="text-lg text-gray-600">어느 조직으로 접속할까요?</p>
+            <div className="px-4 py-2 text-xs text-gray-500 hover:text-red-600 cursor-pointer transition-colors"
+              onClick={openLogoutModal}>
+              로그아웃
+            </div>
           </div>
 
           {/* 조직 선택 */}

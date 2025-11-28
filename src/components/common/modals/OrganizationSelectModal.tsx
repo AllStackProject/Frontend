@@ -12,6 +12,12 @@ interface OrganizationSelectModalProps {
   onClose: () => void;
   onSelect: (org: string) => void;
 }
+type OrgItem = {
+  id: number;
+  name: string;
+  img_url?: string;
+  join_status: "APPROVED" | "PENDING" | "REJECTED";
+};
 
 const OrganizationSelectModal = ({
   isOpen,
@@ -45,6 +51,7 @@ const OrganizationSelectModal = ({
             join_status: org.join_status,
           }))
         );
+        setOrganizations(sortOrganizations(data));
       } catch (err: any) {
         setError(err.message || "조직 목록을 불러오지 못했습니다.");
       } finally {
@@ -118,6 +125,16 @@ const OrganizationSelectModal = ({
 
   if (!isOpen) return null;
 
+  const sortOrganizations = (orgs: OrgItem[]) => {
+    const order: Record<OrgItem["join_status"], number> = {
+      APPROVED: 0,
+      PENDING: 1,
+      REJECTED: 2,
+    };
+
+    return [...orgs].sort((a, b) => order[a.join_status] - order[b.join_status]);
+  };
+
   return (
     <>
       {/* 모달 시작 */}
@@ -155,21 +172,25 @@ const OrganizationSelectModal = ({
               {organizations.map((org) => (
                 <div
                   key={org.id}
-                  onClick={() => handleSelectOrg(org.id, org.name, org.join_status)}
-                  className={`flex flex-col items-center gap-2 cursor-pointer rounded-xl py-4 px-3 transition-all duration-200 hover:shadow-md hover:scale-105 w-full ${org.join_status === "PENDING"
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-50 hover:bg-blue-50"
-                    }`}
+                  onClick={() => {
+                    if (org.join_status === "PENDING" || org.join_status === "REJECTED") return;
+                    handleSelectOrg(org.id, org.name, org.join_status);
+                  }}
+                  className={`flex flex-col items-center gap-2 rounded-xl py-4 px-3 w-full
+                    transition-all duration-200 
+                    ${org.join_status === "PENDING" || org.join_status === "REJECTED"
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed opacity-70 grayscale"
+                      : "bg-gray-50 hover:bg-blue-50 cursor-pointer hover:shadow-md hover:scale-105"
+                    }
+                  `}
                 >
                   <img
-                    src={org.img_url || "/dummy/woori-logo.png"}
+                    src={org.img_url}
                     alt={org.name}
                     className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover shadow-sm"
                   />
                   <div className="text-center">
-                    <p className="text-gray-800 font-medium text-xs sm:text-sm">
-                      {org.name}
-                    </p>
+                    <p className="text-gray-800 font-medium text-xs sm:text-sm">{org.name}</p>
                     {renderStatusBadge(org.join_status)}
                   </div>
                 </div>

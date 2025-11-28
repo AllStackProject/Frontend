@@ -13,7 +13,7 @@ interface Organization {
   name: string;
   image?: string;
   memberCount?: number;
-  joinStatus: "ACTIVE" | "PENDING";
+  joinStatus: "APPROVED" | "PENDING" | "REJECTED";
   isAdmin: boolean;
 }
 
@@ -30,6 +30,11 @@ export default function LoginSelect() {
   // 모달 상태
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const sortOrganizations = (orgs: Organization[]) => {
+    const order = { APPROVED: 0, PENDING: 1, REJECTED: 2 };
+    return [...orgs].sort((a, b) => order[a.joinStatus] - order[b.joinStatus]);
+  };
 
   // 유저 정보 & 조직 목록 불러오기
   useEffect(() => {
@@ -48,7 +53,8 @@ export default function LoginSelect() {
           joinStatus: org.join_status,
           isAdmin: org.is_admin,
         }));
-        setOrganizations(formatted);
+
+        setOrganizations(sortOrganizations(formatted));
       } catch (err: any) {
         console.error("❌ [LoginSelect] 데이터 로드 실패:", err);
         setError(err.message || "데이터를 불러오지 못했습니다.");
@@ -72,7 +78,7 @@ export default function LoginSelect() {
         joinStatus: org.join_status,
         isAdmin: org.is_admin,
       }));
-      setOrganizations(formatted);
+      setOrganizations(sortOrganizations(formatted));
     } catch (err) {
       console.error("조직 목록 새로고침 실패:", err);
     }
@@ -177,8 +183,12 @@ export default function LoginSelect() {
                 <button
                   key={org.id}
                   onClick={() => handleSelectOrg(org.id, org.name)}
-                  disabled={org.joinStatus === "PENDING"}
-                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${org.joinStatus === "PENDING" ? "opacity-60 cursor-not-allowed" : ""
+                  disabled={org.joinStatus === "PENDING" || org.joinStatus === "REJECTED"}
+                  className={`group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 
+                    ${
+                      org.joinStatus === "PENDING" || org.joinStatus === "REJECTED"
+                        ? "opacity-50 cursor-not-allowed hover:-translate-y-0 hover:shadow-lg"
+                        : "hover:-translate-y-2 hover:shadow-2xl"
                     }`}
                 >
                   {/* 상단 그라데이션 */}
@@ -212,15 +222,14 @@ export default function LoginSelect() {
 
                     {org.joinStatus === "PENDING" ? (
                       <p className="text-xs text-yellow-600 text-center mt-1">승인 대기 중</p>
+                    ) : org.joinStatus === "REJECTED" ? (
+                      <p className="text-xs text-red-600 text-center mt-1">가입 거절됨, 재가입 불가</p>
                     ) : (
                       <div
                         className={`flex items-center justify-center gap-2 text-xs font-semibold ${style.text} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
                       >
                         <span>입장하기</span>
-                        <ChevronRight
-                          size={14}
-                          className="group-hover:translate-x-1 transition-transform"
-                        />
+                        <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                       </div>
                     )}
                   </div>

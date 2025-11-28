@@ -245,8 +245,6 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
         type: "success",
         title: "저장 완료",
         message: "그룹 및 카테고리가 성공적으로 저장되었습니다.",
-        autoClose: true,
-        autoCloseDelay: 1500,
       });
 
       // 저장 성공 시에만 onSubmit 호출
@@ -299,7 +297,6 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
                   placeholder="새 그룹명을 입력하세요"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddGroup()}
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
@@ -475,7 +472,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
           placeholder="카테고리 이름 입력"
           value={newCategoryTitle}
           onChange={(e) => setNewCategoryTitle(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           className="flex-1 border-2 border-green-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
         />
         <button
@@ -502,10 +498,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                   <input
                     value={editingTitle}
                     onChange={(e) => setEditingTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") confirmEdit(cat.id);
-                      if (e.key === "Escape") cancelEdit();
-                    }}
                     className="border-2 border-green-300 px-2 py-1 rounded text-sm w-32 focus:outline-none focus:ring-2 focus:ring-green-500"
                     autoFocus
                   />

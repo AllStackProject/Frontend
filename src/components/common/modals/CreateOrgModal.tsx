@@ -208,7 +208,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
               </button>
             </div>
 
-            <label className="block text-sm mb-1 font-medium">조직 설명</label>
+            <label className="block text-sm mb-1 font-medium">조직 설명 *</label>
             <textarea
               value={orgDesc}
               onChange={(e) => setOrgDesc(e.target.value)}

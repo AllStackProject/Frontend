@@ -121,10 +121,15 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
         await refresh();
       }
     } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "조직 가입 중 오류가 발생했습니다.";
+
       openModal({
         type: "error",
         title: "오류 발생",
-        message: err.message || "조직 가입 중 오류가 발생했습니다.",
+        message: errorMsg,
         confirmText: "확인",
       });
     }
@@ -134,7 +139,7 @@ const JoinOrgModal: React.FC<JoinOrgModalProps> = ({ onClose, refresh, onSuccess
     <>
       {createPortal(
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-40"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}

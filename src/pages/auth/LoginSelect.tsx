@@ -290,13 +290,11 @@ export default function LoginSelect() {
         <JoinOrgModal
           onClose={() => setShowJoinModal(false)}
           refresh={refreshOrganizations}
-          onSuccess={(nickname) => {
+          onSuccess={() => {
             openModal({
               type: "success",
-              title: "가입 신청 완료!",
-              message: `"${nickname}" 님의 가입 신청이 완료되었습니다.`,
-              autoClose: true,
-              autoCloseDelay: 2000,
+              title: "가입 신청 완료",
+              message: `가입 신청이 완료되었습니다. 관리자에게 가입 승인을 요청하세요.`,
             });
           }}
         />

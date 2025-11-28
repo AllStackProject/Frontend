@@ -21,6 +21,8 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userName, setUserName] = useState("멤버");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isMobileOrgModalOpen, setIsMobileOrgModalOpen] = useState(false);
 
   const { openLogoutModal } = useLogout(navigate);
 
@@ -280,14 +282,32 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* 모바일: 햄버거 메뉴 + 검색 버튼 */}
-        <div className="flex md:hidden items-center gap-3">
-          <button className="text-gray-600 hover:text-blue-500">
+        {/* 모바일: 조직 변경 + 검색 + 메뉴 버튼 */}
+        <div className="flex md:hidden items-center gap-4">
+
+          {/* 조직 변경(아이콘) */}
+          <button
+            onClick={() => setIsMobileOrgModalOpen(true)}
+            className="text-gray-600 hover:text-blue-500 relative flex items-center justify-center"
+            title="조직 변경"
+          >
+            <Building2 size={20} className="transition-all" />
+          </button>
+
+          {/* 검색 */}
+          <button
+            className="text-gray-600 hover:text-blue-500"
+            onClick={() => setIsMobileSearchOpen(true)}
+            title="검색"
+          >
             <Search size={20} />
           </button>
+
+          {/* 메뉴 */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="text-gray-600 hover:text-blue-500"
+            title="메뉴"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -376,13 +396,63 @@ const Navbar = () => {
           </div>
         </div>
       )}
+      
 
       {/* 조직 선택 모달 */}
       <OrganizationSelectModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSelect={() => setIsModalOpen(false)}
+        isOpen={isModalOpen || isMobileOrgModalOpen}
+        onClose={() => {
+            setIsModalOpen(false);
+            setIsMobileOrgModalOpen(false);
+          }}
+          onSelect={() => {
+            setIsModalOpen(false);
+            setIsMobileOrgModalOpen(false);
+          }}
       />
+      {/* 모바일 검색 모달 */}
+      {isMobileSearchOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setIsMobileSearchOpen(false)}>
+          <div className="bg-white w-full max-w-sm rounded-xl shadow-xl p-5"
+              onClick={(e) => e.stopPropagation()}>
+            
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">검색</h2>
+              <button onClick={() => setIsMobileSearchOpen(false)}>
+                <X size={22} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50">
+              <Search size={18} className="text-gray-500" />
+              <input
+                type="text"
+                placeholder="검색어를 입력하세요"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+                    setIsMobileSearchOpen(false);
+                  }
+                }}
+                className="flex-1 ml-2 bg-transparent outline-none text-sm"
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                handleSearch();
+                setIsMobileSearchOpen(false);
+              }}
+              className="mt-4 w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+            >
+              검색
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

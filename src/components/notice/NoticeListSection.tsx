@@ -23,6 +23,17 @@ const NoticeSection: React.FC = () => {
 
   const [selectedNoticeId, setSelectedNoticeId] = useState<number | null>(null);
 
+  // 모달 닫힐 때 실행될 새로고침 함수
+  const refreshNotices = async () => {
+    if (!orgId) return;
+    try {
+      const data = await fetchNoticeList(orgId);
+      setNotices(data);
+    } catch (err) {
+      console.error("공지 재로딩 실패:", err);
+    }
+  };
+
   // 공지사항 목록 로드
   useEffect(() => {
     if (!orgId) return;
@@ -159,7 +170,10 @@ const NoticeSection: React.FC = () => {
       {selectedNoticeId && (
         <ViewNoticeModal
           noticeId={selectedNoticeId}
-          onClose={() => setSelectedNoticeId(null)}
+          onClose={() => {
+            setSelectedNoticeId(null);  
+            refreshNotices();           
+          }}
         />
       )}
     </div>

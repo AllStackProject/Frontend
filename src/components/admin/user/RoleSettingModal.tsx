@@ -2,29 +2,35 @@ import React, { useState } from "react";
 import { X, Shield, Info } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 import { updateMemberPermission } from "@/api/adminSuper/members";
+import type { OrgMember } from "@/types/member";
 import { useAuth } from "@/context/AuthContext";
 
 interface RoleSettingModalProps {
-  user: { id: number; name: string; email: string; role: string };
+  user: OrgMember;
   onClose: () => void;
   onSubmit: (newRole: string) => void;
 }
 
-const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
-  user,
-  onClose,
-  onSubmit,
-}) => {
+const RoleSettingModal: React.FC<RoleSettingModalProps> = ({ user, onClose, onSubmit }) => {
   const { orgId } = useAuth();
   const { openModal } = useModal();
-  const [role, setRole] = useState(user.role);
+  const [role, setRole] = useState(
+    user.is_super_admin
+      ? "슈퍼관리자"
+      : (user.video_manage ||
+        user.stats_report_manage ||
+        user.notice_manage ||
+        user.org_setting_manage)
+        ? "관리자"
+        : "일반 멤버"
+  );
   const [permissions, setPermissions] = useState({
-    manageVideosAndQuiz: true,
-    manageViewingAndStats: true,
-    manageNotice: true,
-    manageOrganization: true,
-    manageUsers: false, // 슈퍼관리자만
-    viewPricing: false, // 슈퍼관리자만
+    manageVideosAndQuiz: user.video_manage,
+    manageViewingAndStats: user.stats_report_manage,
+    manageNotice: user.notice_manage,
+    manageOrganization: user.org_setting_manage,
+    manageUsers: false,   // 슈퍼관리자만
+    viewPricing: false,   // 슈퍼관리자만
   });
 
   const [saving, setSaving] = useState(false);
@@ -51,8 +57,7 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
     openModal({
       type: "confirm",
       title: "권한 저장",
-      message: `"${user.name}"님의 권한을 "${role}"로 변경하시겠습니까?\n권한 변경은 즉시 적용됩니다.`,
-      requiredKeyword: "저장",
+      message: `"${user.nickname}"님의 권한을 "${role}"로 변경하시겠습니까?\n권한 변경은 즉시 적용됩니다.`,
       confirmText: "저장",
       onConfirm: handleConfirmSave,
     });
@@ -111,15 +116,24 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
 
           {/* 내용 */}
           <div className="p-6 overflow-y-auto flex-1">
+            {/* 경고 메시지 */}
+            <div className="mb-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex gap-2">
+                <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800">
+                  <span className="font-semibold">주의:</span> 권한 변경 시 해당 멤버의 접근 권한이 즉시 적용됩니다.
+                </p>
+              </div>
+            </div>
             {/* 멤버 정보 */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-gray-600 mb-2">권한을 변경할 멤버</p>
-              <p className="font-semibold text-gray-800">{user.name}</p>
-              <p className="text-sm text-gray-600">{user.email}</p>
+              <p className="font-semibold text-gray-800">이름: {user.user_name}</p>
+              <p className="text-sm text-gray-600">닉네임: {user.nickname}</p>
             </div>
 
             {/* 슈퍼관리자인 경우 수정 불가 안내 */}
-            {user.role === "슈퍼관리자" ? (
+            {user.is_super_admin ? (
               <div className="space-y-4">
                 <div className="p-6 bg-purple-50 border-2 border-purple-200 rounded-lg text-center">
                   <div className="flex justify-center mb-3">
@@ -134,43 +148,13 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                     슈퍼관리자는 조직 생성자에게만 부여되는 최고 권한으로, 변경할 수 없습니다.
                   </p>
                 </div>
-
-                {/* 슈퍼관리자 권한 목록 (읽기 전용) */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    슈퍼관리자 권한 목록
-                  </label>
-                  <div className="space-y-2">
-                    {[
-                      "동영상 관리",
-                      "시청 관리 & 통계 및 분석",
-                      "공지 등록",
-                      "조직 설정",
-                      "멤버 관리",
-                      "요금제 관리",
-                    ].map((permission) => (
-                      <div
-                        key={permission}
-                        className="flex items-center gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={true}
-                          disabled={true}
-                          className="w-4 h-4 text-purple-600 rounded cursor-not-allowed"
-                        />
-                        <p className="text-sm font-medium text-gray-800">{permission}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             ) : (
               <>
                 {/* 역할 선택 */}
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    역할 선택 <span className="text-red-500">*</span>
+                    역할 선택 *
                   </label>
                   <select
                     value={role}
@@ -181,14 +165,6 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                     <option value="일반 멤버">일반 멤버</option>
                   </select>
 
-                  {/* 슈퍼관리자 안내 */}
-                  <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg flex gap-2">
-                    <Shield size={16} className="text-purple-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-purple-800">
-                      <span className="font-semibold">슈퍼관리자는 조직 생성자에게만 부여됩니다.</span> 슈퍼관리자 권한은 변경할 수 없습니다.
-                    </p>
-                  </div>
-
                   {/* 역할 설명 */}
                   <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg flex gap-2">
                     <Info size={16} className="text-gray-500 flex-shrink-0 mt-0.5" />
@@ -198,20 +174,13 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
 
                 {/* 세부 권한 설정 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    세부 권한 설정
-                  </label>
-
                   {role === "일반 멤버" ? (
-                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                      <p className="text-sm text-gray-600">
-                        일반 멤버는 세부 권한을 설정할 수 없습니다.
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        관리자 권한이 필요합니다.
-                      </p>
-                    </div>
+                    <br/>
                   ) : (
+                    <div>
+                     <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      세부 권한 설정 *
+                    </label>
                     <div className="space-y-3">
                       {[
                         {
@@ -289,18 +258,11 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
                         );
                       })}
                     </div>
+                    </div>
                   )}
                 </div>
 
-                {/* 경고 메시지 */}
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="flex gap-2">
-                    <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-amber-800">
-                      <span className="font-semibold">주의:</span> 권한 변경 시 해당 멤버의 접근 권한이 즉시 적용됩니다.
-                    </p>
-                  </div>
-                </div>
+                
               </>
             )}
           </div>
@@ -312,9 +274,10 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({
               disabled={saving}
               className="px-5 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {user.role === "슈퍼관리자" ? "닫기" : "취소"}
+              {user.is_super_admin ? "닫기" : "취소"}
             </button>
-            {user.role !== "슈퍼관리자" && (
+
+            {!user.is_super_admin && (
               <button
                 onClick={handleSaveClick}
                 disabled={saving}

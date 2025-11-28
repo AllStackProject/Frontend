@@ -101,17 +101,26 @@ const UserListSection: React.FC = () => {
   }, [orgId]);
 
   // UI 표시용 멤버 데이터 변환
-  const uiUsers = users.map((u) => ({
-    id: u.id,
-    name: u.user_name,
-    email: u.nickname,
-    role: u.is_super_admin
-      ? "슈퍼관리자"
-      : u.is_admin
-        ? "관리자"
-        : "일반 멤버",
-    groups: u.member_groups?.map((g) => g.name) || [],
-  }));
+  const uiUsers = users.map((u) => {
+    // 관리자 권한 여부 판단
+    const isAdmin =
+      u.video_manage ||
+      u.stats_report_manage ||
+      u.notice_manage ||
+      u.org_setting_manage;
+
+    return {
+      id: u.id,
+      name: u.user_name,
+      email: u.nickname,
+      role: u.is_super_admin
+        ? "슈퍼관리자"
+        : isAdmin
+          ? "관리자"
+          : "일반 멤버",
+      groups: u.member_groups?.map((g) => g.name) || [],
+    };
+  });
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -407,10 +416,18 @@ const UserListSection: React.FC = () => {
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => {
-                      setSelectedUser(user);
+                      const original = users.find(u => u.id === user.id);
+                      if (!original) return;
+
+                      setSelectedUser(original);  
                       setShowRoleModal(true);
                     }}
-                    className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs"
+                    disabled={user.role === "슈퍼관리자"}
+                    className={`ml-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                      user.role === "슈퍼관리자"
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-blue-100 text-blue-700 hover:bg-red-200"
+                    }`}
                   >
                     권한 수정
                   </button>
@@ -424,7 +441,7 @@ const UserListSection: React.FC = () => {
                         id: original.id,
                         name: original.user_name,
                         email: original.nickname,
-                        groups: original.member_groups // ← {id, name}
+                        groups: original.member_groups
                       });
 
                       setShowGroupModal(true);
@@ -433,13 +450,17 @@ const UserListSection: React.FC = () => {
                   >
                     그룹 수정
                   </button>
-
                   <button
                     onClick={() => {
                       setSelectedUser(user);
                       setShowRemoveModal(true);
                     }}
-                    className="ml-2 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs"
+                    disabled={user.role === "슈퍼관리자"}
+                    className={`ml-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                      user.role === "슈퍼관리자"
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-red-100 text-red-700 hover:bg-red-200"
+                    }`}
                   >
                     내보내기
                   </button>
@@ -526,10 +547,9 @@ const UserListSection: React.FC = () => {
       {showGroupModal && selectedUser && (
         <GroupSettingModal
           user={selectedUser}
-          availableGroups={groupList}   // ❗ FIXED: 여기!
+          availableGroups={groupList} 
           onClose={() => setShowGroupModal(false)}
           onSubmit={(updatedGroups) => {
-            // UI 갱신
             setUsers((prev) =>
               prev.map((u) =>
                 u.id === selectedUser.id

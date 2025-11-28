@@ -4,7 +4,10 @@ export interface OrgMember {
   user_name: string;
   nickname: string;
   is_super_admin: boolean;
-  is_admin: boolean;
+  video_manage: boolean;
+  stats_report_manage: boolean;
+  notice_manage: boolean;
+  org_setting_manage: boolean;
   member_groups: {
     id: number;
     name: string;

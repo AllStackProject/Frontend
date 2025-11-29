@@ -2,7 +2,7 @@ interface AdBannerProps {
   image?: string;
 }
 
-const AdBanner = ({ image = "/dummy/AD.png" }: AdBannerProps) => {
+const AdBanner = ({ image = "/icon/AD.png" }: AdBannerProps) => {
   return (
     <div
       className="relative w-full h-60 rounded-2xl overflow-hidden shadow-xl 

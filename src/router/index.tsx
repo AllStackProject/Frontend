@@ -31,7 +31,7 @@ import NoticesPage from "@/pages/admin/NoticesPage";
 import LearningPage from "@/pages/admin/LearningPage";
 import PlansPage from "@/pages/admin/PlansPage";
 import WatchHistoryPage from "@/pages/admin/WatchHistoryPage";
-import LearningReportSection from "@/components/admin/learning/LearningReportSection";
+import LearningReportSection from "@/components/admin/learning/LearningReportModal";
 import SettingPage from "@/pages/admin/SettingPage";
 
 // 레이아웃 import

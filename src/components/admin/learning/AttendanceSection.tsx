@@ -1,17 +1,7 @@
-import React, {
-  useState,
-  useMemo,
-  useEffect,
-  useRef,
-} from "react";
-import {
-  Filter,
-  RotateCcw,
-  Eye,
-  BarChart3,
-  Layers,
-} from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef, } from "react";
+import { Filter, RotateCcw, Video, BarChart3, Layers } from "lucide-react";
 import VideoDetailModal from "@/components/admin/learning/VideoDetailModal";
+import LearningReportModal from "@/components/admin/learning/LearningReportModal";
 import { fetchAdminMemberWatchList } from "@/api/adminStats/view";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
 import type { MemberWatchSummary } from "@/types/video";
@@ -19,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const AttendanceSection: React.FC<{
   onOpenReport?: (userId: number) => void;
-}> = ({ onOpenReport }) => {
+}> = () => {
   const { orgId } = useAuth();
 
   const [users, setUsers] = useState<MemberWatchSummary[]>([]);
@@ -29,6 +19,7 @@ const AttendanceSection: React.FC<{
   const [itemsPerPage] = useState("5");
   const [selectedUser, setSelectedUser] = useState<MemberWatchSummary | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   /** 멀티 그룹 상태 */
@@ -38,7 +29,7 @@ const AttendanceSection: React.FC<{
   const groupDropdownRef = useRef<HTMLDivElement>(null);
 
   /* ---------------------------------------------------------
-     🔥 1) 조직 전체 그룹 목록 불러오기
+     1) 조직 전체 그룹 목록 불러오기
   --------------------------------------------------------- */
   useEffect(() => {
     const loadGroups = async () => {
@@ -55,7 +46,7 @@ const AttendanceSection: React.FC<{
   }, [orgId]);
 
   /* ---------------------------------------------------------
-     🔥 2) 시청 데이터 로드
+     2) 시청 데이터 로드
   --------------------------------------------------------- */
   useEffect(() => {
     const loadData = async () => {
@@ -73,7 +64,7 @@ const AttendanceSection: React.FC<{
   }, [orgId]);
 
   /* ---------------------------------------------------------
-     🔥 3) 멀티 그룹 필터 선택
+     3) 멀티 그룹 필터 선택
   --------------------------------------------------------- */
   const toggleGroup = (group: string) => {
     setSelectedGroups((prev) =>
@@ -85,7 +76,7 @@ const AttendanceSection: React.FC<{
   };
 
   /* ---------------------------------------------------------
-     🔥 4) Dropdown 외부 클릭 감지
+     4) Dropdown 외부 클릭 감지
   --------------------------------------------------------- */
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -101,7 +92,7 @@ const AttendanceSection: React.FC<{
   }, []);
 
   /* ---------------------------------------------------------
-     🔥 5) 필터링
+     5) 필터링
   --------------------------------------------------------- */
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
@@ -117,7 +108,7 @@ const AttendanceSection: React.FC<{
   }, [users, filters, selectedGroups]);
 
   /* ---------------------------------------------------------
-     🔥 6) 페이징 처리
+     6) 페이징 처리
   --------------------------------------------------------- */
   const currentUsers = filteredUsers.slice(
     (currentPage - 1) * Number(itemsPerPage),
@@ -125,7 +116,7 @@ const AttendanceSection: React.FC<{
   );
 
   /* ---------------------------------------------------------
-     🔥 7) 초기화
+     7) 초기화
   --------------------------------------------------------- */
   const resetFilters = () => {
     setFilters({ name: "" });
@@ -219,7 +210,7 @@ const AttendanceSection: React.FC<{
                 <td className="px-4 py-3">{idx + 1}</td>
                 <td className="px-4 py-3">{u.nickname}</td>
                 <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-3">
                     {u.groups.map((g, i) => (
                       <span
                         key={i}
@@ -240,12 +231,16 @@ const AttendanceSection: React.FC<{
                       setShowVideoModal(true);
                     }}
                   >
-                    <Eye size={14} className="inline mr-1" /> 동영상
+                    <Video size={14} className="inline mr-1" /> 동영상
                   </button>
 
                   <button
                     className="text-indigo-600 ml-2 hover:text-indigo-800 text-xs"
-                    onClick={() => onOpenReport?.(u.id)}
+                    onClick={() => 
+                      {
+                        setSelectedUser(u);
+                        setShowReportModal(true);
+                      }}
                   >
                     <BarChart3 size={14} className="inline" /> 리포트
                   </button>
@@ -266,6 +261,13 @@ const AttendanceSection: React.FC<{
           onClose={() => setShowVideoModal(false)}
           userName={selectedUser.nickname}
           userId={selectedUser.id}
+        />
+      )}
+      {showReportModal && selectedUser && (
+        <LearningReportModal
+          open={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          initialUserId={selectedUser.id}
         />
       )}
     </div>

@@ -11,6 +11,7 @@ import {
 
 import { fetchAdminNoticeDetail } from "@/api/adminNotice/notice";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Notice {
   id: number;
@@ -69,13 +70,9 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({
     loadDetail();
   }, [orgId, notice.id]);
 
-  if (loading || !detail) {
+  if (!detail) {
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl p-10 text-center text-gray-600">
-          불러오는 중...
-        </div>
-      </div>
+      <LoadingSpinner/>
     );
   }
 

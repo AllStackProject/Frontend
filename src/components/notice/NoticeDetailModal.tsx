@@ -77,11 +77,7 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({
         {/* ===========================
             LOADING
         ============================ */}
-        {loading ? (
-          <div className="flex justify-center items-center py-20 text-gray-500">
-            불러오는 중...
-          </div>
-        ) : data ? (
+        {data ? (
           <>
             {/* ===========================
                 CONTENT

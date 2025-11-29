@@ -31,7 +31,7 @@ export const LoadingProvider = ({ children }: any) => {
     <LoadingContext.Provider value={{ loading, showLoading, hideLoading }}>
       {children}
       {loading && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <LoadingSpinner text="로딩 중.." />
         </div>
       )}

@@ -15,6 +15,7 @@ import {
 import { getOrgMembers } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface LearningReportModalProps {
   open: boolean;
@@ -170,9 +171,7 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
               </div>
             </>
           ) : (
-            <div className="text-center py-16 text-gray-400">
-              멤버를 선택해주세요.
-            </div>
+            <LoadingSpinner/>
           )}
         </div>
 

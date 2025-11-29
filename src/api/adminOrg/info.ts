@@ -29,7 +29,7 @@ export async function fetchOrgInfo(orgId: number) {
 /** 조직 이미지 수정 */
 export const patchOrgImage = async (orgId: number, file: File) => {
   const formData = new FormData();
-  formData.append("image", file);
+  formData.append("img", file); 
 
   try {
     const response = await api.patch(
@@ -43,7 +43,9 @@ export const patchOrgImage = async (orgId: number, file: File) => {
     return response.data.result;
   } catch (err: any) {
     console.error("🚨 조직 이미지 수정 실패:", err);
-    throw new Error(err.response?.data?.message || "조직 이미지 수정에 실패했습니다.");
+    throw new Error(
+      err.response?.data?.message || "조직 이미지 수정에 실패했습니다."
+    );
   }
 };
 

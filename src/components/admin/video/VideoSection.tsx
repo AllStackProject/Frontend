@@ -53,16 +53,16 @@ const VideoSection: React.FC = () => {
 
   const formatExpireDate = (dateString?: string) => {
     if (!dateString) return "만료 없음";
-    
+
     const expireDate = new Date(dateString);
     const now = new Date();
     const yearsDiff = (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
-    
+
     // 100년 이상이면 만료 없음으로 처리
     if (yearsDiff >= 100) {
       return "만료 없음";
     }
-    
+
     return formatDate(dateString);
   };
 
@@ -212,7 +212,7 @@ const VideoSection: React.FC = () => {
             <Filter size={18} className="text-gray-500" />
             <input
               type="text"
-              placeholder="제목 검색..."
+              placeholder="제목으로 검색"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -343,72 +343,78 @@ const VideoSection: React.FC = () => {
 
         {currentVideos.length === 0 && (
           <div className="text-center py-16 text-gray-400">
-            등록된 영상이 없습니다
+            등록된 영상이 없습니다.
           </div>
         )}
       </div>
 
       {/* 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+        {/* 페이지당 표시 개수 */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span className="font-medium">페이지당:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+          >
+            <option value={5}>5개</option>
+            <option value={10}>10개</option>
+            <option value={20}>20개</option>
+            <option value={50}>50개</option>
+          </select>
+        </div>
 
-          {/* 페이지당 표시 개수 */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>페이지당 표시:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={5}>5개</option>
-              <option value={10}>10개</option>
-              <option value={20}>20개</option>
-              <option value={50}>50개</option>
-            </select>
-          </div>
+        {/* 스마트 페이지네이션 */}
+        {totalPages > 0 && (
+          <div className="flex justify-center items-center gap-2">
 
-          {/* 페이지 번호 */}
-          <div className="flex items-center gap-2">
+            {/* Prev */}
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-40"
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="이전 페이지"
             >
               <ChevronLeft size={18} />
             </button>
 
-            {getPageNumbers().map((page, index) =>
-              page === "..." ? (
-                <span key={index} className="px-3 py-1 text-gray-400">
-                  ...
-                </span>
-              ) : (
-                <button
-                  key={index}
-                  onClick={() => setCurrentPage(page as number)}
-                  className={`px-3 py-1 rounded ${currentPage === page
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                >
-                  {page}
-                </button>
-              )
-            )}
+            {/* 페이지 번호 */}
+            <div className="flex gap-1">
+              {getPageNumbers().map((page, idx) => (
+                <React.Fragment key={idx}>
+                  {page === "..." ? (
+                    <span className="px-2 text-gray-400">…</span>
+                  ) : (
+                    <button
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === page
+                        ? "bg-primary text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
 
+            {/* Next */}
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-40"
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="다음 페이지"
             >
               <ChevronRight size={18} />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef, } from "react";
-import { Filter, RotateCcw, Video, BarChart3, Layers } from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { Filter, RotateCcw, Video, BarChart3, Layers, ChevronLeft, ChevronRight } from "lucide-react";
 import VideoDetailModal from "@/components/admin/learning/VideoDetailModal";
 import LearningReportModal from "@/components/admin/learning/LearningReportModal";
 import { fetchAdminMemberWatchList } from "@/api/adminStats/view";
@@ -16,7 +16,7 @@ const AttendanceSection: React.FC<{
   const [filters, setFilters] = useState({ name: "" });
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState("5");
+  const [itemsPerPage, setItemsPerPage] = useState(5); // 🔹 number로 변경
   const [selectedUser, setSelectedUser] = useState<MemberWatchSummary | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -110,10 +110,45 @@ const AttendanceSection: React.FC<{
   /* ---------------------------------------------------------
      6) 페이징 처리
   --------------------------------------------------------- */
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
   const currentUsers = filteredUsers.slice(
-    (currentPage - 1) * Number(itemsPerPage),
-    currentPage * Number(itemsPerPage)
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, "...", totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(
+          1,
+          "...",
+          totalPages - 4,
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages
+        );
+      } else {
+        pages.push(
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages
+        );
+      }
+    }
+    return pages;
+  };
 
   /* ---------------------------------------------------------
      7) 초기화
@@ -124,7 +159,8 @@ const AttendanceSection: React.FC<{
     setCurrentPage(1);
   };
 
-  if (loading) return <div className="text-center py-12 text-gray-500">불러오는 중...</div>;
+  if (loading)
+    return <div className="text-center py-12 text-gray-500">불러오는 중...</div>;
 
   return (
     <div>
@@ -137,13 +173,13 @@ const AttendanceSection: React.FC<{
             {/* 닉네임 검색 */}
             <input
               type="text"
-              placeholder="닉네임 검색"
+              placeholder="닉네임으로 검색"
               value={filters.name}
               onChange={(e) => {
                 setFilters((prev) => ({ ...prev, name: e.target.value }));
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-72"
             />
 
             {/* 그룹 선택 */}
@@ -179,20 +215,20 @@ const AttendanceSection: React.FC<{
                 </div>
               )}
             </div>
-          </div>
 
-          {/* 초기화 */}
-          <button
-            onClick={resetFilters}
-            className="flex items-center gap-2 text-gray-600 border border-gray-300 rounded-lg px-4 py-2 text-sm hover:bg-gray-50"
-          >
-            <RotateCcw size={16} /> 필터 초기화
-          </button>
+            {/* 초기화 */}
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-2 text-gray-600 border border-gray-300 rounded-lg px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              <RotateCcw size={16} /> 필터 초기화
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 테이블 */}
-      <div className="overflow-x-auto bg-white border rounded-lg shadow-sm">
+      <div className="bg-white border rounded-lg shadow-sm overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr className="text-left">
@@ -207,7 +243,9 @@ const AttendanceSection: React.FC<{
           <tbody>
             {currentUsers.map((u, idx) => (
               <tr key={u.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3">{idx + 1}</td>
+                <td className="px-4 py-3">
+                  {(currentPage - 1) * itemsPerPage + (idx + 1)}
+                </td>
                 <td className="px-4 py-3">{u.nickname}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-3">
@@ -236,11 +274,10 @@ const AttendanceSection: React.FC<{
 
                   <button
                     className="text-indigo-600 ml-2 hover:text-indigo-800 text-xs"
-                    onClick={() => 
-                      {
-                        setSelectedUser(u);
-                        setShowReportModal(true);
-                      }}
+                    onClick={() => {
+                      setSelectedUser(u);
+                      setShowReportModal(true);
+                    }}
                   >
                     <BarChart3 size={14} className="inline" /> 리포트
                   </button>
@@ -252,6 +289,74 @@ const AttendanceSection: React.FC<{
 
         {currentUsers.length === 0 && (
           <div className="text-center py-10 text-gray-500">검색 결과 없음</div>
+        )}
+      </div>
+
+      {/* 페이지네이션 */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+        {/* 페이지당 표시 개수 */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span className="font-medium">페이지당:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+          >
+            <option value={5}>5개</option>
+            <option value={10}>10개</option>
+            <option value={20}>20개</option>
+            <option value={50}>50개</option>
+          </select>
+        </div>
+
+        {/* 스마트 페이지네이션 */}
+        {totalPages > 0 && (
+          <div className="flex justify-center items-center gap-2">
+
+            {/* Prev */}
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="이전 페이지"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {/* 페이지 번호 */}
+            <div className="flex gap-1">
+              {getPageNumbers().map((page, idx) => (
+                <React.Fragment key={idx}>
+                  {page === "..." ? (
+                    <span className="px-2 text-gray-400">…</span>
+                  ) : (
+                    <button
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === page
+                        ? "bg-primary text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Next */}
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="다음 페이지"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         )}
       </div>
 

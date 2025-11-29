@@ -268,7 +268,7 @@ const UserListSection: React.FC = () => {
           <Filter size={18} className="text-gray-500" />
 
           {/* 검색 */}
-          <div className="relative">
+          <div className="relative flex-grow max-w-sm">
             <Search
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -281,7 +281,7 @@ const UserListSection: React.FC = () => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="pl-9 pr-5 py-2 border border-gray-300 rounded-lg text-sm w-full"
             />
           </div>
 
@@ -419,15 +419,14 @@ const UserListSection: React.FC = () => {
                       const original = users.find(u => u.id === user.id);
                       if (!original) return;
 
-                      setSelectedUser(original);  
+                      setSelectedUser(original);
                       setShowRoleModal(true);
                     }}
                     disabled={user.role === "슈퍼관리자"}
-                    className={`ml-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                      user.role === "슈퍼관리자"
+                    className={`ml-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${user.role === "슈퍼관리자"
                         ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                         : "bg-blue-100 text-blue-700 hover:bg-red-200"
-                    }`}
+                      }`}
                   >
                     권한 수정
                   </button>
@@ -456,11 +455,10 @@ const UserListSection: React.FC = () => {
                       setShowRemoveModal(true);
                     }}
                     disabled={user.role === "슈퍼관리자"}
-                    className={`ml-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                      user.role === "슈퍼관리자"
+                    className={`ml-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${user.role === "슈퍼관리자"
                         ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                         : "bg-red-100 text-red-700 hover:bg-red-200"
-                    }`}
+                      }`}
                   >
                     내보내기
                   </button>
@@ -478,62 +476,72 @@ const UserListSection: React.FC = () => {
       </div>
 
       {/* 페이지네이션 */}
-      {filteredUsers.length > 0 && (
-        <div className="flex justify-between items-center mt-6">
-          <div className="flex items-center gap-2 text-sm">
-            페이지당:
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border px-3 py-1.5 rounded-lg text-sm"
-            >
-              <option value={5}>5개</option>
-              <option value={10}>10개</option>
-              <option value={20}>20개</option>
-              <option value={50}>50개</option>
-            </select>
-          </div>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+        {/* 페이지당 표시 개수 */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span className="font-medium">페이지당:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+          >
+            <option value={5}>5개</option>
+            <option value={10}>10개</option>
+            <option value={20}>20개</option>
+            <option value={50}>50개</option>
+          </select>
+        </div>
 
-          <div className="flex items-center gap-2">
+        {/* 스마트 페이지네이션 */}
+        {totalPages > 0 && (
+          <div className="flex justify-center items-center gap-2">
+
+            {/* Prev */}
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2 rounded-lg bg-gray-100 disabled:opacity-40"
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="이전 페이지"
             >
               <ChevronLeft size={18} />
             </button>
 
-            {getPageNumbers().map((page, i) => (
-              <React.Fragment key={i}>
-                {page === "..." ? (
-                  <span className="px-2 text-gray-400">…</span>
-                ) : (
-                  <button
-                    onClick={() => setCurrentPage(page as number)}
-                    className={`px-3 py-2 rounded-lg text-sm ${currentPage === page
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                  >
-                    {page}
-                  </button>
-                )}
-              </React.Fragment>
-            ))}
+            {/* 페이지 번호 */}
+            <div className="flex gap-1">
+              {getPageNumbers().map((page, idx) => (
+                <React.Fragment key={idx}>
+                  {page === "..." ? (
+                    <span className="px-2 text-gray-400">…</span>
+                  ) : (
+                    <button
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === page
+                        ? "bg-primary text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
 
+            {/* Next */}
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
-              className="p-2 rounded-lg bg-gray-100 disabled:opacity-40"
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="다음 페이지"
             >
               <ChevronRight size={18} />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 모달들 */}
       {showRoleModal && selectedUser && (
@@ -547,7 +555,7 @@ const UserListSection: React.FC = () => {
       {showGroupModal && selectedUser && (
         <GroupSettingModal
           user={selectedUser}
-          availableGroups={groupList} 
+          availableGroups={groupList}
           onClose={() => setShowGroupModal(false)}
           onSubmit={(updatedGroups) => {
             setUsers((prev) =>

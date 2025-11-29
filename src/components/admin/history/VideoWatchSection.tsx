@@ -31,16 +31,16 @@ const VideoWatchSection: React.FC = () => {
   /** 만료일 포맷 (100년 이상이면 "만료 없음") */
   const formatExpireDate = (dateString?: string) => {
     if (!dateString) return "만료 없음";
-    
+
     const expireDate = new Date(dateString);
     const now = new Date();
     const yearsDiff = (expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365);
-    
+
     // 100년 이상이면 만료 없음으로 처리
     if (yearsDiff >= 100) {
       return "만료 없음";
     }
-    
+
     return formatDate(dateString);
   };
 
@@ -88,6 +88,39 @@ const VideoWatchSection: React.FC = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  /** 스마트 페이지네이션 */
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, "...", totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(
+          1,
+          "...",
+          totalPages - 4,
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages
+        );
+      } else {
+        pages.push(
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages
+        );
+      }
+    }
+    return pages;
+  };
 
   const resetFilters = () => {
     setSearch("");
@@ -107,7 +140,7 @@ const VideoWatchSection: React.FC = () => {
             <Filter size={18} className="text-gray-500" />
             <input
               type="text"
-              placeholder="영상 제목 또는 업로더 검색"
+              placeholder="영상 제목, 업로더로 검색"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -177,22 +210,21 @@ const VideoWatchSection: React.FC = () => {
                 r.open_scope === "PUBLIC"
                   ? "조직 전체"
                   : r.open_scope === "GROUP"
-                  ? "특정 그룹"
-                  : "비공개";
+                    ? "특정 그룹"
+                    : "비공개";
 
               const openColor =
                 r.open_scope === "PUBLIC"
                   ? "bg-green-100 text-green-700"
                   : r.open_scope === "GROUP"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-gray-200 text-gray-700";
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-200 text-gray-700";
 
               return (
                 <tr
                   key={r.id}
-                  className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${
-                    index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                  }`}
+                  className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                    }`}
                 >
                   <td className="px-4 py-3 font-medium text-gray-800">{r.title}</td>
                   <td className="px-4 py-3 text-gray-600">{r.creator}</td>
@@ -212,9 +244,8 @@ const VideoWatchSection: React.FC = () => {
                         style={{ width: `${r.watch_complete_rate}%` }}
                       />
                       <span
-                        className={`absolute inset-0 flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
-                          r.watch_complete_rate >= 50 ? "text-white" : "text-gray-800"
-                        }`}
+                        className={`absolute inset-0 flex items-center justify-center text-xs font-bold transition-colors duration-300 ${r.watch_complete_rate >= 50 ? "text-white" : "text-gray-800"
+                          }`}
                       >
                         {r.watch_complete_rate}%
                       </span>
@@ -246,8 +277,9 @@ const VideoWatchSection: React.FC = () => {
 
       {/* 페이지네이션 */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+        {/* 페이지당 표시 개수 */}
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <span className="font-medium">페이지당 표시:</span>
+          <span className="font-medium">페이지당:</span>
           <select
             value={itemsPerPage}
             onChange={(e) => {
@@ -259,11 +291,15 @@ const VideoWatchSection: React.FC = () => {
             <option value={5}>5개</option>
             <option value={10}>10개</option>
             <option value={20}>20개</option>
+            <option value={50}>50개</option>
           </select>
         </div>
 
-        {totalPages > 1 && (
+        {/* 스마트 페이지네이션 */}
+        {totalPages > 0 && (
           <div className="flex justify-center items-center gap-2">
+
+            {/* Prev */}
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
@@ -273,21 +309,28 @@ const VideoWatchSection: React.FC = () => {
               <ChevronLeft size={18} />
             </button>
 
+            {/* 페이지 번호 */}
             <div className="flex gap-1">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === i + 1
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                >
-                  {i + 1}
-                </button>
+              {getPageNumbers().map((page, idx) => (
+                <React.Fragment key={idx}>
+                  {page === "..." ? (
+                    <span className="px-2 text-gray-400">…</span>
+                  ) : (
+                    <button
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`min-w-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === page
+                          ? "bg-primary text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  )}
+                </React.Fragment>
               ))}
             </div>
 
+            {/* Next */}
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}

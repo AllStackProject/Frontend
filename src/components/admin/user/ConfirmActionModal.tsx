@@ -74,9 +74,6 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
             <p className="text-sm text-gray-700">
               <strong>닉네임:</strong> {user.email}
             </p>
-            <p className="text-sm text-gray-700">
-              <strong>ID:</strong> {user.id}
-            </p>
           </div>
 
           {/* 그룹 선택 (승인일 때만) */}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Trash2, X, MessageSquare, Loader2, ChevronDown, ChevronUp } from "lucide-react"
+import { Trash2, X, MessageSquare, ChevronDown, ChevronUp } from "lucide-react"
 import { getMyComments, deleteComment } from "@/api/myactivity/comment"
 import type { MyComment } from "@/types/comment"
 import { useAuth } from "@/context/AuthContext"
@@ -8,7 +8,6 @@ import { useAuth } from "@/context/AuthContext"
 const CommentSection: React.FC = () => {
   const navigate = useNavigate()
   const [comments, setComments] = useState<MyComment[]>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<MyComment | null>(null)
   const [showAll, setShowAll] = useState(false)
@@ -20,14 +19,11 @@ const CommentSection: React.FC = () => {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        setLoading(true)
         const data = await getMyComments(orgId || 0)
         setComments(data)
       } catch (err: any) {
         console.error("🚨 댓글 로드 실패:", err)
         setError(err.message || "댓글을 불러오지 못했습니다.")
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -50,17 +46,6 @@ const CommentSection: React.FC = () => {
     } finally {
       setDeleteTarget(null)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-          <p className="text-sm text-gray-500">불러오는 중...</p>
-        </div>
-      </div>
-    )
   }
 
   if (error) {

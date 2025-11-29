@@ -15,7 +15,7 @@ const NoticeSection: React.FC = () => {
   const { orgId } = useAuth();
 
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +45,7 @@ const NoticeSection: React.FC = () => {
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -83,9 +83,7 @@ const NoticeSection: React.FC = () => {
 
       {/* 테이블 */}
       <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-        {loading ? (
-          <div className="py-14 text-center text-gray-500">불러오는 중...</div>
-        ) : currentItems.length === 0 ? (
+        {currentItems.length === 0 ? (
           <div className="py-14 text-center text-gray-500">
             등록된 공지사항이 없습니다.
           </div>

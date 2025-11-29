@@ -19,7 +19,7 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
 }) => {
   const { orgId } = useAuth();
   const [users, setUsers] = useState<AdminWatchedMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   /** 시청자 목록 API 호출 */
   useEffect(() => {
@@ -30,7 +30,7 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
       } catch (e) {
         console.error("❌ 시청자 목록 불러오기 실패:", e);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -53,9 +53,6 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
 
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
-          {loading ? (
-            <div className="text-center py-10 text-gray-500">불러오는 중...</div>
-          ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
                 <thead className="bg-gray-50">
@@ -89,7 +86,6 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
                 </tbody>
               </table>
             </div>
-          )}
         </div>
 
         {/* 하단 */}

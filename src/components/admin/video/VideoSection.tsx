@@ -26,7 +26,7 @@ const VideoSection: React.FC = () => {
   const { openModal, closeModal } = useModal();
   const { orgId } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   // 필터 상태
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,7 +68,6 @@ const VideoSection: React.FC = () => {
 
   const loadVideos = async () => {
     try {
-      setLoading(true);
       const res = await getAdminOrgVideos(orgId || 0);
 
       const mapped: Video[] = res.map((v: any) => ({
@@ -90,7 +89,7 @@ const VideoSection: React.FC = () => {
     } catch (err) {
       console.error("🚨 영상 로드 실패:", err);
     } finally {
-      setLoading(false);
+      
     }
   };
 
@@ -197,10 +196,6 @@ const VideoSection: React.FC = () => {
     }
     return pages;
   };
-
-  if (loading) {
-    return <div className="py-10 text-center text-gray-500">불러오는 중…</div>;
-  }
 
   return (
     <div className="space-y-6">

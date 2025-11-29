@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 const VideoDetailPage: React.FC = () => {
   const { orgId } = useAuth();
   const { id } = useParams<{ id: string }>();
-  const [loading, setLoading] = useState(true);
+  
   const [sessionData, setSessionData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,19 +43,12 @@ const VideoDetailPage: React.FC = () => {
         console.error("🚨 영상 세션 시작 실패:", err);
         setError(err.message || "영상 정보를 불러오지 못했습니다.");
       } finally {
-        setLoading(false);
+        
       }
     };
 
     fetchVideoDetail();
   }, [orgId, id]);
-
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen text-gray-500">
-        불러오는 중...
-      </div>
-    );
 
   if (error)
     return (

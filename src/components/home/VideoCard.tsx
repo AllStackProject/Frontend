@@ -37,7 +37,7 @@ const VideoCard = ({
   onFavoriteToggle,
 }: VideoCardProps) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const { openModal } = useModal();
   const navigate = useNavigate();
 
@@ -50,8 +50,6 @@ const VideoCard = ({
   const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (loading) return;
-    setLoading(true);
 
     try {
       if (isFavorite) {
@@ -80,7 +78,7 @@ const VideoCard = ({
         });
       }
     } finally {
-      setLoading(false);
+      
     }
   };
 

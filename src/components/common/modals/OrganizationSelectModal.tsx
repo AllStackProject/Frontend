@@ -30,7 +30,7 @@ const OrganizationSelectModal = ({
   const [organizations, setOrganizations] = useState<
     { id: number; name: string; img_url?: string; join_status: string }[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  
   const [error, setError] = useState<string | null>(null);
 
   const { selectOrganization } = useSelectOrganization();
@@ -41,7 +41,6 @@ const OrganizationSelectModal = ({
     if (!isOpen) return;
     const fetchOrganizations = async () => {
       try {
-        setLoading(true);
         const data = await getOrganizations();
         setOrganizations(
           data.map((org: any) => ({
@@ -55,7 +54,7 @@ const OrganizationSelectModal = ({
       } catch (err: any) {
         setError(err.message || "조직 목록을 불러오지 못했습니다.");
       } finally {
-        setLoading(false);
+        
       }
     };
     fetchOrganizations();
@@ -159,9 +158,7 @@ const OrganizationSelectModal = ({
           </h2>
 
           {/* 조직 목록 */}
-          {loading ? (
-            <p className="text-center text-gray-500 py-8">조직 목록을 불러오는 중...</p>
-          ) : error ? (
+          {error ? (
             <p className="text-center text-red-500 py-8">{error}</p>
           ) : organizations.length === 0 ? (
             <p className="text-center text-gray-500 py-8">

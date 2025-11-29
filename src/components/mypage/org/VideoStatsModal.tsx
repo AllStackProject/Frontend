@@ -54,7 +54,7 @@ interface Props {
 
 const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
   const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   /** 📌 API 로드 */
   useEffect(() => {
@@ -72,22 +72,14 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
       } catch (err) {
         console.error("❌ 통계 데이터 로드 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
     load();
   }, [orgId, video.id]);
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center text-white text-lg">
-        분석 데이터를 불러오는 중...
-      </div>
-    );
-  }
-
-  /** 📊 통계 계산 */
+  /** 통계 계산 */
   const avgViewRate =
     data.reduce((sum, d) => sum + d.viewRate, 0) / data.length || 0;
 

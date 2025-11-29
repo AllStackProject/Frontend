@@ -45,7 +45,7 @@ const CurrentOrganizationSettings: React.FC = () => {
   const { setNickname: setGlobalNickname } = useAuth();
   const [orgImage, setOrgImage] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  
   const [org, setOrg] = useState<OrganizationItem | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,7 +60,6 @@ const CurrentOrganizationSettings: React.FC = () => {
       if (!orgId) return;
 
       try {
-        setLoading(true);
         setError(null);
 
         const res: OrgMyActivityResponse = await fetchOrgMyActivityInfo(orgId);
@@ -81,7 +80,7 @@ const CurrentOrganizationSettings: React.FC = () => {
         console.error("❌ org info load failed:", err);
         setError("조직 정보를 불러오지 못했습니다.");
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -170,19 +169,6 @@ const CurrentOrganizationSettings: React.FC = () => {
     }
   };
 
-  // ---------------------------------------------
-  // UI
-  // ---------------------------------------------
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-text-muted">조직 정보를 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error || !org) {
     return (

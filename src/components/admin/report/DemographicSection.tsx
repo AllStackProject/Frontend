@@ -58,7 +58,7 @@ const DemographicSection: React.FC = () => {
 
   const [genderData, setGenderData] = useState<any[]>([]);
   const [ageData, setAgeData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   // 데이터 로딩
   useEffect(() => {
@@ -96,7 +96,7 @@ const DemographicSection: React.FC = () => {
       } catch (err) {
         console.error("통계 조회 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -104,14 +104,6 @@ const DemographicSection: React.FC = () => {
   }, [orgId]);
 
   const totalMembers = genderData.reduce((sum, g) => sum + g.value, 0);
-
-  if (loading) {
-    return (
-      <div className="bg-white p-10 border rounded-xl shadow-sm text-center text-gray-500">
-        통계를 불러오는 중입니다...
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">

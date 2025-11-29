@@ -28,7 +28,7 @@ const LoginPasswordReset: React.FC = () => {
 
     setLoading(true);
     setTimeout(() => {
-      setLoading(false);
+      
       setStep(2);
     }, 1000);
   };
@@ -50,7 +50,7 @@ const LoginPasswordReset: React.FC = () => {
 
     setLoading(true);
     setTimeout(() => {
-      setLoading(false);
+      
       setStep(3);
     }, 1000);
   };
@@ -81,7 +81,7 @@ const LoginPasswordReset: React.FC = () => {
 
     setLoading(true);
     setTimeout(() => {
-      setLoading(false);
+      
       setSuccess(true);
 
       openModal({

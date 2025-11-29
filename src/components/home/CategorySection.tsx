@@ -8,7 +8,7 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
 
   const [categories, setCategories] = useState<string[]>(["전체"]);
   const [selected, setSelected] = useState("전체");
-  const [loading, setLoading] = useState(true);
+  
   const [showAll, setShowAll] = useState(false);
 
   /** 반응형 - 화면 크기별 최대 노출 개수 결정 */
@@ -52,7 +52,7 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
       } catch (err) {
         console.error("❌ 카테고리 조회 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -72,14 +72,6 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
     setSelected(cat);
     onCategoryChange?.(cat);
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-4 text-gray-500">
-        카테고리를 불러오는 중...
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-wrap justify-center items-center gap-3">

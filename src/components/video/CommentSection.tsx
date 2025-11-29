@@ -71,7 +71,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       } catch (err: any) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        
       }
     };
     loadComments();
@@ -149,18 +149,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       action();
     }
   };
-
-  if (loading)
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-        </div>
-        <p className="text-gray-500 font-medium">댓글을 불러오는 중...</p>
-      </div>
-    );
 
   if (error)
     return (

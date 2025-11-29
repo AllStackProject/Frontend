@@ -39,7 +39,7 @@ const UserListSection: React.FC = () => {
 
   // 서버 데이터
   const [users, setUsers] = useState<OrgMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   // 모달 상태
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -86,13 +86,12 @@ const UserListSection: React.FC = () => {
   // 서버에서 멤버 불러오기
   const loadData = async () => {
     try {
-      setLoading(true);
       const members = await getOrgMembers(orgId);
       setUsers(members);
     } catch (err) {
       console.error("🚨 조직 멤버 조회 실패:", err);
     } finally {
-      setLoading(false);
+      
     }
   };
 
@@ -251,14 +250,6 @@ const UserListSection: React.FC = () => {
     loadData(); // 서버에서 최신 데이터 다시 로드
     setShowRoleModal(false);
   };
-
-  if (loading) {
-    return (
-      <div className="text-center py-10 text-gray-500">
-        불러오는 중…
-      </div>
-    );
-  }
 
   return (
     <div>

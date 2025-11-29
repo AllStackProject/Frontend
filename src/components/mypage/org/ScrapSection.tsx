@@ -78,18 +78,7 @@ const ScrapSection: React.FC = () => {
     const s = seconds % 60
     return `${m}:${s.toString().padStart(2, "0")}`
   }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-rose-600" size={32} />
-          <p className="text-sm text-gray-500">불러오는 중...</p>
-        </div>
-      </div>
-    )
-  }
-
+  
   if (error) {
     return (
       <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">

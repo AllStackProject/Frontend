@@ -34,7 +34,7 @@ const MyVideoSection: React.FC = () => {
   const { openModal } = useModal();
 
   const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   // 필터
   const [searchTerm, setSearchTerm] = useState("");
@@ -86,7 +86,6 @@ const MyVideoSection: React.FC = () => {
     if (!orgId) return;
 
     const load = async () => {
-      setLoading(true);
       try {
         const raw = await fetchMyUploadedVideos(orgId);
 
@@ -109,7 +108,7 @@ const MyVideoSection: React.FC = () => {
       } catch (err) {
         console.error("❌ 내 영상 목록 로드 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -272,14 +271,6 @@ const MyVideoSection: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  /* ============================================================
-      로딩 화면
-  ============================================================ */
-  if (loading) {
-    return (
-      <div className="text-center py-20 text-gray-500">불러오는 중...</div>
-    );
-  }
 
   /* ============================================================
       데이터 없음

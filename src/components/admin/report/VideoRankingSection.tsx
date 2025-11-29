@@ -24,7 +24,7 @@ const VideoRankingSection: React.FC = () => {
   const orgId = Number(localStorage.getItem("org_id"));
 
   const [videos, setVideos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   // API 호출
   useEffect(() => {
@@ -44,7 +44,7 @@ const VideoRankingSection: React.FC = () => {
       } catch (e) {
         console.error("❌ 인기 동영상 조회 실패", e);
       } finally {
-        setLoading(false);
+        
       }
     };
 

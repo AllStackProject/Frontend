@@ -83,7 +83,7 @@ const EditNicknameModal = ({
               disabled={checking}
               className="px-3 py-2 bg-primary text-white rounded-lg"
             >
-              {checking ? "..." : "중복 체크"}
+              {checking ? "체크 중..." : "중복 체크"}
             </button>
           </div>
 

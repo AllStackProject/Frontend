@@ -22,7 +22,7 @@ interface SearchResultSectionProps {
 const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) => {
   const { orgId } = useAuth();
   const [searchResults, setSearchResults] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   /* ============================================
       검색 API 호출
@@ -30,8 +30,6 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
   useEffect(() => {
     const load = async () => {
       if (!orgId) return;
-
-      setLoading(true);
 
       try {
         const videos = await fetchSearchVideos(orgId, keyword);
@@ -53,7 +51,7 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
         console.error("❌ 검색 실패:", err);
         setSearchResults([]);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -82,11 +80,7 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
       </div>
 
       {/* 로딩 */}
-      {loading ? (
-        <div className="w-full py-32 text-center text-text-muted">
-          검색 중입니다...
-        </div>
-      ) : searchResults.length === 0 ? (
+      {searchResults.length === 0 ? (
         <div className="w-full py-32 text-center">
           <p className="text-lg font-medium text-text-muted">
             검색 결과가 없습니다

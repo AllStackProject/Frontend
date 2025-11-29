@@ -45,7 +45,7 @@ const NoticeSection: React.FC = () => {
   const { openModal } = useModal();
 
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState("전체");
@@ -64,8 +64,6 @@ const NoticeSection: React.FC = () => {
     if (!orgId) return;
 
     try {
-      setLoading(true);
-
       const data = await fetchAdminNoticeList(orgId);
 
       const mapped: Notice[] = data.map((n: any) => ({
@@ -88,7 +86,7 @@ const NoticeSection: React.FC = () => {
         confirmText: "확인",
       });
     } finally {
-      setLoading(false);
+      
     }
   };
 
@@ -246,9 +244,7 @@ const NoticeSection: React.FC = () => {
 
       {/* 테이블 */}
       <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-        {loading ? (
-          <div className="py-12 text-center text-gray-500">불러오는 중...</div>
-        ) : (
+        
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr className="text-left text-gray-700">
@@ -307,9 +303,8 @@ const NoticeSection: React.FC = () => {
               ))}
             </tbody>
           </table>
-        )}
 
-        {!loading && currentItems.length === 0 && (
+        {currentItems.length === 0 && (
           <div className="text-center text-gray-500 py-12">
             등록된 공지사항이 없습니다.
           </div>

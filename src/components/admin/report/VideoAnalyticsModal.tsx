@@ -64,7 +64,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
   const orgId = Number(localStorage.getItem("org_id"));
   const [data, setData] = useState<SegmentData[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   /** API 데이터 로드 */
   useEffect(() => {
@@ -82,20 +82,12 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
       } catch (err) {
         console.error("❌ 구간 상세 로드 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
     load();
   }, [orgId, video.id]);
-
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center text-white text-lg">
-        분석 데이터를 불러오는 중...
-      </div>
-    );
-  }
 
   /** 통계 계산 */
   const avgViewRate =

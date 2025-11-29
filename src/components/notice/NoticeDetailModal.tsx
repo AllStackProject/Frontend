@@ -33,7 +33,7 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({
   const { orgId } = useAuth();
 
   const [data, setData] = useState<NoticeDetailResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  
 
   // ------------------ 데이터 로드 ------------------
   useEffect(() => {
@@ -46,7 +46,7 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({
       } catch (err) {
         console.error("❌ 공지사항 상세 조회 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 

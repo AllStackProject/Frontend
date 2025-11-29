@@ -20,7 +20,7 @@ const AttendanceSection: React.FC<{
   const [selectedUser, setSelectedUser] = useState<MemberWatchSummary | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  
 
   /** 멀티 그룹 상태 */
   const [GROUP_OPTIONS, setGroupOptions] = useState<string[]>([]);
@@ -56,7 +56,7 @@ const AttendanceSection: React.FC<{
       } catch (err) {
         console.error("❌ 멤버 시청 목록 불러오기 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -158,9 +158,6 @@ const AttendanceSection: React.FC<{
     setSelectedGroups([]);
     setCurrentPage(1);
   };
-
-  if (loading)
-    return <div className="text-center py-12 text-gray-500">불러오는 중...</div>;
 
   return (
     <div>

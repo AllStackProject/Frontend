@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Calendar, Clock } from "lucide-react";
+import { Eye, Calendar } from "lucide-react";
 import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
 
@@ -22,7 +22,6 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
   views,
   uploadDate = "",
   description = "",
-  duration,
   categories = [],
   initialFavorite = false,
 }) => {
@@ -40,7 +39,6 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
   /** 스크랩 등록/해제 */
   const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (loading) return;
     setLoading(true);
 
     try {
@@ -58,7 +56,7 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
         alert(error.message || "스크랩 처리 중 오류가 발생했습니다.");
       }
     } finally {
-      setLoading(false);
+      
     }
   };
 

@@ -36,7 +36,7 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
   const [members, setMembers] = useState<OrgMember[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(initialUserId ?? null);
   const [report, setReport] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  
 
   // ------------------------------
   // 1) 멤버 목록 불러오기
@@ -53,7 +53,7 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
       } catch (err) {
         console.error("❌ 멤버 조회 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -91,16 +91,6 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
       date: `${m.year}-${m.month}`,
       views: m.watched_video_cnt,
     })) ?? [];
-
-  // ------------------------------
-  // 로딩 화면
-  // ------------------------------
-  if (loading)
-    return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-xl shadow-xl">불러오는 중...</div>
-      </div>
-    );
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -1,7 +1,7 @@
 import axios, { AxiosHeaders } from "axios";
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
-// ✅ 커스텀 설정 타입
+// 커스텀 설정 타입
 export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   tokenType?: "user" | "org" | "none";
 }
@@ -12,7 +12,31 @@ const api: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-// ✅ 요청 인터셉터
+// 요청 시작 시 로딩 ON
+api.interceptors.request.use(
+  (config) => {
+    window.dispatchEvent(new Event("loading-start"));
+    return config;
+  },
+  (error) => {
+    window.dispatchEvent(new Event("loading-end"));
+    return Promise.reject(error);
+  }
+);
+
+// 응답 완료/실패 시 로딩 OFF
+api.interceptors.response.use(
+  (response) => {
+    window.dispatchEvent(new Event("loading-end"));
+    return response;
+  },
+  (error) => {
+    window.dispatchEvent(new Event("loading-end"));
+    return Promise.reject(error);
+  }
+);
+
+// 요청 인터셉터
 api.interceptors.request.use(
   (config: CustomAxiosRequestConfig): InternalAxiosRequestConfig => {
     const accessToken = localStorage.getItem("access_token");
@@ -32,7 +56,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ 응답 인터셉터
+// 응답 인터셉터
 api.interceptors.response.use(
   (response) => response,
   (error) => {

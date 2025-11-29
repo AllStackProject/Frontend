@@ -58,7 +58,6 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({ user, onClose, onSu
       type: "confirm",
       title: "권한 저장",
       message: `"${user.nickname}"님의 권한을 "${role}"로 변경하시겠습니까?\n권한 변경은 즉시 적용됩니다.`,
-      confirmText: "저장",
       onConfirm: handleConfirmSave,
     });
   };

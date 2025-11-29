@@ -19,7 +19,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
   const orgId = Number(localStorage.getItem("org_id"));
 
   const [videos, setVideos] = useState<MemberWatchDetail[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   /** API 호출 */
   useEffect(() => {
@@ -36,7 +36,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
       } catch (err) {
         console.error("❌ 상세 시청 기록 불러오기 실패", err);
       } finally {
-        setLoading(false);
+        
       }
     };
     load();
@@ -58,9 +58,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
 
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
-          {loading ? (
-            <div className="text-center py-10 text-gray-500">불러오는 중...</div>
-          ) : videos.length === 0 ? (
+          {videos.length === 0 ? (
             <p className="text-center py-10 text-gray-500">시청 기록 없음</p>
           ) : (
             <table className="w-full text-sm border rounded-lg">

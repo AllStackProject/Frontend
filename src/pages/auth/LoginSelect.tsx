@@ -24,7 +24,7 @@ export default function LoginSelect() {
   const [userName, setUserName] = useState<string>("");
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  
   const [error, setError] = useState<string | null>(null);
   const { selectOrganization } = useSelectOrganization();
 
@@ -43,7 +43,6 @@ export default function LoginSelect() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         const user = await getUserInfo();
         setUserName(user.name);
 
@@ -62,7 +61,7 @@ export default function LoginSelect() {
         console.error("❌ [LoginSelect] 데이터 로드 실패:", err);
         setError(err.message || "데이터를 불러오지 못했습니다.");
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -144,14 +143,6 @@ export default function LoginSelect() {
     const color = getRandomColor(orgId);
     return colorStyles[color] || colorStyles.blue;
   };
-
-  // 로딩 & 에러 처리
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen text-gray-500">
-        조직 목록 불러오는 중...
-      </div>
-    );
 
   if (error)
     return (

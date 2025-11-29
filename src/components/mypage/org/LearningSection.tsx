@@ -10,7 +10,6 @@ import { useAuth } from "@/context/AuthContext"
 const LearningSection: React.FC = () => {
   const navigate = useNavigate()
   const [videos, setVideos] = useState<WatchedVideo[]>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
   const [loadingId, setLoadingId] = useState<number | null>(null)
@@ -22,18 +21,13 @@ const LearningSection: React.FC = () => {
       try {
         if (!orgId) {
           setError("조직 정보가 없습니다.")
-          setLoading(false)
           return
         }
-        setLoading(true)
-
         const data = await getWatchedVideos(orgId)
         setVideos(data)
       } catch (err: any) {
         console.error("🚨 시청 기록 로드 실패:", err)
         setError(err.message || "시청 기록을 불러오지 못했습니다.")
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -80,17 +74,6 @@ const LearningSection: React.FC = () => {
     const m = Math.floor(seconds / 60)
     const s = seconds % 60
     return `${m}:${s.toString().padStart(2, "0")}`
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-          <p className="text-sm text-gray-500">불러오는 중...</p>
-        </div>
-      </div>
-    )
   }
 
   if (error) {

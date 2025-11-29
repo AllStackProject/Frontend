@@ -36,15 +36,6 @@ const OrgMyPage: React.FC = () => {
     navigate(`/orgmypage/${tab}`);
   };
 
-  // 로딩 처리
-  if (!currentOrganization.name) {
-    return (
-      <div className="flex justify-center items-center min-h-screen text-gray-500">
-        조직 정보를 불러오는 중...
-      </div>
-    );
-  }
-
   return (
     <div className="w-full min-h-screen bg-bg-page py-10 px-6">
       <div className="max-w-6xl mx-auto">

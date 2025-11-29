@@ -9,7 +9,7 @@ const VideoWatchSection: React.FC = () => {
   const { orgId } = useAuth();
 
   const [records, setRecords] = useState<AdminVideoWatchItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState<
@@ -53,7 +53,7 @@ const VideoWatchSection: React.FC = () => {
       } catch (e) {
         console.error("❌ 전체 영상 시청 목록 불러오기 실패:", e);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -127,9 +127,6 @@ const VideoWatchSection: React.FC = () => {
     setVisibilityFilter("all");
     setCurrentPage(1);
   };
-
-  if (loading)
-    return <div className="text-center py-10 text-gray-500">불러오는 중...</div>;
 
   return (
     <div>

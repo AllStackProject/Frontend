@@ -33,7 +33,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
   const [sortType, setSortType] = useState<SortType>("recommended");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -48,7 +48,6 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
     if (!orgId) return;
 
     const load = async () => {
-      setLoading(true);
       try {
         const filter =
           sortType === "recommended"
@@ -78,7 +77,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
       } catch (err) {
         console.error("❌ 홈 영상 조회 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
 
@@ -169,17 +168,6 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
     popular: { label: "인기순", icon: <HiOutlineFire className="text-lg" /> },
     latest: { label: "최신순", icon: <HiOutlineClock className="text-lg" /> },
   };
-
-  /* ============================================================
-      UI 렌더링
-  ============================================================ */
-  if (loading) {
-    return (
-      <div className="text-center py-20 text-gray-400">
-        영상 불러오는 중...
-      </div>
-    );
-  }
 
   return (
     <div className="w-full">

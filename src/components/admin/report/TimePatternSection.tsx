@@ -47,7 +47,7 @@ const TimePatternSection: React.FC = () => {
 
   const [dayData, setDayData] = useState<DayData[]>([]);
   const [timeData, setTimeData] = useState<TimeData[]>([]);
-  const [loading, setLoading] = useState(true);
+  
 
   const getCurrentMonth = () => {
     const d = new Date();
@@ -94,7 +94,7 @@ const TimePatternSection: React.FC = () => {
       } catch (err) {
         console.error("❌ TimePatternSection 데이터 로드 실패:", err);
       } finally {
-        setLoading(false);
+        
       }
     };
     load();
@@ -119,13 +119,6 @@ const TimePatternSection: React.FC = () => {
 
   const maxDayViews = peakDay.views;
   const maxTimeViews = peakTime.views;
-
-  if (loading)
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm text-center text-gray-500">
-        시청 패턴 불러오는 중...
-      </div>
-    );
 
   return (
     <div className="w-full">

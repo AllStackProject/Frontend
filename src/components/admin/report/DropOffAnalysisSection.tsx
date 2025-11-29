@@ -105,7 +105,7 @@ const DropOffAnalysisSection: React.FC = () => {
             ))}
 
             {highQuit.length === 0 && (
-              <p className="text-xs text-gray-500 text-center py-4">데이터 없음</p>
+              <p className="text-xs text-gray-500 text-center py-4">아직 데이터가 없습니다.</p>
             )}
           </div>
         </div>
@@ -162,7 +162,7 @@ const DropOffAnalysisSection: React.FC = () => {
             ))}
 
             {lowQuit.length === 0 && (
-              <p className="text-xs text-gray-500 text-center py-4">데이터 없음</p>
+              <p className="text-xs text-gray-500 text-center py-4">아직 데이터 없습니다.</p>
             )}
           </div>
         </div>

@@ -34,16 +34,13 @@ const CustomTooltip = ({ active, payload }: any) => {
 const GroupComparisonSection: React.FC = () => {
   const orgId = Number(localStorage.getItem("org_id"));
 
-  // 현재 달을 YYYY-MM 형태로 가져오는 함수
   const getCurrentMonth = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   };
 
-  // 필터 선택 월 (초기: 이번 달)
   const [month, setMonth] = useState(getCurrentMonth());
 
-  // API 데이터
   const [data, setData] = useState<{ name: string; completion: number }[]>([]);
   const [avgCompletion, setAvgCompletion] = useState(0);
 
@@ -69,11 +66,13 @@ const GroupComparisonSection: React.FC = () => {
     };
 
     load();
-  }, [orgId, month]); // month 변경될 때마다 자동 re-fetch
+  }, [orgId, month]);
 
-  // -----------------------------
-  // 최고 / 최저 시청 완료율 계산
-  // -----------------------------
+  /** 데이터 여부 체크 */
+  const noData =
+    data.length === 0 || data.every((g) => g.completion === 0);
+
+  /** 최고 / 최저 */
   const maxCompletion = useMemo(
     () => Math.max(...data.map((g) => g.completion), 0),
     [data]
@@ -86,13 +85,9 @@ const GroupComparisonSection: React.FC = () => {
   const topGroup = data.find((g) => g.completion === maxCompletion);
   const lowGroup = data.find((g) => g.completion === minCompletion);
 
-  // ======================
-  // 렌더
-  // ======================
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-
-      {/* ⭐ 필터바 */}
+      {/* 필터 */}
       <div className="mb-4">
         <ReportFilterBar selectedMonth={month} onChangeMonth={setMonth} />
       </div>
@@ -133,48 +128,67 @@ const GroupComparisonSection: React.FC = () => {
 
       {/* 요약 통계 */}
       <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* 조직 평균 */}
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
           <p className="text-xs text-blue-600 mb-1">조직 평균 완료율</p>
-          <p className="text-xl font-bold text-blue-600">{avgCompletion}%</p>
+          <p className="text-xl font-bold text-blue-600">
+            {noData ? "-" : `${avgCompletion}%`}
+          </p>
         </div>
 
+        {/* 최고 */}
         <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
           <p className="text-xs text-green-600 mb-1">최고 그룹</p>
-          <p className="text-sm font-bold text-green-600">{topGroup?.name}</p>
-          <p className="text-xs text-green-700 mt-0.5">{topGroup?.completion}%</p>
+          <p className="text-sm font-bold text-green-600">
+            {noData ? "-" : topGroup?.name}
+          </p>
+          <p className="text-xs text-green-700 mt-0.5">
+            {noData ? "-" : `${topGroup?.completion}%`}
+          </p>
         </div>
 
+        {/* 최저 */}
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-center">
           <p className="text-xs text-amber-600 mb-1">개선 필요</p>
-          <p className="text-sm font-bold text-amber-600">{lowGroup?.name}</p>
-          <p className="text-xs text-amber-700 mt-0.5">{lowGroup?.completion}%</p>
+          <p className="text-sm font-bold text-amber-600">
+            {noData ? "-" : lowGroup?.name}
+          </p>
+          <p className="text-xs text-amber-700 mt-0.5">
+            {noData ? "-" : `${lowGroup?.completion}%`}
+          </p>
         </div>
       </div>
 
       {/* 차트 */}
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="name" />
-          <YAxis domain={[0, 100]} />
-          <Tooltip content={<CustomTooltip />} />
+      {noData ? (
+        <div className="py-20 text-center text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
+          아직 데이터가 없습니다.
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="name" />
+            <YAxis domain={[0, 100]} />
+            <Tooltip content={<CustomTooltip />} />
 
-          <Bar dataKey="completion" radius={[8, 8, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={
-                  entry.completion === maxCompletion
-                    ? "#10b981" // 최고
-                    : entry.completion === minCompletion
-                    ? "#f59e0b" // 최저
-                    : "#3b82f6" // 기본
-                }
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            <Bar dataKey="completion" radius={[8, 8, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell
+                  key={index}
+                  fill={
+                    entry.completion === maxCompletion
+                      ? "#10b981"
+                      : entry.completion === minCompletion
+                      ? "#f59e0b"
+                      : "#3b82f6"
+                  }
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 };

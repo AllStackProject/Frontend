@@ -102,7 +102,7 @@ const VideoAnalyticsSection: React.FC = () => {
 
       {currentItems.length === 0 && (
         <div className="text-center text-gray-500 py-12">
-          데이터가 없습니다.
+          아직 데이터가 없습니다.
         </div>
       )}
 

@@ -12,6 +12,7 @@ import {
 import { Clock, Calendar } from "lucide-react";
 import { fetchHourlyReport, fetchDayReport } from "@/api/adminStats/report";
 import ReportFilterBar from "@/components/admin/report/ReportFilterBar";
+import { useAuth } from "@/context/AuthContext";
 
 interface DayData {
   day: string;
@@ -42,13 +43,12 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 const TimePatternSection: React.FC = () => {
-  const orgId = Number(localStorage.getItem("org_id"));
-
+  const { orgId } = useAuth();
 
   const [dayData, setDayData] = useState<DayData[]>([]);
   const [timeData, setTimeData] = useState<TimeData[]>([]);
   const [loading, setLoading] = useState(true);
-  // 현재 달 자동 설정
+
   const getCurrentMonth = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -56,12 +56,10 @@ const TimePatternSection: React.FC = () => {
 
   const [month, setMonth] = useState(getCurrentMonth());
 
-
   const handleMonthChange = (m: string) => {
     setMonth(m);
   };
 
-  /** 요일명 / 시간대 라벨 */
   const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
   const TIME_LABELS = [
     "00-03시",
@@ -78,16 +76,14 @@ const TimePatternSection: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const dayRes = await fetchDayReport(orgId, month);
-        const hourRes = await fetchHourlyReport(orgId, month);
+        const dayRes = await fetchDayReport(orgId || 0, month);
+        const hourRes = await fetchHourlyReport(orgId || 0, month);
 
-        // 요일 데이터 변환
         const mappedDay = dayRes.day_watch_cnts.map((v, idx) => ({
           day: DAY_LABELS[idx],
           views: v,
         }));
 
-        // 시간대 데이터 변환
         const mappedHour = hourRes.hour_watch_cnts.map((v, idx) => ({
           time: TIME_LABELS[idx],
           views: v,
@@ -101,13 +97,25 @@ const TimePatternSection: React.FC = () => {
         setLoading(false);
       }
     };
-
     load();
   }, [orgId, month]);
 
-  /** 최고 시청 요일 / 시간대 계산 */
-  const peakDay = useMemo(() => dayData.reduce((a, b) => (a.views > b.views ? a : b), { day: "", views: 0 }), [dayData]);
-  const peakTime = useMemo(() => timeData.reduce((a, b) => (a.views > b.views ? a : b), { time: "", views: 0 }), [timeData]);
+  /** 📌 데이터 여부 체크 */
+  const noDayData =
+    dayData.length === 0 || dayData.every((d) => d.views === 0);
+
+  const noTimeData =
+    timeData.length === 0 || timeData.every((t) => t.views === 0);
+
+  /** 최고 시청 요일 / 시간대 */
+  const peakDay = useMemo(
+    () => dayData.reduce((a, b) => (a.views > b.views ? a : b), { day: "", views: 0 }),
+    [dayData]
+  );
+  const peakTime = useMemo(
+    () => timeData.reduce((a, b) => (a.views > b.views ? a : b), { time: "", views: 0 }),
+    [timeData]
+  );
 
   const maxDayViews = peakDay.views;
   const maxTimeViews = peakTime.views;
@@ -121,16 +129,11 @@ const TimePatternSection: React.FC = () => {
 
   return (
     <div className="w-full">
-
-      {/* 필터바 */}
       <div className="mb-4">
-        <ReportFilterBar
-          selectedMonth={month}
-          onChangeMonth={handleMonthChange}
-        />
+        <ReportFilterBar selectedMonth={month} onChangeMonth={handleMonthChange} />
       </div>
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
 
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
         {/* 헤더 */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
@@ -150,36 +153,37 @@ const TimePatternSection: React.FC = () => {
               <p className="text-sm font-semibold text-gray-700">요일별 시청 수</p>
             </div>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={dayData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
-                  axisLine={{ stroke: "#d1d5db" }}
-                />
-                <YAxis
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
-                  axisLine={{ stroke: "#d1d5db" }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="views" radius={[8, 8, 0, 0]}>
-                  {dayData.map((entry, index) => (
-                    <Cell
-                      key={index}
-                      fill={entry.views === maxDayViews ? "#3b82f6" : "#93c5fd"}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {noDayData ? (
+              <div className="py-16 text-center text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
+                아직 데이터가 없습니다.
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={dayData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="day" tick={{ fill: "#6b7280", fontSize: 12 }} />
+                    <YAxis tick={{ fill: "#6b7280", fontSize: 12 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="views" radius={[8, 8, 0, 0]}>
+                      {dayData.map((entry, index) => (
+                        <Cell
+                          key={index}
+                          fill={entry.views === maxDayViews ? "#3b82f6" : "#93c5fd"}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
 
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                가장 높은 활동:{" "}
-                <span className="font-semibold">{peakDay?.day}요일</span>
-              </p>
-            </div>
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800">
+                    가장 높은 활동:{" "}
+                    <span className="font-semibold">{peakDay?.day}요일</span>
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* 시간대별 */}
@@ -189,39 +193,42 @@ const TimePatternSection: React.FC = () => {
               <p className="text-sm font-semibold text-gray-700">시간대별 시청 수</p>
             </div>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={timeData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="time"
-                  tick={{ fill: "#6b7280", fontSize: 11 }}
-                  axisLine={{ stroke: "#d1d5db" }}
-                  angle={-15}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
-                  axisLine={{ stroke: "#d1d5db" }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="views" radius={[8, 8, 0, 0]}>
-                  {timeData.map((entry, index) => (
-                    <Cell
-                      key={index}
-                      fill={entry.views === maxTimeViews ? "#10b981" : "#6ee7b7"}
+            {noTimeData ? (
+              <div className="py-16 text-center text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
+                아직 데이터가 없습니다.
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={timeData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="time"
+                      tick={{ fill: "#6b7280", fontSize: 11 }}
+                      angle={-15}
+                      textAnchor="end"
                     />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                    <YAxis tick={{ fill: "#6b7280", fontSize: 12 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="views" radius={[8, 8, 0, 0]}>
+                      {timeData.map((entry, index) => (
+                        <Cell
+                          key={index}
+                          fill={entry.views === maxTimeViews ? "#10b981" : "#6ee7b7"}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
 
-            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-xs text-green-800">
-                가장 활발한 시간대:{" "}
-                <span className="font-semibold">{peakTime?.time}</span>
-              </p>
-            </div>
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-xs text-green-800">
+                    가장 활발한 시간대:{" "}
+                    <span className="font-semibold">{peakTime?.time}</span>
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -188,7 +188,7 @@ const LearningReportSection: React.FC<LearningReportSectionProps> = ({ initialUs
                     </span>
                   ))
                 ) : (
-                  <span className="text-gray-400 text-xs">데이터 없음</span>
+                  <span className="text-gray-400 text-xs">아직 데이터가 없습니다.</span>
                 )}
               </div>
             </div>

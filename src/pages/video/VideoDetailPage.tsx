@@ -53,7 +53,7 @@ const VideoDetailPage: React.FC = () => {
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen text-gray-500">
-        영상 정보를 불러오는 중입니다...
+        불러오는 중...
       </div>
     );
 
@@ -67,7 +67,7 @@ const VideoDetailPage: React.FC = () => {
   if (!sessionData)
     return (
       <div className="flex justify-center items-center min-h-screen text-gray-500">
-        데이터가 없습니다.
+        아직 데이터가 없습니다.
       </div>
     );
 

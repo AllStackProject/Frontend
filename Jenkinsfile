@@ -15,6 +15,13 @@ spec:
       volumeMounts:
         - name: docker-config
           mountPath: /kaniko/.docker
+
+    - name: sonar-scanner
+      image: sonarsource/sonar-scanner-cli:latest
+      command:
+        - cat
+      tty: true
+      
   volumes:
     - name: docker-config
       secret:

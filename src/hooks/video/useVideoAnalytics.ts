@@ -280,7 +280,7 @@ export function useVideoAnalytics({
     }, [getVideoEl]);
 
     // =======================
-    // 3) 페이지 이탈 / 숨김 감지 (Beacon 사용)
+    // 3) 페이지 이탈 / 숨김 / 라우팅 변경 감지 (Beacon 강화)
     // =======================
     useEffect(() => {
         const handleLeave = (via: string) => {
@@ -288,18 +288,14 @@ export function useVideoAnalytics({
             if (!v) return;
 
             // 이미 END 처리된 상태면 중복 LEAVE는 안 보냄
-            if (endedSent.current) {
-                return;
-            }
+            if (endedSent.current) return;
 
-            console.log(`🚪 [페이지 이탈 감지] via=${via}`);
+            console.log(`🚪 [이탈 감지] via=${via}`);
 
-            // 페이지 이탈 시 플레이어 일시정지
             try {
                 v.pause();
-            } catch {
-                // pause 중 에러 나도 굳이 처리 안 해도 됨
-            }
+            } catch { }
+
             isPlaying.current = false;
 
             // 현재 위치까지 시청 시간 누적
@@ -312,25 +308,65 @@ export function useVideoAnalytics({
             void sendLeave(false, via);
         };
 
-        const onPageHide = () => handleLeave("pagehide");
-        const onBeforeUnload = () => handleLeave("beforeunload");
+        /** 1) 기본 브라우저 이벤트 */
+        const onPageHide = () => handleLeave("pagehide");         // 홈 버튼 / 뒤로가기 /
+        const onBeforeUnload = () => handleLeave("beforeunload"); // 브라우저 종료
         const onVisibilityChange = () => {
             if (document.visibilityState === "hidden") {
-                handleLeave("visibilitychange");
+                handleLeave("visibilitychange");                  // 다른 앱 이동, 화면 꺼짐
             }
         };
 
+        /** 2) 뒤로가기/앞으로가기 (popstate) */
+        const onPopState = () => {
+            handleLeave("popstate"); // 브라우저 뒤로가기 버튼
+        };
+
+        /** 3) SPA pushState/replaceState 감지 (React Router 이동 포함) */
+        const wrapHistory = (type: "pushState" | "replaceState") => {
+            const original = history[type];
+            return function (...args: any[]) {
+                handleLeave(type); // 라우팅 변경 감지
+                // @ts-ignore
+                return original.apply(this, args);
+            };
+        };
+
+        history.pushState = wrapHistory("pushState");
+        history.replaceState = wrapHistory("replaceState");
+
+        /** 4) <a href> 태그 클릭으로 외부 URL 이동 */
+        const onDocumentClick = (e: any) => {
+            const a = e.target.closest("a");
+            if (!a) return;
+
+            const url = a.getAttribute("href");
+            if (!url) return;
+
+            // 같은 페이지 anchor(#) 이동은 무시
+            if (url.startsWith("#")) return;
+
+            handleLeave("anchor-click");
+        };
+
+        /** 이벤트 등록 */
         window.addEventListener("pagehide", onPageHide);
         window.addEventListener("beforeunload", onBeforeUnload);
         document.addEventListener("visibilitychange", onVisibilityChange);
+
+        window.addEventListener("popstate", onPopState);
+        document.addEventListener("click", onDocumentClick, true);
 
         return () => {
             window.removeEventListener("pagehide", onPageHide);
             window.removeEventListener("beforeunload", onBeforeUnload);
             document.removeEventListener("visibilitychange", onVisibilityChange);
+
+            window.removeEventListener("popstate", onPopState);
+            document.removeEventListener("click", onDocumentClick, true);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getVideoEl, orgId, videoId, sessionId]);
+
 
     // =======================
     // 4) 외부로 노출할 핸들러들

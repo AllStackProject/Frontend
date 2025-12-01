@@ -6,6 +6,7 @@ import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap"
 import { Heart, PlayCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import type { WatchedVideo } from "@/types/video"
 import { useAuth } from "@/context/AuthContext"
+import LoadingSpinner from "@/components/common/LoadingSpinner"
 
 const LearningSection: React.FC = () => {
   const navigate = useNavigate()
@@ -82,16 +83,7 @@ const LearningSection: React.FC = () => {
     return `${m}:${s.toString().padStart(2, "0")}`
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-          <p className="text-sm text-gray-500">불러오는 중...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   if (error) {
     return (

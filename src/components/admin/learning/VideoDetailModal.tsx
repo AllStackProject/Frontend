@@ -3,6 +3,7 @@ import { X, ExternalLink, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { fetchAdminMemberWatchDetail } from "@/api/adminStats/view";
 import type { MemberWatchDetail } from "@/types/video";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface VideoDetailModalProps {
   onClose: () => void;
@@ -59,7 +60,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
           {loading ? (
-            <div className="text-center py-10 text-gray-500">불러오는 중...</div>
+            <LoadingSpinner text="불러오는 중..." />
           ) : videos.length === 0 ? (
             <p className="text-center py-10 text-gray-500">시청 기록 없음</p>
           ) : (

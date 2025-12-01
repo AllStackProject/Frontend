@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchOrgMyActivityGroup } from "@/api/myactivity/info";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) => void }) => {
   const { orgId } = useAuth();
@@ -73,13 +74,7 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
     onCategoryChange?.(cat);
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-4 text-gray-500">
-        카테고리를 불러오는 중...
-      </div>
-    );
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />
 
   return (
     <div className="flex flex-wrap justify-center items-center gap-3">

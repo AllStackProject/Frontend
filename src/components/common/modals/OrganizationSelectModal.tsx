@@ -6,6 +6,7 @@ import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
 import { useModal } from "@/context/ModalContext";
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "../LoadingSpinner";
 
 interface OrganizationSelectModalProps {
   isOpen: boolean;
@@ -160,7 +161,7 @@ const OrganizationSelectModal = ({
 
           {/* 조직 목록 */}
           {loading ? (
-            <p className="text-center text-gray-500 py-8">조직 목록을 불러오는 중...</p>
+            <LoadingSpinner text="불러오는 중..." />
           ) : error ? (
             <p className="text-center text-red-500 py-8">{error}</p>
           ) : organizations.length === 0 ? (

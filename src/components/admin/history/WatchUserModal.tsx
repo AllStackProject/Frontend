@@ -3,6 +3,7 @@ import { X, Users } from "lucide-react";
 import { fetchAdminOrgSingleVideoWatch } from "@/api/adminStats/view";
 import type { AdminWatchedMember } from "@/types/video";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface WatchUserModalProps {
   videoId: number;
@@ -54,7 +55,7 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
           {loading ? (
-            <div className="text-center py-10 text-gray-500">불러오는 중...</div>
+            <LoadingSpinner text="불러오는 중..." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">

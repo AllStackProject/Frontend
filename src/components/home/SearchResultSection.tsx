@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import VideoCard from "@/components/home/VideoCard";
 import { useAuth } from "@/context/AuthContext";
 import { fetchSearchVideos } from "@/api/home/home";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface Video {
   id: number;
@@ -83,9 +84,7 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
 
       {/* 로딩 */}
       {loading ? (
-        <div className="w-full py-32 text-center text-text-muted">
-          검색 중입니다...
-        </div>
+        <LoadingSpinner text="불러오는 중..." />
       ) : searchResults.length === 0 ? (
         <div className="w-full py-32 text-center">
           <p className="text-lg font-medium text-text-muted">

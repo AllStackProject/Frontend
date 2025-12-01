@@ -8,6 +8,7 @@ import { useModal } from "@/context/ModalContext";
 import CreateOrgModal from "@/components/common/modals/CreateOrgModal";
 import JoinOrgModal from "@/components/common/modals/JoinOrgModal";
 import { useLogout } from "@/api/user/useLogout";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Organization {
   id: number;
@@ -146,12 +147,7 @@ export default function LoginSelect() {
   };
 
   // 로딩 & 에러 처리
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen text-gray-500">
-        조직 목록 불러오는 중...
-      </div>
-    );
+  if (loading) <LoadingSpinner text="불러오는 중..." />
 
   if (error)
     return (

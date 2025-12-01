@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useModal } from "@/context/ModalContext";
 import { useAuth } from "@/context/AuthContext";
 import { getAdminOrgVideos, deleteAdminOrgVideo } from "@/api/adminVideo/orgVideos";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Video {
   id: number;
@@ -198,9 +199,7 @@ const VideoSection: React.FC = () => {
     return pages;
   };
 
-  if (loading) {
-    return <div className="py-10 text-center text-gray-500">불러오는 중…</div>;
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   return (
     <div className="space-y-6">

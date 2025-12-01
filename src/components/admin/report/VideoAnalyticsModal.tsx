@@ -18,6 +18,7 @@ import {
   Legend,
 } from "recharts";
 import { fetchIntervalDetail } from "@/api/adminStats/report";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Props {
   video: {
@@ -89,13 +90,7 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
     load();
   }, [orgId, video.id]);
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center text-white text-lg">
-        분석 데이터를 불러오는 중...
-      </div>
-    );
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   /** 통계 계산 */
   const avgViewRate =

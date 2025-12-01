@@ -19,6 +19,7 @@ import {
   fetchAdminNoticeList,
   deleteAdminNotice,
 } from "@/api/adminNotice/notice";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Notice {
   id: number;
@@ -247,7 +248,7 @@ const NoticeSection: React.FC = () => {
       {/* 테이블 */}
       <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
         {loading ? (
-          <div className="py-12 text-center text-gray-500">불러오는 중...</div>
+          <LoadingSpinner text="불러오는 중..." />
         ) : (
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">

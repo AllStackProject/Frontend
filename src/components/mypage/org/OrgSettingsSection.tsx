@@ -15,6 +15,7 @@ import { exitOrganization } from "@/api/organization/orgs";
 import { fetchOrgMyActivityInfo, updateMyOrgNickname } from "@/api/myactivity/info";
 import { getOrganizations } from "@/api/organization/orgs";
 import EditNicknameModal from "@/components/mypage/org/EditNicknameModal";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 type JoinStatus = "APPROVED" | "PENDING" | "REJECTED";
 
@@ -173,16 +174,7 @@ const CurrentOrganizationSettings: React.FC = () => {
   // ---------------------------------------------
   // UI
   // ---------------------------------------------
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-text-muted">조직 정보를 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />
 
   if (error || !org) {
     return (

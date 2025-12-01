@@ -4,6 +4,7 @@ import { Trash2, X, MessageSquare, Loader2, ChevronDown, ChevronUp } from "lucid
 import { getMyComments, deleteComment } from "@/api/myactivity/comment"
 import type { MyComment } from "@/types/comment"
 import { useAuth } from "@/context/AuthContext"
+import LoadingSpinner from "@/components/common/LoadingSpinner"
 
 const CommentSection: React.FC = () => {
   const navigate = useNavigate()
@@ -52,16 +53,7 @@ const CommentSection: React.FC = () => {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-          <p className="text-sm text-gray-500">불러오는 중...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   if (error) {
     return (

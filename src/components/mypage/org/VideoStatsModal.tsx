@@ -20,6 +20,7 @@ import {
 } from "recharts";
 
 import { fetchMyVideoStats } from "@/api/myactivity/video";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 // 초 → 분:초
 const formatTimeToMinutes = (seconds: number) => {
@@ -79,13 +80,7 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
     load();
   }, [orgId, video.id]);
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center text-white text-lg">
-        분석 데이터를 불러오는 중...
-      </div>
-    );
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   /** 📊 통계 계산 */
   const avgViewRate =

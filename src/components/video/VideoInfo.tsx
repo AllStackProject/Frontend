@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, Calendar, Clock } from "lucide-react";
 import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface VideoInfoProps {
   orgId: number;
@@ -40,7 +41,7 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
   /** 스크랩 등록/해제 */
   const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (loading) return;
+    if (loading) <LoadingSpinner text="불러오는 중..." />;
     setLoading(true);
 
     try {

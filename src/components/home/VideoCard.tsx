@@ -10,6 +10,7 @@ import {
 } from "react-icons/hi";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
 import { useModal } from "@/context/ModalContext";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface VideoCardProps {
   thumbnail: string;
@@ -50,7 +51,7 @@ const VideoCard = ({
   const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (loading) return;
+    if (loading) <LoadingSpinner text="불러오는 중..." />;
     setLoading(true);
 
     try {

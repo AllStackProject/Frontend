@@ -149,7 +149,7 @@ const CurrentOrganizationSettings: React.FC = () => {
   };
 
   // ---------------------------------------------
-  // 🔥 조직 나가기
+  // 조직 나가기
   // ---------------------------------------------
   const handleLeave = async () => {
     if (!org) return;
@@ -174,7 +174,7 @@ const CurrentOrganizationSettings: React.FC = () => {
   // ---------------------------------------------
   // UI
   // ---------------------------------------------
-  if (loading) <LoadingSpinner text="불러오는 중..." />
+  if (loading) <LoadingSpinner text="로딩 중..." />
 
   if (error || !org) {
     return (

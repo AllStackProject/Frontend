@@ -6,6 +6,7 @@ import { HiOutlineFire, HiOutlineClock, HiOutlineStar } from "react-icons/hi";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { fetchHomeVideos } from "@/api/home/home";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface Video {
   id: number;
@@ -173,13 +174,7 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
   /* ============================================================
       UI 렌더링
   ============================================================ */
-  if (loading) {
-    return (
-      <div className="text-center py-20 text-gray-400">
-        영상 불러오는 중...
-      </div>
-    );
-  }
+  if (loading) <LoadingSpinner text="로딩 중..." />;
 
   return (
     <div className="w-full">
@@ -268,7 +263,6 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
       {/* 비디오 그리드 */}
       {finalVideos.length === 0 ? (
         <div className="text-center py-24 sm:py-32 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100">
-          <div className="text-gray-400 mb-2 text-lg">🎥</div>
           <p className="text-gray-500 font-medium">
             해당 조건의 영상이 없습니다.
           </p>

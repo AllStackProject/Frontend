@@ -84,7 +84,7 @@ const SearchResultSection: React.FC<SearchResultSectionProps> = ({ keyword }) =>
 
       {/* 로딩 */}
       {loading ? (
-        <LoadingSpinner text="불러오는 중..." />
+        <LoadingSpinner text="로딩 중..." />
       ) : searchResults.length === 0 ? (
         <div className="w-full py-32 text-center">
           <p className="text-lg font-medium text-text-muted">

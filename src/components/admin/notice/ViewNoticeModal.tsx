@@ -71,7 +71,7 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({
   }, [orgId, notice.id]);
 
   if (loading || !detail) {
-    return <LoadingSpinner text="불러오는 중..." />
+    return <LoadingSpinner text="로딩 중..." />
   }
 
   return (

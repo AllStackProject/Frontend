@@ -190,7 +190,7 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
                   </label>
 
                   {loadingGroups ? (
-                    <LoadingSpinner text="불러오는 중..." />
+                    <LoadingSpinner text="로딩 중..." />
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       {groups.map((g) => (
@@ -240,7 +240,7 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
             </button>
             <button
               onClick={handleSubmit}
-              className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg"
+              className="px-5 py-2 text-sm bg-primary text-white rounded-lg"
             >
               등록
             </button>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import OrgMyPageTabs from "@/components/mypage/org/OrgMyPageTabs";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const OrgMyPage: React.FC = () => {
   const location = useLocation();
@@ -39,9 +40,7 @@ const OrgMyPage: React.FC = () => {
   // 로딩 처리
   if (!currentOrganization.name) {
     return (
-      <div className="flex justify-center items-center min-h-screen text-gray-500">
-        조직 정보를 불러오는 중...
-      </div>
+     <LoadingSpinner text="로딩 중..." />
     );
   }
 

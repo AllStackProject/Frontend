@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import ViewNoticeModal from "@/components/notice/NoticeDetailModal";
 import { fetchNoticeList } from "@/api/home/notice";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface Notice {
   id: number;
@@ -84,7 +85,7 @@ const NoticeSection: React.FC = () => {
       {/* 테이블 */}
       <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
         {loading ? (
-          <div className="py-14 text-center text-gray-500">불러오는 중...</div>
+          <LoadingSpinner text="로딩 중..." />
         ) : currentItems.length === 0 ? (
           <div className="py-14 text-center text-gray-500">
             등록된 공지사항이 없습니다.

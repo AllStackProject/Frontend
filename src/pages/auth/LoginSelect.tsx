@@ -147,7 +147,7 @@ export default function LoginSelect() {
   };
 
   // 로딩 & 에러 처리
-  if (loading) <LoadingSpinner text="불러오는 중..." />
+  if (loading) <LoadingSpinner text="로딩 중..." />
 
   if (error)
     return (

@@ -55,7 +55,7 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
           {loading ? (
-            <LoadingSpinner text="불러오는 중..." />
+            <LoadingSpinner text="로딩 중..." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
@@ -78,7 +78,18 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
                     >
                       <td className="px-4 py-3 text-gray-600">{i + 1}</td>
                       <td className="px-4 py-3 font-medium text-gray-800">{u.nickname}</td>
-                      <td className="px-4 py-3 text-gray-600">{u.groups.join(", ")}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        <div className="flex flex-wrap gap-3">
+                          {u.groups.map((g, i) => (
+                            <span
+                              key={i}
+                              className="px-2 py-1 rounded-full text-xs bg-gray-100 border"
+                            >
+                              {g}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-4 py-3">{u.watch_rate}%</td>
                       <td className="px-4 py-3 text-gray-600">
                         {u.watched_at

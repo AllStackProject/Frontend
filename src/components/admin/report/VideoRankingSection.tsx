@@ -69,7 +69,7 @@ const VideoRankingSection: React.FC = () => {
 
       {/* 로딩 */}
       {loading ? (
-        <LoadingSpinner text="불러오는 중..." />
+        <LoadingSpinner text="로딩 중..." />
       ) : videos.length === 0 ? (
         /* 데이터 없음 안내 */
         <div className="py-16 text-gray-500 text-center border border-gray-200 rounded-lg bg-gray-50">

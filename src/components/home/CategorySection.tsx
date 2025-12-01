@@ -74,7 +74,7 @@ const CategorySection = ({ onCategoryChange }: { onCategoryChange?: (c: string) 
     onCategoryChange?.(cat);
   };
 
-  if (loading) <LoadingSpinner text="불러오는 중..." />
+  if (loading) <LoadingSpinner text="로딩 중..." />
 
   return (
     <div className="flex flex-wrap justify-center items-center gap-3">

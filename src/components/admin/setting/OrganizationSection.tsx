@@ -18,6 +18,7 @@ import { getOrganizations } from "@/api/organization/orgs";
 import { useAuth } from "@/context/AuthContext";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface GroupCategory {
   id: number;
@@ -39,6 +40,7 @@ const OrganizationSection: React.FC = () => {
   const { openModal } = useModal();
   const navigate = useNavigate();
   const { clearOrganization, setAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   const [organization, setOrganization] = useState<OrganizationInfo>({
     id: orgId || 0,
@@ -77,6 +79,8 @@ const OrganizationSection: React.FC = () => {
 
       } catch (e) {
         console.error("❌ 조직 정보 로딩 실패:", e);
+      }finally{
+        setLoading(false);
       }
     };
 
@@ -276,6 +280,8 @@ const OrganizationSection: React.FC = () => {
     setShowModal(false);
     window.location.reload();
   };
+
+  if (loading) return <LoadingSpinner text="로딩 중..." />;
 
   return (
     <div>

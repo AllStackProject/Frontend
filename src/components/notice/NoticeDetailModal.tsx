@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { X, Megaphone, Calendar, BarChart3, Earth } from "lucide-react";
 import { fetchNoticeDetail } from "@/api/home/notice";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 // ------------------ 타입 정의 ------------------
 type NoticeOpenScope = "PUBLIC" | "PRIVATE" | "GROUP";
@@ -78,9 +79,7 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({
             LOADING
         ============================ */}
         {loading ? (
-          <div className="flex justify-center items-center py-20 text-gray-500">
-            불러오는 중...
-          </div>
+          <LoadingSpinner text="로딩 중..." />
         ) : data ? (
           <>
             {/* ===========================

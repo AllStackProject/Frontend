@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Filter, RotateCcw, Eye, ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { Link } from "react-router-dom";
 import WatchUserModal from "@/components/admin/history/WatchUserModal";
 import { fetchAdminOrgVideoWatchList } from "@/api/adminStats/view";
 import type { AdminVideoWatchItem } from "@/types/video";
@@ -129,7 +130,7 @@ const VideoWatchSection: React.FC = () => {
     setCurrentPage(1);
   };
 
-  if (loading) return <LoadingSpinner text="불러오는 중..." />;
+  if (loading) return <LoadingSpinner text="로딩 중..." />;
 
   return (
     <div>
@@ -146,8 +147,9 @@ const VideoWatchSection: React.FC = () => {
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-            />
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm 
+             focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
+             w-72 sm:w-80 md:w-96 lg:w-[420px]" />
             <select
               value={visibilityFilter}
               onChange={(e) => {
@@ -224,9 +226,12 @@ const VideoWatchSection: React.FC = () => {
                 <tr
                   key={r.id}
                   className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                    }`}
-                >
-                  <td className="px-4 py-3 font-medium text-gray-800">{r.title}</td>
+                    }`}>
+                  <td className="px-4 py-3 font-medium text-gray-800">
+                    <Link to={`/video/${r.id}`} className="text-blue-600 hover:underline">
+                      {r.title}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-gray-600">{r.creator}</td>
                   <td className="px-4 py-3 text-gray-600">{formatDate(r.created_at)}</td>
                   <td className="px-4 py-3 text-gray-600">{formatExpireDate(r.expired_at)}</td>
@@ -270,7 +275,7 @@ const VideoWatchSection: React.FC = () => {
 
         {currentRecords.length === 0 && (
           <div className="text-center text-gray-500 py-12">
-            검색 결과가 없습니다.
+            데이터가 없습니다.
           </div>
         )}
       </div>

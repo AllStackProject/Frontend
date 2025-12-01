@@ -41,7 +41,7 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
   /** 스크랩 등록/해제 */
   const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (loading) <LoadingSpinner text="불러오는 중..." />;
+    if (loading) <LoadingSpinner text="로딩 중..." />;
     setLoading(true);
 
     try {

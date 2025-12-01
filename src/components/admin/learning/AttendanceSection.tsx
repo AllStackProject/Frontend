@@ -6,6 +6,7 @@ import { fetchAdminMemberWatchList } from "@/api/adminStats/view";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
 import type { MemberWatchSummary } from "@/types/video";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const AttendanceSection: React.FC<{
   onOpenReport?: (userId: number) => void;
@@ -159,8 +160,7 @@ const AttendanceSection: React.FC<{
     setCurrentPage(1);
   };
 
-  if (loading)
-    return <div className="text-center py-12 text-gray-500">불러오는 중...</div>;
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   return (
     <div>

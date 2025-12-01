@@ -8,6 +8,7 @@ import AIFeedbackSection from "@/components/video/AIFeedbackSection";
 import AISummarySection from "@/components/video/AISummarySection";
 import { startVideoSession } from "@/api/video/video";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const VideoDetailPage: React.FC = () => {
   const { orgId } = useAuth();
@@ -50,12 +51,7 @@ const VideoDetailPage: React.FC = () => {
     fetchVideoDetail();
   }, [orgId, id]);
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen text-gray-500">
-        불러오는 중...
-      </div>
-    );
+  if (loading) <LoadingSpinner text="불러오는 중..." />
 
   if (error)
     return (

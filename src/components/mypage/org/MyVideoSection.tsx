@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchMyUploadedVideos, fetchMyVideoStats, deleteVideo } from "@/api/myactivity/video";
 import { getVideoData } from "@/api/video/video";
 import type { VideoMetaData } from "@/types/video";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Video {
   id: number;
@@ -275,11 +276,7 @@ const MyVideoSection: React.FC = () => {
   /* ============================================================
       로딩 화면
   ============================================================ */
-  if (loading) {
-    return (
-      <div className="text-center py-20 text-gray-500">불러오는 중...</div>
-    );
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   /* ============================================================
       데이터 없음

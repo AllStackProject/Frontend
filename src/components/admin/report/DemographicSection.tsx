@@ -6,6 +6,7 @@ import {
 import { UserCircle, Users } from "lucide-react";
 import { fetchAgeReport, fetchGenderReport } from "@/api/adminStats/report";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 // 색상
 const GENDER_COLORS = ["#3b82f6", "#ec4899"];
@@ -105,13 +106,7 @@ const DemographicSection: React.FC = () => {
 
   const totalMembers = genderData.reduce((sum, g) => sum + g.value, 0);
 
-  if (loading) {
-    return (
-      <div className="bg-white p-10 border rounded-xl shadow-sm text-center text-gray-500">
-        통계를 불러오는 중입니다...
-      </div>
-    );
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Trophy, Eye, TrendingUp, Calendar } from "lucide-react";
 import { fetchTopRankVideos } from "@/api/adminStats/report";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const getRankBadge = (rank: number) => {
   switch (rank) {
@@ -68,9 +69,7 @@ const VideoRankingSection: React.FC = () => {
 
       {/* 로딩 */}
       {loading ? (
-        <div className="py-16 text-gray-600 text-center">
-          인기 동영상 불러오는 중...
-        </div>
+        <LoadingSpinner text="불러오는 중..." />
       ) : videos.length === 0 ? (
         /* 데이터 없음 안내 */
         <div className="py-16 text-gray-500 text-center border border-gray-200 rounded-lg bg-gray-50">

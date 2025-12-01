@@ -6,6 +6,7 @@ import { getScrapVideos } from "@/api/myactivity/getScrap"
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap"
 import type { ScrapVideo } from "@/types/scrap"
 import { useAuth } from "@/context/AuthContext"
+import LoadingSpinner from "@/components/common/LoadingSpinner"
 
 type ScrapVideoWithState = ScrapVideo & { is_scrapped?: boolean }
 
@@ -79,16 +80,7 @@ const ScrapSection: React.FC = () => {
     return `${m}:${s.toString().padStart(2, "0")}`
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-rose-600" size={32} />
-          <p className="text-sm text-gray-500">불러오는 중...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   if (error) {
     return (

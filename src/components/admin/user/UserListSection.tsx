@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getOrgMembers } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Group {
   id: number;
@@ -252,13 +253,7 @@ const UserListSection: React.FC = () => {
     setShowRoleModal(false);
   };
 
-  if (loading) {
-    return (
-      <div className="text-center py-10 text-gray-500">
-        불러오는 중…
-      </div>
-    );
-  }
+  if (loading) <LoadingSpinner text="불러오는 중..." />
 
   return (
     <div>

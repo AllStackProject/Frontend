@@ -4,6 +4,7 @@ import { useModal } from "@/context/ModalContext";
 import { createAdminNotice } from "@/api/adminNotice/notice";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface CreateNoticeModalProps {
   onClose: () => void;
@@ -189,7 +190,7 @@ const CreateNoticeModal: React.FC<CreateNoticeModalProps> = ({
                   </label>
 
                   {loadingGroups ? (
-                    <p className="text-sm text-gray-500">그룹 정보를 불러오는 중...</p>
+                    <LoadingSpinner text="불러오는 중..." />
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       {groups.map((g) => (

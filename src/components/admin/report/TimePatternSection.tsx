@@ -13,6 +13,7 @@ import { Clock, Calendar } from "lucide-react";
 import { fetchHourlyReport, fetchDayReport } from "@/api/adminStats/report";
 import ReportFilterBar from "@/components/admin/report/ReportFilterBar";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface DayData {
   day: string;
@@ -120,12 +121,7 @@ const TimePatternSection: React.FC = () => {
   const maxDayViews = peakDay.views;
   const maxTimeViews = peakTime.views;
 
-  if (loading)
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm text-center text-gray-500">
-        시청 패턴 불러오는 중...
-      </div>
-    );
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   return (
     <div className="w-full">

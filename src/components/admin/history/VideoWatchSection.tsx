@@ -3,6 +3,7 @@ import { Filter, RotateCcw, Eye, ChevronLeft, ChevronRight, Info } from "lucide-
 import WatchUserModal from "@/components/admin/history/WatchUserModal";
 import { fetchAdminOrgVideoWatchList } from "@/api/adminStats/view";
 import type { AdminVideoWatchItem } from "@/types/video";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useAuth } from "@/context/AuthContext";
 
 const VideoWatchSection: React.FC = () => {
@@ -128,8 +129,7 @@ const VideoWatchSection: React.FC = () => {
     setCurrentPage(1);
   };
 
-  if (loading)
-    return <div className="text-center py-10 text-gray-500">불러오는 중...</div>;
+  if (loading) return <LoadingSpinner text="불러오는 중..." />;
 
   return (
     <div>

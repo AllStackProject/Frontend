@@ -15,6 +15,7 @@ import {
 import { getOrgMembers } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface LearningReportModalProps {
   open: boolean;
@@ -95,12 +96,7 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
   // ------------------------------
   // 로딩 화면
   // ------------------------------
-  if (loading)
-    return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-xl shadow-xl">불러오는 중...</div>
-      </div>
-    );
+  if (loading) <LoadingSpinner text="불러오는 중..." />;
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -90,28 +90,34 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
     load();
   }, [orgId, video.id]);
 
-  if (loading) <LoadingSpinner text="불러오는 중..." />;
-
   /** 통계 계산 */
-  const avgViewRate =
-    data.reduce((sum, d) => sum + d.viewRate, 0) / data.length || 0;
+  const avgViewRate = data.length
+  ? data.reduce((sum, d) => sum + d.viewRate, 0) / data.length
+  : 0;
 
-  const avgDropOff =
-    data.reduce((sum, d) => sum + d.dropOff, 0) / data.length || 0;
+  const avgDropOff = data.length
+  ? data.reduce((sum, d) => sum + d.dropOff, 0) / data.length
+  : 0;
 
-  const top3Watched = [...data]
-    .filter((d) => d.time >= 10) // 0-10초 구간 제외 룰 유지
-    .sort((a, b) => b.viewRate - a.viewRate)
-    .slice(0, 3);
+  const top3Watched =
+  data.length > 0
+    ? [...data]
+        .filter((d) => d.time >= 10)
+        .sort((a, b) => b.viewRate - a.viewRate)
+        .slice(0, 3)
+    : [];
 
-  const highDrop = data.reduce((max, cur) =>
-    cur.dropOff > max.dropOff ? cur : max
-  );
+  const highDrop =
+  data.length > 0
+    ? data.reduce((max, cur) => (cur.dropOff > max.dropOff ? cur : max))
+    : null;
 
   /** 모달 외부 클릭 → 닫기 */
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
+
+  if (loading) <LoadingSpinner text="로딩 중..." />
 
   return (
     <div
@@ -280,13 +286,15 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
                     </strong>
                   </li>
 
-                  <li>
-                    이탈률이 가장 높은 구간:{" "}
-                    <strong>
-                      {formatTimeToMinutes(highDrop.time)} ~{" "}
-                      {formatTimeToMinutes(highDrop.time + 10)}
-                    </strong>
-                  </li>
+                  {highDrop && (
+                    <li>
+                      이탈률이 가장 높은 구간:{" "}
+                      <strong>
+                        {formatTimeToMinutes(highDrop.time)} ~ 
+                        {formatTimeToMinutes(highDrop.time + 10)}
+                      </strong>
+                    </li>
+                  )}
 
                   <li>
                     평균 시청률: <strong>{avgViewRate.toFixed(1)}%</strong>,

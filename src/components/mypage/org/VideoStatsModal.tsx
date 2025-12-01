@@ -80,7 +80,7 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
     load();
   }, [orgId, video.id]);
 
-  if (loading) <LoadingSpinner text="불러오는 중..." />;
+  if (loading) <LoadingSpinner text="로딩 중..." />;
 
   /** 📊 통계 계산 */
   const avgViewRate =

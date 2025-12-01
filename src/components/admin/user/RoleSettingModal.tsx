@@ -4,6 +4,7 @@ import { useModal } from "@/context/ModalContext";
 import { updateMemberPermission } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
 import { useAuth } from "@/context/AuthContext";
+import ButtonSpinner from "@/components/common/ButtonSpinner";
 
 interface RoleSettingModalProps {
   user: OrgMember;
@@ -58,7 +59,6 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({ user, onClose, onSu
       type: "confirm",
       title: "권한 저장",
       message: `"${user.nickname}"님의 권한을 "${role}"로 변경하시겠습니까?\n권한 변경은 즉시 적용됩니다.`,
-      confirmText: "저장",
       onConfirm: handleConfirmSave,
     });
   };
@@ -283,7 +283,14 @@ const RoleSettingModal: React.FC<RoleSettingModalProps> = ({ user, onClose, onSu
                 disabled={saving}
                 className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? "저장 중..." : "권한 저장"}
+                {saving ? (
+                <>
+                  <ButtonSpinner />
+                  저장 중...
+                </>
+              ) : (
+                "저장"
+              )}
               </button>
             )}
           </div>

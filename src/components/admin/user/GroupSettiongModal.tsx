@@ -3,6 +3,7 @@ import { X, Layers } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 import { updateMemberGroups } from "@/api/adminSuper/members";
 import { useAuth } from "@/context/AuthContext";
+import ButtonSpinner from "@/components/common/ButtonSpinner";
 
 interface Group {
   id: number;
@@ -51,8 +52,6 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
       type: "confirm",
       title: "그룹 변경",
       message: `"${user.name}"님의 그룹을 변경하시겠습니까?\n선택된 그룹 ${selectedGroups.length}개`,
-      requiredKeyword: "저장",
-      confirmText: "저장",
       onConfirm: handleConfirmSave,
     });
   };
@@ -69,7 +68,7 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
       });
       return;
     }
-    
+
     try {
       setSaving(true);
 
@@ -186,7 +185,14 @@ const GroupSettingModal: React.FC<GroupSettingModalProps> = ({
               disabled={saving}
               className="px-5 py-2 bg-green-600 text-white rounded-lg"
             >
-              {saving ? "저장 중..." : "그룹 저장"}
+              {saving ? (
+                <>
+                  <ButtonSpinner />
+                  저장 중...
+                </>
+              ) : (
+                "저장"
+              )}
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Send, MessageCircle, CornerDownRight, ChevronDown, ChevronUp } from "lu
 import type { CommentWithReplies } from "@/types/comment";
 import { getVideoComments, postVideoComment } from "@/api/video/comment";
 import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface CommentSectionProps {
   orgId: number;
@@ -150,17 +151,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  if (loading)
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-        </div>
-        <p className="text-gray-500 font-medium">댓글을 불러오는 중...</p>
-      </div>
-    );
+  if (loading) <LoadingSpinner text="로딩 중..." />
 
   if (error)
     return (

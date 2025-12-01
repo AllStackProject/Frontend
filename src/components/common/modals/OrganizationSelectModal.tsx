@@ -161,7 +161,7 @@ const OrganizationSelectModal = ({
 
           {/* 조직 목록 */}
           {loading ? (
-            <LoadingSpinner text="불러오는 중..." />
+            <LoadingSpinner text="로딩 중..." />
           ) : error ? (
             <p className="text-center text-red-500 py-8">{error}</p>
           ) : organizations.length === 0 ? (

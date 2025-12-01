@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Edit3 } from "lucide-react";
 import { checkNicknameAvailability } from "@/api/organization/orgs";
 import { useModal } from "@/context/ModalContext";
+import ButtonSpinner from "@/components/common/ButtonSpinner";
 
 const EditNicknameModal = ({
   currentNickname,
@@ -83,7 +84,14 @@ const EditNicknameModal = ({
               disabled={checking}
               className="px-3 py-2 bg-primary text-white rounded-lg"
             >
-              {checking ? "..." : "중복 체크"}
+              {checking ? (
+                <>
+                  <ButtonSpinner />
+                  확인 중...
+                </>
+              ) : (
+                "중복 확인"
+              )}
             </button>
           </div>
 

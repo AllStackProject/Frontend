@@ -60,7 +60,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
           {loading ? (
-            <LoadingSpinner text="불러오는 중..." />
+            <LoadingSpinner text="로딩 중..." />
           ) : videos.length === 0 ? (
             <p className="text-center py-10 text-gray-500">시청 기록 없음</p>
           ) : (

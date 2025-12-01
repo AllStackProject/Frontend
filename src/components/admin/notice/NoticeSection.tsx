@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   Trash2,
-  Eye,
   Filter,
   RotateCcw,
   ChevronLeft,
@@ -237,7 +236,7 @@ const NoticeSection: React.FC = () => {
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-light transition-colors"
             >
               <Plus size={18} /> 새 공지 등록
             </button>
@@ -248,7 +247,7 @@ const NoticeSection: React.FC = () => {
       {/* 테이블 */}
       <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
         {loading ? (
-          <LoadingSpinner text="불러오는 중..." />
+          <LoadingSpinner text="로딩 중..." />
         ) : (
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
@@ -268,7 +267,9 @@ const NoticeSection: React.FC = () => {
                   className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                     }`}
                 >
-                  <td className="px-4 py-3 font-medium text-gray-800">
+                  <td
+                    className="px-4 py-3 font-medium text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => setViewingNotice(n)}>
                     {n.title}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{n.author}</td>
@@ -290,12 +291,6 @@ const NoticeSection: React.FC = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-center items-center gap-2">
-                      <button
-                        onClick={() => setViewingNotice(n)}
-                        className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                      >
-                        <Eye size={16} />
-                      </button>
                       <button
                         onClick={() => handleDelete(n)}
                         className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"

@@ -6,6 +6,7 @@ import { addCategory, deleteCategory, updateCategory } from "@/api/adminOrg/cate
 import { addGroup, deleteGroupApi } from "@/api/adminOrg/group";
 import { fetchOrgInfo } from "@/api/adminOrg/info";
 import { useAuth } from "@/context/AuthContext";
+import ButtonSpinner from "@/components/common/ButtonSpinner";
 
 /* ---------------------------------------------------------
    타입 정의
@@ -381,7 +382,7 @@ const GroupCategoryModal: React.FC<GroupCategoryModalProps> = ({
               >
                 {isSaving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <ButtonSpinner />
                     저장 중...
                   </>
                 ) : (

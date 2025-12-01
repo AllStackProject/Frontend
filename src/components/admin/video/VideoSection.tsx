@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import {
-  Eye,
   Trash2,
   Filter,
   RotateCcw,
@@ -199,7 +198,7 @@ const VideoSection: React.FC = () => {
     return pages;
   };
 
-  if (loading) <LoadingSpinner text="불러오는 중..." />;
+  if (loading) <LoadingSpinner text="로딩 중..." />;
 
   return (
     <div className="space-y-6">
@@ -269,7 +268,7 @@ const VideoSection: React.FC = () => {
           <thead className="bg-gray-50 border-b">
             <tr className="text-left text-gray-600">
               <th className="p-3">썸네일</th>
-              <th className="p-3">제목</th>
+              <th className="p-3">영상 제목</th>
               <th className="p-3">업로드일</th>
               <th className="p-3">만료일</th>
               <th className="p-3">공개 범위</th>
@@ -289,7 +288,11 @@ const VideoSection: React.FC = () => {
                   />
                 </td>
 
-                <td className="p-3">{video.title}</td>
+                <td className="p-3">
+                  <Link to={`/video/${video.id}`} className="text-blue-600 hover:underline">
+                    {video.title}
+                  </Link>
+                </td>
 
                 <td className="p-3 text-gray-600">
                   {formatDate(video.createdAt)}
@@ -320,13 +323,6 @@ const VideoSection: React.FC = () => {
 
                 <td className="p-3 text-center">
                   <div className="flex justify-center gap-2">
-                    <Link
-                      to={`/video/${video.id}`}
-                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
-                    >
-                      <Eye size={16} />
-                    </Link>
-
                     <button
                       onClick={() => handleDeleteClick(video)}
                       className="p-2 text-red-500 hover:bg-red-50 rounded-lg"

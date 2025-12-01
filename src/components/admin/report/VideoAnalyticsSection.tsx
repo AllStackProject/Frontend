@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import VideoAnalyticsModal from "./VideoAnalyticsModal";
 import { fetchIntervalList } from "@/api/adminStats/report";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface VideoData {
   id: number;
@@ -20,6 +21,8 @@ const VideoAnalyticsSection: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -36,6 +39,8 @@ const VideoAnalyticsSection: React.FC = () => {
         setVideos(mapped);
       } catch (e) {
         console.error("❌ 구간 목록 로딩 실패:", e);
+      }finally{
+        setLoading(false);
       }
     };
 
@@ -84,6 +89,8 @@ const VideoAnalyticsSection: React.FC = () => {
     }
     return pages;
   };
+
+  if (loading) return <LoadingSpinner text="로딩 중..." />;
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">

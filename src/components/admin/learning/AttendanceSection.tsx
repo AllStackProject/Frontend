@@ -366,15 +366,16 @@ const AttendanceSection: React.FC<{
       {showVideoModal && selectedUser && (
         <VideoDetailModal
           onClose={() => setShowVideoModal(false)}
-          userName={selectedUser.nickname}
-          userId={selectedUser.id}
+          nickname={selectedUser.nickname}
+          memberId={selectedUser.id}
         />
       )}
       {showReportModal && selectedUser && (
         <LearningReportModal
           open={showReportModal}
           onClose={() => setShowReportModal(false)}
-          initialUserId={selectedUser.id}
+          memberId={selectedUser.id}
+          nickname={selectedUser.nickname}
         />
       )}
     </div>

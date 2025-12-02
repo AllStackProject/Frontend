@@ -9,10 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { BarChart3, X } from "lucide-react";
-import {
-  fetchAdminMemberReport,
-} from "@/api/adminStats/view";
-import type { OrgMember } from "@/types/member";
+import { fetchAdminMemberReport } from "@/api/adminStats/view";
 import { useAuth } from "@/context/AuthContext";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 
@@ -35,13 +32,12 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
   // ------------------------------
   // 상태 관리
   // ------------------------------
-  const [members ] = useState<OrgMember[]>([]);
   const [selectedUserId ] = useState<number | null>(memberId ?? null);
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // ------------------------------
-  // 2) 특정 멤버 보고서 불러오기
+  // 1) 특정 멤버 보고서 불러오기
   // ------------------------------
   useEffect(() => {
     if (!selectedUserId) return;
@@ -59,11 +55,6 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
 
     loadReport();
   }, [selectedUserId]);
-
-  // ------------------------------
-  // 검색 필터링
-  // ------------------------------
-  const selectedMember = members.find((m) => m.id === selectedUserId);
 
   // ------------------------------
   // 그래프 데이터 변환
@@ -99,7 +90,7 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
           {/* 데이터 */}
-          {selectedMember && report ? (
+          {report ? (
             <>
               {/* 요약 카드들 */}
               <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4 mb-6">

@@ -57,7 +57,7 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /** 📌 API 로드 */
+  /** API 로드 */
   useEffect(() => {
     const load = async () => {
       try {
@@ -81,24 +81,31 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
   }, [orgId, video.id]);
 
   if (loading) {
-  return <LoadingSpinner text="로딩 중..." />;
-}
+    return <LoadingSpinner text="로딩 중..." />;
+  }
 
-  /** 📊 통계 계산 */
+  /** 통계 계산 */
+  // 평균값 계산
   const avgViewRate =
-    data.reduce((sum, d) => sum + d.viewRate, 0) / data.length || 0;
+    data.length > 0 ? data.reduce((sum, d) => sum + d.viewRate, 0) / data.length : 0;
 
   const avgDropOff =
-    data.reduce((sum, d) => sum + d.dropOff, 0) / data.length || 0;
+    data.length > 0 ? data.reduce((sum, d) => sum + d.dropOff, 0) / data.length : 0;
 
-  const top3Watched = [...data]
-    .filter((d) => d.time >= 10)
-    .sort((a, b) => b.viewRate - a.viewRate)
-    .slice(0, 3);
+  // Top 3
+  const top3Watched =
+    data.length > 0
+      ? [...data]
+        .filter((d) => d.time >= 10)
+        .sort((a, b) => b.viewRate - a.viewRate)
+        .slice(0, 3)
+      : [];
 
-  const highDrop = data.reduce((max, cur) =>
-    cur.dropOff > max.dropOff ? cur : max
-  );
+  // 최고 이탈 구간
+  const highDrop =
+    data.length > 0
+      ? data.reduce((max, cur) => (cur.dropOff > max.dropOff ? cur : max))
+      : null;
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
@@ -177,13 +184,12 @@ const VideoStatsModal: React.FC<Props> = ({ video, orgId, onClose }) => {
                   >
                     <div className="absolute top-2 right-2">
                       <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                          idx === 0
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0
                             ? "bg-yellow-400 text-yellow-900"
                             : idx === 1
-                            ? "bg-gray-300 text-gray-700"
-                            : "bg-orange-300 text-orange-900"
-                        }`}
+                              ? "bg-gray-300 text-gray-700"
+                              : "bg-orange-300 text-orange-900"
+                          }`}
                       >
                         {idx + 1}
                       </div>

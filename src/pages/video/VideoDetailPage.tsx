@@ -107,6 +107,7 @@ const VideoDetailPage: React.FC = () => {
             sessionId={sessionData.session_id}
             wholeTime={video.whole_time}
             heatmapCounts={sessionData.seg_view_cnts}
+            recentPositionSec={video.recent_position_sec}
           />
 
           {/* (모바일 전용) VideoInfo */}

@@ -49,7 +49,6 @@ export const leaveVideoSession = async (
   orgId: number,
   videoId: number,
   payload: {
-    member_id: number,
     session_id: string;
     watch_rate: number;
     watch_segments: string;

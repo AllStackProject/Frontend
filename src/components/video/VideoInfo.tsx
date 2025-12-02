@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Calendar, Clock } from "lucide-react";
+import { Eye, Calendar } from "lucide-react";
 import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 import { postVideoScrap, deleteVideoScrap } from "@/api/video/scrap";
 import LoadingSpinner from "../common/LoadingSpinner";

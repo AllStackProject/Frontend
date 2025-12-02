@@ -51,7 +51,9 @@ const VideoCard = ({
   const handleFavoriteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (loading) <LoadingSpinner text="로딩 중..." />;
+    if (loading) {
+  return <LoadingSpinner text="로딩 중..." />;
+}
     setLoading(true);
 
     try {

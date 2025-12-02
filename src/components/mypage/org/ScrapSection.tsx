@@ -80,7 +80,9 @@ const ScrapSection: React.FC = () => {
     return `${m}:${s.toString().padStart(2, "0")}`
   }
 
-  if (loading) <LoadingSpinner text="로딩 중..." />;
+  if (loading) {
+  return <LoadingSpinner text="로딩 중..." />;
+}
 
   if (error) {
     return (

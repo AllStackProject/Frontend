@@ -160,7 +160,9 @@ const AttendanceSection: React.FC<{
     setCurrentPage(1);
   };
 
-  if (loading) <LoadingSpinner text="로딩 중..." />;
+  if (loading) {
+    return <LoadingSpinner text="로딩 중..." />;
+  }
 
   return (
     <div>

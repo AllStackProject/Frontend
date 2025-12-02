@@ -121,7 +121,9 @@ const TimePatternSection: React.FC = () => {
   const maxDayViews = peakDay.views;
   const maxTimeViews = peakTime.views;
 
-  if (loading) <LoadingSpinner text="로딩 중..." />;
+  if (loading) {
+  return <LoadingSpinner text="로딩 중..." />;
+}
 
   return (
     <div className="w-full">

@@ -174,7 +174,9 @@ const VideoListSection: React.FC<VideoListSectionProps> = ({ selectedTag }) => {
   /* ============================================================
       UI 렌더링
   ============================================================ */
-  if (loading) <LoadingSpinner text="로딩 중..." />;
+  if (loading) {
+  return <LoadingSpinner text="로딩 중..." />;
+}
 
   return (
     <div className="w-full">

@@ -51,7 +51,9 @@ const VideoDetailPage: React.FC = () => {
     fetchVideoDetail();
   }, [orgId, id]);
 
-  if (loading) <LoadingSpinner text="로딩 중..." />
+  if (loading) {
+    return <LoadingSpinner text="로딩 중..." />;
+  }
 
   if (error)
     return (

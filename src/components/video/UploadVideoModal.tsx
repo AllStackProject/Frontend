@@ -351,7 +351,7 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                     <div className="flex flex-col items-center text-gray-400">
                       <Image size={28} className="mb-1" />
                       <span className="text-xs">
-                        PNG 이미지 선택 (권장 1280×720)
+                        PNG 이미지 선택 (권장 1280×720, 9MB)
                       </span>
                     </div>
                   )}
@@ -362,11 +362,19 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
+                      
+                      const maxSize = 9 * 1024 * 1024;
+                      if (file.size > maxSize) {
+                        openModal({
+                          type: "error",
+                          title: "이미지 용량 초과",
+                          message: "썸네일 PNG 파일 크기는 9MB 이하여야 합니다.",
+                        });
+                        return;
+                      }
+
                       handleChange("thumbnail", file);
-                      handleChange(
-                        "thumbnailPreview",
-                        URL.createObjectURL(file)
-                      );
+                      handleChange("thumbnailPreview", URL.createObjectURL(file));
                     }}
                   />
                 </label>

@@ -12,7 +12,6 @@ import { BarChart3, X } from "lucide-react";
 import {
   fetchAdminMemberReport,
 } from "@/api/adminStats/view";
-import { getOrgMembers } from "@/api/adminSuper/members";
 import type { OrgMember } from "@/types/member";
 import { useAuth } from "@/context/AuthContext";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -34,32 +33,10 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
   // ------------------------------
   // 상태 관리
   // ------------------------------
-  const [members, setMembers] = useState<OrgMember[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(initialUserId ?? null);
+  const [members ] = useState<OrgMember[]>([]);
+  const [selectedUserId ] = useState<number | null>(initialUserId ?? null);
   const [report, setReport] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  // ------------------------------
-  // 1) 멤버 목록 불러오기
-  // ------------------------------
-  useEffect(() => {
-    const loadMembers = async () => {
-      try {
-        const list = await getOrgMembers(orgId || 0);
-        setMembers(list);
-
-        if (!initialUserId && list.length > 0) {
-          setSelectedUserId(list[0].id);
-        }
-      } catch (err) {
-        console.error("❌ 멤버 조회 실패:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMembers();
-  }, [orgId]);
+  const [loading] = useState(true);
 
   // ------------------------------
   // 2) 특정 멤버 보고서 불러오기

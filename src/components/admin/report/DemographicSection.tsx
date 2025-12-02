@@ -106,7 +106,9 @@ const DemographicSection: React.FC = () => {
 
   const totalMembers = genderData.reduce((sum, g) => sum + g.value, 0);
 
-  if (loading) <LoadingSpinner text="로딩 중..." />;
+  if (loading) {
+    return <LoadingSpinner text="로딩 중..." />;
+  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">

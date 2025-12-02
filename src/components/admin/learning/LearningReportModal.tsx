@@ -96,7 +96,9 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
   // ------------------------------
   // 로딩 화면
   // ------------------------------
-  if (loading) <LoadingSpinner text="로딩 중..." />;
+  if (loading) {
+    return <LoadingSpinner text="로딩 중..." />;
+  }
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

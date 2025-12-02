@@ -198,7 +198,9 @@ const VideoSection: React.FC = () => {
     return pages;
   };
 
-  if (loading) <LoadingSpinner text="로딩 중..." />;
+  if (loading) {
+  return <LoadingSpinner text="로딩 중..." />;
+}
 
   return (
     <div className="space-y-6">

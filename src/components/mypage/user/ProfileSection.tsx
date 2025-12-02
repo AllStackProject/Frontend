@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Edit2, Lock, AlertCircle, Eye, EyeOff, UserX } from "lucide-react";
 import { getUserInfo, updateUserInfo, deleteUser } from "@/api/user/userInfo";
-import type { UserInfoResponse } from "@/types/user";
+import type { UpdateUserInfoRequest, UserInfoResponse } from "@/types/user";
 import { useModal } from "@/context/ModalContext";
 
 // 전화번호 정규식
@@ -173,16 +173,13 @@ const ProfileSection: React.FC = () => {
     }
 
     try {
-      const body: Record<string, any> = {
+    const body: UpdateUserInfoRequest = {
+        new_password: formData.password || "",
+        confirm_password: formData.passwordConfirm || "",
         changed_age: parseInt(formData.ageGroup.replace("대", "").trim(), 10),
         changed_gender: formData.gender === "남성" ? "MALE" : "FEMALE",
         changed_phone_num: formData.phone,
       };
-
-      if (formData.password && formData.passwordConfirm) {
-        body.new_password = formData.password;
-        body.confirm_password = formData.passwordConfirm;
-      }
 
       const isSuccess = await updateUserInfo(body);
 

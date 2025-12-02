@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import BaseModal from "@/components/common/modals/BaseModal";
+import { registerModalHandler } from "@/utils/modalDispatcher"; 
 
 type OpenModalProps = {
   type?: "confirm" | "delete" | "edit" | "success" | "error";
@@ -31,6 +32,11 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
     setModalProps(null);
   };
 
+  useEffect(() => {
+    registerModalHandler(openModal);
+  }, []);
+
+  
   return (
     <ModalContext.Provider value={{ openModal, closeModal }}>
       {children}

@@ -114,11 +114,11 @@ const OrganizationSection: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 9 * 1024 * 1024) {
       openModal({
         type: "error",
         title: "이미지 오류",
-        message: "이미지 파일 크기는 5MB 이하여야 합니다.",
+        message: "이미지 파일 크기는 9MB 이하여야 합니다.",
       });
       return;
     }

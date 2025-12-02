@@ -79,7 +79,7 @@ const OrganizationSelectModal = ({
         openModal({
           type: "confirm",
           title: "가입 요청 완료",
-          message: `"${orgName}" 조직에 가입 요청이 접수되었습니다.`,
+          message: `가입 요청이 접수되었습니다.`,
         });
         return;
       }

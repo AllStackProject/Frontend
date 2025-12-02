@@ -7,14 +7,14 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface VideoDetailModalProps {
   onClose: () => void;
-  userName: string;
-  userId: number;
+  nickname: string;
+  memberId: number;
 }
 
 const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
   onClose,
-  userName,
-  userId,
+  nickname,
+  memberId,
 }) => {
   const navigate = useNavigate();
   const orgId = Number(localStorage.getItem("org_id"));
@@ -26,7 +26,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await fetchAdminMemberWatchDetail(orgId, userId);
+        const data = await fetchAdminMemberWatchDetail(orgId, memberId);
         setVideos(
           data.map((v) => ({
             ...v,
@@ -41,7 +41,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
       }
     };
     load();
-  }, [orgId, userId]);
+  }, [orgId, memberId]);
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -50,7 +50,7 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
         <div className="flex justify-between items-center px-6 py-4 border-b">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Video size={20} className="text-blue-600" />
-            {userName}님의 시청 영상
+            {nickname}님의 시청 영상
           </h2>
           <button onClick={onClose}>
             <X size={22} />

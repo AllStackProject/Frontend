@@ -19,13 +19,15 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 interface LearningReportModalProps {
   open: boolean;
   onClose: () => void;
-  initialUserId?: number;
+  memberId?: number;
+  nickname: string;
 }
 
 const LearningReportModal: React.FC<LearningReportModalProps> = ({
   open,
   onClose,
-  initialUserId
+  memberId,
+  nickname
 }) => {
   const { orgId } = useAuth();
   if (!open) return null;
@@ -34,9 +36,9 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
   // 상태 관리
   // ------------------------------
   const [members ] = useState<OrgMember[]>([]);
-  const [selectedUserId ] = useState<number | null>(initialUserId ?? null);
+  const [selectedUserId ] = useState<number | null>(memberId ?? null);
   const [report, setReport] = useState<any>(null);
-  const [loading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // ------------------------------
   // 2) 특정 멤버 보고서 불러오기
@@ -50,6 +52,8 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
         setReport(r);
       } catch (err) {
         console.error("❌ 멤버 리포트 조회 실패:", err);
+      } finally{
+        setLoading(false);
       }
     };
 
@@ -85,7 +89,7 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
         <div className="flex justify-between items-center px-6 py-4 border-b">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <BarChart3 size={20} className="text-blue-600" />
-            {selectedMember?.nickname}님의 학습 리포트
+            {nickname}님의 학습 리포트
           </h2>
           <button onClick={onClose}>
             <X size={22} />

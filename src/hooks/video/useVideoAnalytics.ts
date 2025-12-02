@@ -46,6 +46,7 @@ export function useVideoAnalytics({
     const endedSent = useRef(false);
     const lastPos = useRef(0);
     const startedAt = useRef(Date.now());
+    const initialPathnameRef = useRef(window.location.pathname);
 
     const SEGMENT_SIZE = 10; // 10초 단위
 
@@ -102,9 +103,11 @@ export function useVideoAnalytics({
         }
     };
 
-    /** 영상 거의 끝났는지 체크 (마지막 9초) */
-    const nearEnd = (v: HTMLVideoElement) =>
-        v.duration > 0 && v.currentTime >= v.duration - 9;
+    const safeNearEnd = (v: HTMLVideoElement) => {
+        if (Date.now() - startedAt.current < 5000) return false;
+        if (v.duration < 15) return false;
+        return v.currentTime >= v.duration - 9;
+    };
 
     /**
      * LEAVE API payload 생성
@@ -149,7 +152,6 @@ export function useVideoAnalytics({
         const recent = Math.floor(v.currentTime || 0);
 
         return {
-            member_id: 1, // TODO: 나중에 실제 member_id 로 교체
             session_id: sessionId,
             watch_rate,
             watch_segments,
@@ -245,7 +247,7 @@ export function useVideoAnalytics({
             if (!v) return;
 
             // 영상 거의 끝났는데 아직 END 안보냈으면 여기서 한 번 더 체크
-            if (!endedSent.current && nearEnd(v)) {
+            if (!endedSent.current && safeNearEnd(v)) {
                 console.log("🏁 [Loop near-end 감지] → onEnded 처리");
 
                 endedSent.current = true;
@@ -283,12 +285,21 @@ export function useVideoAnalytics({
     // 3) 페이지 이탈 / 숨김 / 라우팅 변경 감지 (Beacon 강화)
     // =======================
     useEffect(() => {
-        const handleLeave = (via: string) => {
+        const initialPathname = initialPathnameRef.current;
+
+        const handleLeave = (via: string, options?: { checkPath?: boolean }) => {
             const v = getVideoEl();
             if (!v) return;
 
             // 이미 END 처리된 상태면 중복 LEAVE는 안 보냄
             if (endedSent.current) return;
+
+            const shouldCheckPath = options?.checkPath ?? true;
+
+            // URL 기준으로만 이탈 처리하고 싶을 때
+            if (shouldCheckPath && window.location.pathname === initialPathname) {
+                return;
+            }
 
             console.log(`🚪 [이탈 감지] via=${via}`);
 
@@ -308,34 +319,36 @@ export function useVideoAnalytics({
             void sendLeave(false, via);
         };
 
-        /** 1) 기본 브라우저 이벤트 */
-        const onPageHide = () => handleLeave("pagehide");         // 홈 버튼 / 뒤로가기 /
-        const onBeforeUnload = () => handleLeave("beforeunload"); // 브라우저 종료
-        const onVisibilityChange = () => {
-            if (document.visibilityState === "hidden") {
-                handleLeave("visibilitychange");                  // 다른 앱 이동, 화면 꺼짐
-            }
-        };
-
-        /** 2) 뒤로가기/앞으로가기 (popstate) */
+        /** 1) 브라우저 뒤로가기/앞으로가기 (popstate) */
         const onPopState = () => {
-            handleLeave("popstate"); // 브라우저 뒤로가기 버튼
+            handleLeave("popstate", { checkPath: true });
         };
 
-        /** 3) SPA pushState/replaceState 감지 (React Router 이동 포함) */
-        const wrapHistory = (type: "pushState" | "replaceState") => {
-            const original = history[type];
-            return function (...args: any[]) {
-                handleLeave(type); // 라우팅 변경 감지
-                // @ts-ignore
-                return original.apply(this, args);
-            };
-        };
+        /** 2) SPA pushState/replaceState 감지 (React Router 이동 포함) */
+        const originalPushState = history.pushState;
+        const originalReplaceState = history.replaceState;
 
-        history.pushState = wrapHistory("pushState");
-        history.replaceState = wrapHistory("replaceState");
+        history.pushState = function (
+            data: any,
+            unused: string,
+            url?: string | URL | null,
+        ) {
+            const result = originalPushState.apply(history, [data, unused, url]);
+            handleLeave("pushState", { checkPath: true });
+            return result;
+        } as History["pushState"];
 
-        /** 4) <a href> 태그 클릭으로 외부 URL 이동 */
+        history.replaceState = function (
+            data: any,
+            unused: string,
+            url?: string | URL | null,
+        ) {
+            const result = originalReplaceState.apply(history, [data, unused, url]);
+            handleLeave("replaceState", { checkPath: true });
+            return result;
+        } as History["replaceState"];
+
+        /** 3) <a href> 태그 클릭으로 외부/다른 페이지 이동 */
         const onDocumentClick = (e: any) => {
             const a = e.target.closest("a");
             if (!a) return;
@@ -346,24 +359,31 @@ export function useVideoAnalytics({
             // 같은 페이지 anchor(#) 이동은 무시
             if (url.startsWith("#")) return;
 
-            handleLeave("anchor-click");
+            handleLeave("anchor-click", { checkPath: true });
         };
+
+        /** 4) 브라우저 종료 / 새로고침 */
+        const onBeforeUnload = () => handleLeave("beforeunload", { checkPath: false });
+        const onPageHide = () => handleLeave("pagehide", { checkPath: false });
 
         /** 이벤트 등록 */
         window.addEventListener("pagehide", onPageHide);
         window.addEventListener("beforeunload", onBeforeUnload);
-        document.addEventListener("visibilitychange", onVisibilityChange);
-
         window.addEventListener("popstate", onPopState);
         document.addEventListener("click", onDocumentClick, true);
+
+        // ❌ visibilitychange는 더 이상 사용하지 않음 (탭 이동 제외)
+        // document.addEventListener("visibilitychange", onVisibilityChange);
 
         return () => {
             window.removeEventListener("pagehide", onPageHide);
             window.removeEventListener("beforeunload", onBeforeUnload);
-            document.removeEventListener("visibilitychange", onVisibilityChange);
-
             window.removeEventListener("popstate", onPopState);
             document.removeEventListener("click", onDocumentClick, true);
+
+            // history 원복
+            history.pushState = originalPushState;
+            history.replaceState = originalReplaceState;
         };
     }, [getVideoEl, orgId, videoId, sessionId]);
 
@@ -386,7 +406,7 @@ export function useVideoAnalytics({
         if (!v) return;
 
         // 영상 거의 끝난 상태의 pause는 END 직전일 수 있으므로 별도 처리 X
-        if (!nearEnd(v)) {
+        if (!safeNearEnd(v)) {
             // 마지막으로 기록된 위치 ~ 현재 위치까지 시청시간 누적(살짝 보정)
             accumulateWatchTime(lastPos.current, v.currentTime || lastPos.current);
             lastPos.current = v.currentTime || lastPos.current;

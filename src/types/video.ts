@@ -29,6 +29,7 @@ export interface StartVideoSessionResult {
     watch_cnt: number;
     whole_time: number;
     created_at: string;
+    recent_position_sec: number;
   };
 
   seg_view_cnts: number[];

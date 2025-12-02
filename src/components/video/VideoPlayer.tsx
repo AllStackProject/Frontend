@@ -26,6 +26,7 @@ interface VideoPlayerProps {
   orgId: number;
   wholeTime: number;
   heatmapCounts: number[];
+  recentPositionSec: number;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -35,6 +36,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   orgId,
   wholeTime,
   heatmapCounts,
+  recentPositionSec,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +55,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging] = useState(false);
 
   const [thumbnail, setThumbnail] = useState<string>("");
   const [showControls, setShowControls] = useState(true);
@@ -161,13 +163,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (!instance) return;
 
         const levels = instance.levels;
-        if (!levels || levels.length === 0) return;
+        if (levels && levels.length > 0) {
+            const highest = levels.length - 1;
+            instance.currentLevel = highest;
+            setQuality(`${levels[highest].height}p`);
+        }
 
-        const highest = levels.length - 1;
-        instance.currentLevel = highest;
-
-        setQuality(`${levels[highest].height}p`);
-      });
+        // recent_position_sec 이어보기 처리
+        // 0이면 → 그대로 재생 (이어보기 없음)
+        // 0보다 크면 → 이어보기 적용
+        if (recentPositionSec > 0) {
+            setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.currentTime = recentPositionSec;
+                    console.log("🎬 이어보기 적용:", recentPositionSec);
+                }
+            }, 300); // HLS duration 안정화용
+        } else {
+            console.log("🆕 첫 시청 → 0초부터 재생");
+        }
+    });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
         console.error("[HLS ERROR]", data);

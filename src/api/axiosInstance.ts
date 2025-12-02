@@ -1,6 +1,6 @@
 import axios, { AxiosHeaders } from "axios";
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { useModal } from "@/context/ModalContext";
+import { openModalGlobally } from "@/utils/modalDispatcher";
 
 // 커스텀 설정 타입
 export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -12,8 +12,6 @@ const api: AxiosInstance = axios.create({
   //headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });
-
-const { openModal } = useModal();
 
 // 요청 인터셉터
 api.interceptors.request.use(
@@ -76,7 +74,7 @@ api.interceptors.response.use(
 
     // 탈퇴 멤버 처리
     if (code === 5017) {
-      openModal({
+      openModalGlobally({
         type: "error",
         title: "접근 권한 없음",
         message: "해당 조직에서 탈퇴된 멤버입니다.\n다시 로그인해주세요.",

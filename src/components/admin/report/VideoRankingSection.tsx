@@ -104,7 +104,7 @@ const VideoRankingSection: React.FC = () => {
 
                 {/* 텍스트 */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800">
+                  <p className="text-sm font-semibold text-gray-800 truncate">
                     {video.title}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-gray-600">

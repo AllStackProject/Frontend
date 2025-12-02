@@ -117,9 +117,15 @@ const VideoAnalyticsSection: React.FC = () => {
               key={v.id}
               className={`border-b hover:bg-blue-50 transition-colors cursor-pointer ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                 }`}
-              onClick={() => setSelectedVideo(v)}
-            >
-              <td className="px-4 py-3 font-medium text-gray-800">{v.title}</td>
+              onClick={() => setSelectedVideo(v)}>
+              <td
+                className="
+                  px-4 py-3 font-medium text-gray-800 
+                  max-w-[400px] whitespace-nowrap overflow-hidden text-ellipsis block
+                "
+              >
+                {v.title}
+              </td>
               <td className="px-4 py-3 text-gray-600">{v.uploader}</td>
               <td className="px-4 py-3 text-center">{v.totalViewers} 명</td>
               <td

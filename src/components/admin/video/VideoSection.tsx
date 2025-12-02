@@ -290,11 +290,16 @@ const VideoSection: React.FC = () => {
                   />
                 </td>
 
-                <td className="p-3">
-                  <Link to={`/video/${video.id}`} className="text-blue-600 hover:underline">
-                    {video.title}
-                  </Link>
-                </td>
+                <td className="p-3 max-w-[220px]">
+                <Link
+                  to={`/video/${video.id}`}
+                  className="
+                    text-blue-600 hover:underline 
+                    block whitespace-nowrap overflow-hidden text-ellipsis
+                  ">
+                  {video.title}
+                </Link>
+              </td>
 
                 <td className="p-3 text-gray-600">
                   {formatDate(video.createdAt)}

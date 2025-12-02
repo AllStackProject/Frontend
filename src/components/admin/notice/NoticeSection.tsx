@@ -268,7 +268,8 @@ const NoticeSection: React.FC = () => {
                     }`}
                 >
                   <td
-                    className="px-4 py-3 font-medium text-blue-600 cursor-pointer hover:underline"
+                    className="px-4 py-3 font-medium text-blue-600 cursor-pointer hover:underline 
+                              max-w-[300px] whitespace-nowrap overflow-hidden text-ellipsis block"
                     onClick={() => setViewingNotice(n)}>
                     {n.title}
                   </td>

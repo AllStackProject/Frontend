@@ -607,6 +607,9 @@ const UploadVideoModal: React.FC<UploadVideoModalProps> = ({
                   <p>
                     💡 동영상 업로드 후 <b>AI 사용 여부를 수정할 수 없습니다.</b>
                   </p>
+                  <p>
+                    🚨 AI 기능은 음성에 한해 생성 가능합니다.
+                  </p>
                 </div>
               </div>
 

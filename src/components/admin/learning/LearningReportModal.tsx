@@ -14,14 +14,12 @@ import { useAuth } from "@/context/AuthContext";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface LearningReportModalProps {
-  open: boolean;
   onClose: () => void;
   memberId: number;
   nickname: string;
 }
 
 const LearningReportModal: React.FC<LearningReportModalProps> = ({
-  open,
   onClose,
   memberId,
   nickname,
@@ -36,6 +34,7 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
   /** 멤버 리포트 로드 */
   useEffect(() => {
     const loadReport = async () => {
+      setLoading(true);
       try {
         const data = await fetchAdminMemberReport(orgId || 0, memberId);
         setReport(data);
@@ -49,17 +48,12 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
     loadReport();
   }, [orgId, memberId]);
 
-  /** 📌 그래프 데이터 변환 */
+  /** 그래프 데이터 변환 */
   const chartData =
     report?.monthly_watched_cnts?.map((m: any) => ({
       date: `${m.year}-${m.month}`,
       views: m.watched_video_cnt,
     })) ?? [];
-
-  /** 로딩중 표시 */
-  if (loading) {
-    return <LoadingSpinner text="로딩 중..." />;
-  }
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -78,11 +72,15 @@ const LearningReportModal: React.FC<LearningReportModalProps> = ({
 
         {/* 내용 */}
         <div className="p-6 overflow-y-auto flex-1">
-          {report ? (
+          {loading ? (
+            <div className="flex justify-center items-center h-52">
+              <LoadingSpinner text="로딩 중..." />
+            </div>
+          ) : report ? (
             <>
               {/* 요약 카드 */}
               <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                
+
                 {/* 완료 영상 수 */}
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 text-center">
                   <p className="text-xs text-gray-500 mb-1">시청 완료 영상 수</p>

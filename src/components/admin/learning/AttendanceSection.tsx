@@ -21,7 +21,7 @@ const AttendanceSection: React.FC<{
   const [selectedUser, setSelectedUser] = useState<MemberWatchSummary | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   /** 멀티 그룹 상태 */
   const [GROUP_OPTIONS, setGroupOptions] = useState<string[]>([]);
@@ -34,12 +34,15 @@ const AttendanceSection: React.FC<{
   --------------------------------------------------------- */
   useEffect(() => {
     const loadGroups = async () => {
+      setLoading(true);
       try {
         const info = await fetchOrgInfo(orgId || 0);
         const groups = info.member_groups?.map((g: any) => g.name) || [];
         setGroupOptions(groups);
       } catch (err) {
         console.error("❌ 그룹 목록 조회 실패:", err);
+      }finally{
+        setLoading(false);
       }
     };
 
@@ -51,6 +54,7 @@ const AttendanceSection: React.FC<{
   --------------------------------------------------------- */
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       try {
         const list = await fetchAdminMemberWatchList(orgId || 0);
         setUsers(list);
@@ -160,12 +164,15 @@ const AttendanceSection: React.FC<{
     setCurrentPage(1);
   };
 
-  if (loading) {
-    return <LoadingSpinner text="로딩 중..." />;
-  }
-
   return (
-    <div>
+    <div className="relative">
+      {/* 로딩 오버레이 */}
+      {loading && (
+        <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-50">
+          <LoadingSpinner text="로딩 중..." />
+        </div>
+      )}
+
       {/* 필터 UI */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -372,7 +379,6 @@ const AttendanceSection: React.FC<{
       )}
       {showReportModal && selectedUser && (
         <LearningReportModal
-          open={showReportModal}
           onClose={() => setShowReportModal(false)}
           memberId={selectedUser.id}
           nickname={selectedUser.nickname}

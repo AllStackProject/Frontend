@@ -75,7 +75,7 @@ const DropOffAnalysisSection: React.FC = () => {
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm font-medium text-gray-800 line-clamp-2">
                       {v.title}
                     </p>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -132,7 +132,7 @@ const DropOffAnalysisSection: React.FC = () => {
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm font-medium text-gray-800 line-clamp-2">
                       {v.title}
                     </p>
                     <div className="flex items-center gap-3 text-xs text-gray-500">

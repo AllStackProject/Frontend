@@ -229,8 +229,14 @@ const VideoWatchSection: React.FC = () => {
                   key={r.id}
                   className={`border-b last:border-b-0 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                     }`}>
-                  <td className="px-4 py-3 font-medium text-gray-800">
-                    <Link to={`/video/${r.id}`} className="text-blue-600 hover:underline">
+                  <td className="px-4 py-3 font-medium text-gray-800 max-w-[240px]">
+                    <Link
+                      to={`/video/${r.id}`}
+                      className="
+                        text-blue-600 hover:underline
+                        block whitespace-nowrap overflow-hidden text-ellipsis
+                      "
+                    >
                       {r.title}
                     </Link>
                   </td>

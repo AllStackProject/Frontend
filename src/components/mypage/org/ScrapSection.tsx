@@ -191,11 +191,6 @@ const ScrapSection: React.FC = () => {
                   <h4 className="text-lg font-bold text-gray-900 line-clamp-2 leading-snug">
                     {video.name}
                   </h4>
-
-                  {/* 최근 시청일 */}
-                  <p className="text-sm text-gray-500">
-                    최근 시청일: {new Date(video.recent_watch).toLocaleDateString("ko-KR")}
-                  </p>
                 </div>
               </div>
             </div>

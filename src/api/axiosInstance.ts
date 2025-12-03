@@ -36,28 +36,22 @@ api.interceptors.request.use(
 // 응답 인터셉터
 api.interceptors.response.use(
   (response) => {
-    // === 신규 사용자 Access Token 갱신 ===
-    const newAccessToken =
-      response.headers["authorization"] ||
-      response.headers["Authorization"];
+    // === 새로운 조직 Token 체크 ===
+    const rawAuthHeader = response.headers["authorization"];
 
-    if (newAccessToken) {
-      const token = newAccessToken.replace("Bearer ", "").trim();
+    if (rawAuthHeader) {
+      console.log("🔄 새로운 Org Token 감지 → 업데이트");
 
-      console.log("새로운 Access Token 감지 → 업데이트");
+      // "Bearer ..." 형태인지 체크
+      const newToken = rawAuthHeader.startsWith("Bearer ")
+        ? rawAuthHeader
+        : `Bearer ${rawAuthHeader}`;
 
-      localStorage.setItem("access_token", token);
-    }
+      // 기존 토큰 제거
+      localStorage.removeItem("org_token");
 
-    // === 신규 조직 Token 갱신 ===
-    const newOrgToken =
-      response.headers["x-org-token"] ||
-      response.headers["X-Org-Token"];
-
-    if (newOrgToken) {
-      console.log("새로운 Org Token 감지 → 업데이트");
-
-      localStorage.setItem("org_token", newOrgToken);
+      // 새 토큰 저장
+      localStorage.setItem("org_token", newToken);
     }
 
     return response;
@@ -84,4 +78,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export default api;

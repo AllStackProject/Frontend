@@ -140,19 +140,43 @@ spec:
       throw e
 
     } finally {
-
+      // Git 정보 수집
+      def branch = env.BRANCH_NAME ?: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+      def commitAuthor = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+      def commitMsg = sh(script: "git log -1 --pretty=format:'%s'", returnStdout: true).trim()
+      def commitHash = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+      def timestamp = new Date().format("yyyy-MM-dd HH:mm:ss")
+      def imageTag = BUILD_NUMBER
+      
       if (currentBuild.result == 'SUCCESS') {
         slackSend(
           channel: 'C09FJ3HK7E1',
           color: 'good',
-          message: "🎉 *Frontend Build 성공 (#${BUILD_NUMBER})*\n이미지: `dockdock150/frontend:${BUILD_NUMBER}`",
+          message: """
+🎉 *Backend 배포 성공!*
+* 배포자:* ${commitAuthor}
+* 배포 시각:* ${timestamp}
+* 브랜치:* ${branch}
+* 버전(Tag):* ${imageTag}
+* 커밋 메시지:* ${commitMsg}
+* 커밋:* ${commitHash}
+🔗 <${env.BUILD_URL}|Jenkins Build 보기>
+""",
           tokenCredentialId: 'slack-webhook'
         )
       } else {
         slackSend(
           channel: 'C09FJ3HK7E1',
           color: 'danger',
-          message: "🔥 *Frontend Build 실패 (#${BUILD_NUMBER})*",
+           message: """
+🔥 *Backend 배포 실패!*
+*배포자:* ${commitAuthor}
+* 배포 시각:* ${timestamp}
+* 브랜치:* ${branch}
+* 커밋 메시지:* ${commitMsg}
+* 커밋:* ${commitHash}
+🔗 <${env.BUILD_URL}|Jenkins Build 보기>
+""",
           tokenCredentialId: 'slack-webhook'
         )
       }

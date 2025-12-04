@@ -14,8 +14,12 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
   const navigate = useNavigate();
   const { nickname, orgName, orgId } = useAuth();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 로딩 상태 + 기본 이미지 설정
   const [orgImage, setOrgImage] = useState<string>("/dummy/woori-logo.png");
+  const [isOrgImageLoading, setIsOrgImageLoading] = useState(true);
 
   // 권한별 역할 표시 텍스트
   const getRoleText = () => {
@@ -36,12 +40,13 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
     const loadOrgInfo = async () => {
       if (!orgId) return;
 
+      setIsOrgImageLoading(true);
+
       try {
         const info = await fetchOrgInfo(orgId);
 
         let url = info.img_url;
 
-        // http/https 없으면 자동 보정
         if (url && !url.startsWith("http")) {
           url = "https://" + url;
         }
@@ -50,6 +55,8 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
       } catch (error) {
         console.error("❌ 조직 정보 불러오기 실패:", error);
         setOrgImage("/dummy/woori-logo.png");
+      } finally {
+        setIsOrgImageLoading(false);
       }
     };
 
@@ -60,16 +67,22 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
     <>
       {/* 헤더 */}
       <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+        
         {/* 조직 정보 */}
         <div
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setIsModalOpen(true)}
         >
           <img
-            src={orgImage}
-            className="w-10 h-10 rounded-md object-cover border border-gray-300"
+            src={
+              isOrgImageLoading
+                ? "/dummy/woori-logo.png"
+                : orgImage || "/dummy/woori-logo.png"
+            }
+            className="w-10 h-10 rounded-md object-cover border border-gray-300 transition-all duration-300"
             alt="org logo"
           />
+
           <div>
             <h2 className="font-semibold text-gray-800 group-hover:text-blue-600 transition">
               {orgName}
@@ -80,7 +93,6 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
 
         {/* 관리자 이름 + 홈 버튼 */}
         <div className="flex items-center gap-4">
-          {/* 관리자 이름 */}
           <div className="flex items-center gap-2 text-gray-700 text-sm font-medium">
             <UserCircle size={18} className="text-blue-500" />
             <span>
@@ -88,7 +100,6 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
             </span>
           </div>
 
-          {/* 홈으로 이동 버튼 */}
           <button
             onClick={() => navigate("/home")}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-sm text-blue-600 font-medium transition"
@@ -103,7 +114,6 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6">
-            {/* 모달 헤더 */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-800">조직 선택</h3>
               <button
@@ -114,7 +124,6 @@ const Header: React.FC<HeaderProps> = ({ userRole = "admin" }) => {
               </button>
             </div>
 
-            {/* 조직 선택 모달 */}
             <OrganizationSelectModal
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}

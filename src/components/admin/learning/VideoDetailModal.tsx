@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, ExternalLink, Video } from "lucide-react";
+import { X, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { fetchAdminMemberWatchDetail } from "@/api/adminStats/view";
 import type { MemberWatchDetail } from "@/types/video";
@@ -43,6 +43,17 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
     load();
   }, [orgId, memberId]);
 
+  const formatDateWithoutSeconds = (dateStr: string) => {
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hour = String(d.getHours()).padStart(2, "0");
+  const minute = String(d.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[85vh]">
@@ -70,30 +81,24 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
                   <th className="px-4 py-3 text-left">제목</th>
                   <th className="px-4 py-3 text-left">시청률</th>
                   <th className="px-4 py-3 text-left">최근 시청일</th>
-                  <th className="px-4 py-3 text-center">동영상</th>
                 </tr>
               </thead>
 
               <tbody>
                 {videos.map((v) => (
                   <tr key={v.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3">{v.title}</td>
+                    <td
+                      className="px-4 py-3 max-w-[280px] truncate text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => navigate(`/video/${v.id}`)}>
+                      {v.title}
+                    </td>
                     <td className="px-4 py-3 text-blue-600 font-semibold">
                       {v.watch_rate}%
                     </td>
                     <td className="px-4 py-3">
-                    {v.watched_at
-                          ? new Date(v.watched_at).toLocaleString()
-                          : "-"}
-                          </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => navigate(`/video/${v.id}`)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <ExternalLink size={14} className="inline mr-1" />
-                        보기
-                      </button>
+                   {v.watched_at
+                      ? formatDateWithoutSeconds(v.watched_at)
+                      : "-"}
                     </td>
                   </tr>
                 ))}

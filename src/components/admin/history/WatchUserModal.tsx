@@ -38,6 +38,17 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
     load();
   }, [orgId, videoId]);
 
+  const formatDateWithoutSeconds = (dateStr: string) => {
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hour = String(d.getHours()).padStart(2, "0");
+  const minute = String(d.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hour}:${minute}`;
+};
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[85vh]">
@@ -93,8 +104,8 @@ const WatchUserModal: React.FC<WatchUserModalProps> = ({
                       <td className="px-4 py-3">{u.watch_rate}%</td>
                       <td className="px-4 py-3 text-gray-600">
                         {u.watched_at
-                          ? new Date(u.watched_at).toLocaleString()
-                          : "-"}
+                            ? formatDateWithoutSeconds(u.watched_at)
+                            : "-"}
                       </td>
                     </tr>
                   ))}

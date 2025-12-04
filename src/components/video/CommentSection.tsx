@@ -78,9 +78,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     loadComments();
   }, [orgId, videoId]);
 
-  const sortedComments = [...comments].sort((a, b) =>
-    sortOrder === "latest" ? b.id - a.id : a.id - b.id
-  );
+  // created_at 기준으로 정렬 (최신순 또는 오래된순)
+  const sortedComments = [...comments].sort((a, b) => {
+    const dateA = new Date(a.created_at || 0).getTime();
+    const dateB = new Date(b.created_at || 0).getTime();
+    return sortOrder === "latest" ? dateB - dateA : dateA - dateB;
+  });
 
   /* 댓글 작성 */
   const handleAddComment = async () => {
@@ -95,6 +98,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             id: Date.now(),
             text: newComment,
             creator: nickname,
+            created_at: new Date().toISOString(),
             replies: [],
           } as unknown as CommentWithReplies,
         ]);
@@ -115,28 +119,28 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       const res = await postVideoComment(orgId, videoId, replyContent, parentId);
 
       if (res.is_success) {
-  setComments((prev) =>
-    prev.map((comment) =>
-      comment.id === parentId
-        ? {
-            ...comment,
-            replies: [
-              ...(comment.replies ?? []),
-              {
-                id: Date.now(),
-                parent_comment_id: parentId,
-                text: replyContent,
-                creator: nickname ?? "멤버",
-                created_at: new Date().toISOString(),
-              },
-            ],
-          }
-        : comment
-    )
-  );
-  setReplyContent("");
-  setReplyingTo(null);
-}
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === parentId
+              ? {
+                  ...comment,
+                  replies: [
+                    ...(comment.replies ?? []),
+                    {
+                      id: Date.now(),
+                      parent_comment_id: parentId,
+                      text: replyContent,
+                      creator: nickname ?? "멤버",
+                      created_at: new Date().toISOString(),
+                    },
+                  ],
+                }
+              : comment
+          )
+        );
+        setReplyContent("");
+        setReplyingTo(null);
+      }
     } catch (err: any) {
       alert(err.message || "답글 작성에 실패했습니다.");
     } finally {
@@ -151,7 +155,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  if (loading) <LoadingSpinner text="로딩 중..." />
+  if (loading) return <LoadingSpinner text="로딩 중..." />;
 
   if (error)
     return (

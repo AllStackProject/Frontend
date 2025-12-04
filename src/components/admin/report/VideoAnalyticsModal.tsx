@@ -15,7 +15,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Legend,
 } from "recharts";
 import { fetchIntervalDetail } from "@/api/adminStats/report";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -41,31 +40,51 @@ const formatTimeToMinutes = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
-// 툴팁
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-        <p className="text-sm font-semibold text-gray-800 mb-2">
-          {formatTimeToMinutes(label)} ~ {formatTimeToMinutes(label + 10)}
-        </p>
-
-        {payload.map((entry: any, idx: number) => (
-          <p key={idx} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}:{" "}
-            <span className="font-semibold">{entry.value.toFixed(1)}%</span>
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
 const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
   const orgId = Number(localStorage.getItem("org_id"));
   const [data, setData] = useState<SegmentData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const maxViewRate = Math.max(...data.map((d) => d.viewRate), 0);
+  const maxDropOff = Math.max(...data.map((d) => d.dropOff), 0);
+
+  // 그래프 padding (여유)
+  const viewMaxDomain = Math.min(Math.ceil(maxViewRate + 10), 100);
+  const dropMaxDomain = Math.min(Math.ceil(maxDropOff + 10), 100);
+
+  // 데이터 개수에 따라 분 단위 표시 여부 결정
+  const isMinuteMode = data.length > 20;
+
+  // 초 → mm:ss
+  const toMinSec = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // 툴팁 컴포넌트
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    const start = label;
+    const end = label + 10;
+
+    // 분 단위 모드일 때 툴팁도 분:초 형식으로 표시
+    const rangeText = isMinuteMode
+      ? `${toMinSec(start)} ~ ${toMinSec(end)}`
+      : `${start}초 ~ ${end}초`;
+
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm">
+        <p className="font-semibold text-gray-800 mb-2">{rangeText}</p>
+        {payload.map((item: any) => (
+          <p key={item.dataKey} style={{ color: item.color }}>
+            {item.name}: <strong>{item.value.toFixed(1)}%</strong>
+          </p>
+        ))}
+      </div>
+    );
+  };
 
   /** API 데이터 로드 */
   useEffect(() => {
@@ -92,32 +111,34 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
 
   /** 통계 계산 */
   const avgViewRate = data.length
-  ? data.reduce((sum, d) => sum + d.viewRate, 0) / data.length
-  : 0;
+    ? data.reduce((sum, d) => sum + d.viewRate, 0) / data.length
+    : 0;
 
   const avgDropOff = data.length
-  ? data.reduce((sum, d) => sum + d.dropOff, 0) / data.length
-  : 0;
+    ? data.reduce((sum, d) => sum + d.dropOff, 0) / data.length
+    : 0;
 
+  // 처음 1분(0~60초) 제외하고 Top 3 추출
   const top3Watched =
-  data.length > 0
-    ? [...data]
-        .filter((d) => d.time >= 10)
-        .sort((a, b) => b.viewRate - a.viewRate)
-        .slice(0, 3)
-    : [];
+    data.length > 0
+      ? [...data]
+          .filter((d) => d.time >= 60)
+          .sort((a, b) => b.viewRate - a.viewRate)
+          .slice(0, 3)
+      : [];
 
   const highDrop =
-  data.length > 0
-    ? data.reduce((max, cur) => (cur.dropOff > max.dropOff ? cur : max))
-    : null;
+    data.length > 0
+      ? data.reduce((max, cur) => (cur.dropOff > max.dropOff ? cur : max))
+      : null;
 
   /** 모달 외부 클릭 → 닫기 */
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
 
-  if (loading) <LoadingSpinner text="로딩 중..." />
+  // 로딩 중일 때
+  if (loading) return <LoadingSpinner text="로딩 중..." />;
 
   return (
     <div
@@ -172,12 +193,15 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
           {/* Top 3 구간 */}
           {top3Watched.length > 0 && (
             <div className="bg-yellow-50 border border-amber-200 rounded-lg p-5 mb-6">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <Award size={20} className="text-amber-600" />
                 <h3 className="text-base font-semibold text-amber-900">
                   최고 시청 구간 Top 3
                 </h3>
               </div>
+              <p className="text-xs text-amber-700 mb-4">
+                * 처음 1분은 제외하고 분석되었습니다
+              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {top3Watched.map((seg, idx) => (
@@ -222,20 +246,40 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
               구간별 시청률
             </h3>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <ReLineChart data={data}>
+            <ResponsiveContainer width="100%" height={320}>
+              <ReLineChart data={data} margin={{ bottom: 20, left: 10, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="time" />
-                <YAxis domain={[0, 100]} />
+                <YAxis
+                  domain={[0, viewMaxDomain]}
+                  label={{
+                    value: "시청률 (%)",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { fill: "#374151", fontSize: 12, textAnchor: "middle" },
+                  }}
+                />
+
+                <XAxis
+                  dataKey="time"
+                  tickFormatter={(v) => (isMinuteMode ? Math.floor(v / 60).toString() : v.toString())}
+                  interval="preserveStartEnd"
+                  minTickGap={30}
+                  label={{
+                    value: isMinuteMode ? "시청 (분)" : "시청 (초)",
+                    position: "insideBottom",
+                    offset: 0,
+                    style: { fill: "#374151", fontSize: 12 },
+                  }}
+                />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
                 <Line
                   type="monotone"
                   dataKey="viewRate"
                   name="시청률"
                   stroke="#3b82f6"
                   strokeWidth={3}
-                  dot={{ r: 4 }}
+                  dot={false}
+                  activeDot={{ r: 6 }}
                 />
               </ReLineChart>
             </ResponsiveContainer>
@@ -248,20 +292,41 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
               구간별 이탈률
             </h3>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <ReLineChart data={data}>
+            <ResponsiveContainer width="100%" height={320}>
+              <ReLineChart data={data} margin={{ bottom: 20, left: 10, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="time" />
-                <YAxis domain={[0, 100]} />
+                <YAxis
+                  domain={[0, dropMaxDomain]}
+                  label={{
+                    value: "이탈률 (%)",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { fill: "#374151", fontSize: 12, textAnchor: "middle" },
+                  }}
+                />
+
+                <XAxis
+                  dataKey="time"
+                  tickFormatter={(v) => (isMinuteMode ? Math.floor(v / 60).toString() : v.toString())}
+                  interval="preserveStartEnd"
+                  minTickGap={30}
+                  label={{
+                    value: isMinuteMode ? "시청 (분)" : "시청 (초)",
+                    position: "insideBottom",
+                    offset: 0,
+                    style: { fill: "#374151", fontSize: 12 },
+                  }}
+                />
+
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
                 <Line
                   type="monotone"
                   dataKey="dropOff"
                   name="이탈률"
                   stroke="#ef4444"
                   strokeWidth={3}
-                  dot={{ r: 4 }}
+                  dot={false}
+                  activeDot={{ r: 6 }}
                 />
               </ReLineChart>
             </ResponsiveContainer>
@@ -278,27 +343,29 @@ const VideoAnalyticsModal: React.FC<Props> = ({ video, onClose }) => {
                 </h4>
 
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>
-                    가장 높은 시청률 구간:{" "}
-                    <strong>
-                      {formatTimeToMinutes(top3Watched[0]?.time)} ~{" "}
-                      {formatTimeToMinutes(top3Watched[0]?.time + 10)}
-                    </strong>
-                  </li>
+                  {top3Watched.length > 0 && (
+                    <li>
+                      가장 높은 시청률 구간 (처음 1분 제외):{" "}
+                      <strong>
+                        {formatTimeToMinutes(top3Watched[0]?.time)} ~{" "}
+                        {formatTimeToMinutes(top3Watched[0]?.time + 10)}
+                      </strong>
+                    </li>
+                  )}
 
                   {highDrop && (
                     <li>
                       이탈률이 가장 높은 구간:{" "}
                       <strong>
-                        {formatTimeToMinutes(highDrop.time)} ~ 
+                        {formatTimeToMinutes(highDrop.time)} ~
                         {formatTimeToMinutes(highDrop.time + 10)}
                       </strong>
                     </li>
                   )}
 
                   <li>
-                    평균 시청률: <strong>{avgViewRate.toFixed(1)}%</strong>,
-                    평균 이탈률: <strong>{avgDropOff.toFixed(1)}%</strong>
+                    평균 시청률: <strong>{avgViewRate.toFixed(1)}%</strong>, 평균
+                    이탈률: <strong>{avgDropOff.toFixed(1)}%</strong>
                   </li>
                 </ul>
               </div>

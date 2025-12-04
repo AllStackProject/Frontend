@@ -14,6 +14,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { nickname, orgName, orgId } = useAuth();
   const [orgImage, setOrgImage] = useState<string | null>(null);
+  const [isOrgImageLoading, setIsOrgImageLoading] = useState(true);
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,27 +78,31 @@ const Navbar = () => {
 }, [orgId]);
 
   useEffect(() => {
-    const fetchOrgImage = async () => {
-      try {
-        const orgs = await getOrganizations();
+  const fetchOrgImage = async () => {
+    setIsOrgImageLoading(true);
 
-        const selected = orgs.find(org => org.id === orgId);
+    try {
+      const orgs = await getOrganizations();
+      const selected = orgs.find(org => org.id === orgId);
 
-        if (selected?.img_url) {
-          const fixedUrl = selected.img_url.startsWith("http")
-            ? selected.img_url
-            : `https://${selected.img_url}`;
-
-          setOrgImage(fixedUrl);
-        }
-      } catch (e) {
-        console.error("🚨 조직 이미지 로드 실패:", e);
+      if (selected?.img_url) {
+        const fixedUrl = selected.img_url.startsWith("http")
+          ? selected.img_url
+          : `https://${selected.img_url}`;
+        setOrgImage(fixedUrl);
+      } else {
         setOrgImage(null);
       }
-    };
+    } catch (e) {
+      console.error("🚨 조직 이미지 로드 실패:", e);
+      setOrgImage(null);
+    } finally {
+      setIsOrgImageLoading(false); // API 끝 → 로딩 false
+    }
+  };
 
-    if (orgId) fetchOrgImage();
-  }, [orgId]);
+  if (orgId) fetchOrgImage();
+}, [orgId]);
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -162,9 +167,13 @@ const Navbar = () => {
             >
               <div className="relative">
                 <img
-                  src={orgImage || "/dummy/woori-logo.png"}
+                  src={
+                    isOrgImageLoading
+                      ? "/dummy/woori-logo.png"
+                      : orgImage || "/dummy/woori-logo.png"
+                  }
                   alt="org"
-                  className="w-6 h-6 rounded-full object-cover transition-all"
+                  className="w-6 h-6 rounded-full object-cover transition-all duration-300"
                 />
               </div>
               <span className="font-semibold text-gray-800 text-sm whitespace-nowrap">{orgName}</span>

@@ -146,25 +146,6 @@
 
 <br/>
 
-<!-- UI Preview -->
-<div align="center">
-  <h2>UI Preview</h2>
-</div>
-
-<table align="center">
-  <tr>
-    <th align="center">🧑‍💻 사용자 흐름</th>
-    <th align="center">🛠️ 관리자 흐름</th>
-  </tr>
-  <tr>
-    <td align="center">
-    </td>
-    <td align="center">
-    </td>
-  </tr>
-</table>
-
-<br/>
 
 <!-- Installation -->
 <div align="center">
